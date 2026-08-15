@@ -24,5 +24,10 @@ export async function closeTabsWithEffect(entries: CloseEntry[]): Promise<void> 
   });
   const total = (entries.length - 1) * STAGGER_MS + EXIT_MS;
   await new Promise((resolve) => window.setTimeout(resolve, total));
-  await chrome.tabs.remove(entries.map((e) => e.tabId));
+  try {
+    await chrome.tabs.remove(entries.map((e) => e.tabId));
+  } catch {
+    // 动画窗口内 tab 可能已被用户手动关闭，remove 会 reject；
+    // 吞掉即可——useTabs 的事件驱动刷新会自愈状态，无需在此处理
+  }
 }

@@ -53,4 +53,12 @@ describe('closeTabsWithEffect', () => {
     expect(shootConfetti).not.toHaveBeenCalled();
     expect(chromeMock.tabs.remove).toHaveBeenCalledWith([7]);
   });
+
+  it('tab 在动画期间被手动关闭导致 remove reject：不抛出，Promise 正常 resolve', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.remove.mockRejectedValueOnce(new Error('No tab with id: 2'));
+    const done = closeTabsWithEffect([entry(2)]);
+    vi.advanceTimersByTime(300);
+    await expect(done).resolves.toBeUndefined();
+  });
 });
