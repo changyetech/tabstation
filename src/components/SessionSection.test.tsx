@@ -52,3 +52,24 @@ describe('SessionSection', () => {
     expect(screen.queryByText('已保存会话')).not.toBeInTheDocument();
   });
 });
+
+describe('SessionSection 展开编辑', () => {
+  it('展开显示条目；点击条目标题 → onOpenTab；点击条目 ✕ → onDeleteTab', async () => {
+    const props = renderSection();
+    await userEvent.click(screen.getByText(/2026\/8\/15 10:00/));
+    expect(screen.getByText('A')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('A'));
+    expect(props.onOpenTab).toHaveBeenCalledWith(sessions[0].tabs[0]);
+    await userEvent.click(screen.getAllByTitle('删除')[0]);
+    expect(props.onDeleteTab).toHaveBeenCalledWith(sessions[0], 0);
+  });
+
+  it('重命名：切输入框，Enter 提交', async () => {
+    const props = renderSection();
+    await userEvent.click(screen.getByTitle('重命名'));
+    const input = screen.getByRole('textbox');
+    await userEvent.clear(input);
+    await userEvent.type(input, '工作会话{Enter}');
+    expect(props.onRename).toHaveBeenCalledWith(sessions[0], '工作会话');
+  });
+});
