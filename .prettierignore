@@ -1,0 +1,7 @@
+dist/
+node_modules/
+coverage/
+pnpm-lock.yaml
+
+# 文档为手写规格，交给 Prettier 重排会打乱中文折行与表格，故排除
+*.md
