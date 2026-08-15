@@ -68,3 +68,32 @@ body {
   background: none;
   cursor: pointer;
 }
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+.toolbar-spacer {
+  flex: 1;
+}
+.seg-group {
+  display: flex;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg {
+  border: none;
+  background: none;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.seg-active {
+  background: #e8e8e8;
+  font-weight: 600;
+}
