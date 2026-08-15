@@ -1,6 +1,8 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
+import type { View } from './Toolbar';
+import DomainGroupList from './DomainGroupList';
 import TabRow from './TabRow';
 
 export interface WindowSectionProps {
@@ -9,6 +11,7 @@ export interface WindowSectionProps {
   tabs: TabWithId[];
   isCurrent: boolean;
   draggable: boolean;
+  view: View;
   dupCountByTabId: Map<number, number>;
   now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
@@ -21,6 +24,7 @@ export default function WindowSection({
   tabs,
   isCurrent,
   draggable,
+  view,
   dupCountByTabId,
   now,
   registerRow,
@@ -36,21 +40,31 @@ export default function WindowSection({
       <header className="window-header">
         <h2>{label}</h2>
       </header>
-      <SortableContext items={tabs.map((x) => x.id)} strategy={verticalListSortingStrategy}>
-        <ul className="tab-list">
-          {tabs.map((tab) => (
-            <TabRow
-              key={tab.id}
-              tab={tab}
-              dupCount={dupCountByTabId.get(tab.id)}
-              draggable={draggable}
-              now={now}
-              registerRow={registerRow}
-              onClose={onCloseTab}
-            />
-          ))}
-        </ul>
-      </SortableContext>
+      {view === 'domain' ? (
+        <DomainGroupList
+          tabs={tabs}
+          now={now}
+          dupCountByTabId={dupCountByTabId}
+          registerRow={registerRow}
+          onCloseTab={onCloseTab}
+        />
+      ) : (
+        <SortableContext items={tabs.map((x) => x.id)} strategy={verticalListSortingStrategy}>
+          <ul className="tab-list">
+            {tabs.map((tab) => (
+              <TabRow
+                key={tab.id}
+                tab={tab}
+                dupCount={dupCountByTabId.get(tab.id)}
+                draggable={draggable}
+                now={now}
+                registerRow={registerRow}
+                onClose={onCloseTab}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      )}
     </section>
   );
 }

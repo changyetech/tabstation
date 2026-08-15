@@ -3,6 +3,7 @@ import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } f
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import Toolbar, { type Mode, type View } from '../components/Toolbar';
 import WindowSection from '../components/WindowSection';
+import DomainGroupList from '../components/DomainGroupList';
 import TabRow from '../components/TabRow';
 import { I18nProvider, resolveLanguage } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
@@ -99,12 +100,21 @@ export default function App() {
                 tabs={winTabs}
                 isCurrent={w.id === currentWindowId}
                 draggable={view === 'list'}
+                view={view}
                 dupCountByTabId={dupCountByTabId}
                 now={now}
                 registerRow={registerRow}
                 onCloseTab={closeTab}
               />
             ))
+          ) : view === 'domain' ? (
+            <DomainGroupList
+              tabs={mergedTabs}
+              now={now}
+              dupCountByTabId={dupCountByTabId}
+              registerRow={registerRow}
+              onCloseTab={closeTab}
+            />
           ) : (
             <SortableContext
               items={mergedTabs.map((x) => x.id)}
