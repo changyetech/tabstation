@@ -21,6 +21,7 @@ describe('useTabs', () => {
   it('tabs 事件触发重查', async () => {
     const { chromeMock } = getChromeMock();
     chromeMock.tabs.query.mockResolvedValue([]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
     const { result } = renderHook(() => useTabs());
     await waitFor(() => expect(result.current.tabs).toEqual([]));
 
@@ -43,8 +44,22 @@ describe('useTabs', () => {
     expect(chromeMock.tabs.query.mock.calls.length).toBe(before);
   });
 
+  it('windowId 不在 windows.getAll() 结果里的 tab（如 devtools/app 窗口）会被过滤掉', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({ id: 1, windowId: 1 }),
+      makeTab({ id: 2, windowId: 99 }), // 孤儿 tab：不在 windows.getAll() 里
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    const { result } = renderHook(() => useTabs());
+    await waitFor(() => expect(result.current.windows).toHaveLength(1));
+    expect(result.current.tabs.map((t) => t.id)).toEqual([1]);
+  });
+
   it('先发起但后 resolve 的过期 refresh 不会覆盖后发起且先 resolve 的新结果', async () => {
     const { chromeMock } = getChromeMock();
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
     let resolveMountQuery!: (tabs: chrome.tabs.Tab[]) => void;
     const mountQueryPromise = new Promise<chrome.tabs.Tab[]>((resolve) => {
       resolveMountQuery = resolve;

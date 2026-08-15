@@ -194,6 +194,38 @@ describe('一键去重', () => {
     await userEvent.click(screen.getByText(/一键去重/));
     await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
   });
+
+  it('孤儿 tab（windowId 不在 windows.getAll() 里）不渲染、不计入 ×N、不进入一键去重计划', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({
+        id: 1,
+        windowId: 1,
+        index: 0,
+        title: 'D1',
+        url: 'https://d.com/',
+        lastAccessed: 100,
+      }),
+      // 孤儿：与 D1 同 URL，若未被过滤会被算作重复对象
+      makeTab({
+        id: 2,
+        windowId: 99,
+        index: 0,
+        title: 'D2',
+        url: 'https://d.com/',
+        lastAccessed: 200,
+      }),
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('D1')).toBeInTheDocument());
+    expect(screen.queryByText('D2')).not.toBeInTheDocument();
+    expect(screen.queryByText('×2')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByText(/一键去重/));
+    expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
+  });
 });
 
 describe('稍后阅读', () => {
