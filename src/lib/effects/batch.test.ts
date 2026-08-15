@@ -61,4 +61,14 @@ describe('closeTabsWithEffect', () => {
     vi.advanceTimersByTime(300);
     await expect(done).resolves.toBeUndefined();
   });
+
+  it('remove 整批 reject：本批次仍开着的行摘掉 .closing，不留幽灵行', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.remove.mockRejectedValueOnce(new Error('No tab with id: 2'));
+    const entries = [entry(1), entry(2), entry(3)];
+    const done = closeTabsWithEffect(entries);
+    vi.advanceTimersByTime((entries.length - 1) * 40 + 300);
+    await done;
+    entries.forEach((e) => expect(e.el.classList.contains('closing')).toBe(false));
+  });
 });

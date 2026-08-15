@@ -1,4 +1,4 @@
-import { animateElementOut, EXIT_MS } from './exit';
+import { animateElementOut, undoAnimateElementOut, EXIT_MS } from './exit';
 import { playCloseSound } from './sound';
 import { shootConfetti } from './confetti';
 
@@ -29,5 +29,8 @@ export async function closeTabsWithEffect(entries: CloseEntry[]): Promise<void> 
   } catch {
     // 动画窗口内 tab 可能已被用户手动关闭，remove 会 reject；
     // 吞掉即可——useTabs 的事件驱动刷新会自愈状态，无需在此处理
+    // 但 remove 是整批一次调用，一旦 reject，本批次里仍然开着的 tab
+    // 也会永远卡在 .closing（不可见/不可点）——必须摘掉，否则是永久幽灵行
+    entries.forEach((e) => e.el && undoAnimateElementOut(e.el));
   }
 }

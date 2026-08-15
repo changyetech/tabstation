@@ -115,6 +115,36 @@ describe('App', () => {
     await waitFor(() => expect(chromeMock.windows.remove).toHaveBeenCalledWith(2));
     expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
   });
+
+  it('关闭窗口·windows.remove reject：区块摘掉 .closing，不永久消失', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    chromeMock.windows.remove.mockRejectedValueOnce(new Error('No window'));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2));
+    const heading = screen.getByRole('heading', { level: 2, name: /窗口 2/ });
+    const section = heading.closest('section');
+    if (!section) throw new Error('窗口 2 分区未找到');
+    await userEvent.click(within(section).getByText(/关闭窗口/));
+    await waitFor(() => expect(chromeMock.windows.remove).toHaveBeenCalledWith(2));
+    await waitFor(() => expect(section).not.toHaveClass('closing'), { timeout: 2000 });
+  });
+
+  it('关闭窗口·tabs.remove reject（管理页豁免场景）：区块摘掉 .closing，不永久消失', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    chromeMock.tabs.remove.mockRejectedValueOnce(new Error('No tab'));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2));
+    const heading = screen.getByRole('heading', { level: 2, name: /窗口 1/ });
+    const section = heading.closest('section');
+    if (!section) throw new Error('窗口 1 分区未找到');
+    await userEvent.click(within(section).getByText(/关闭窗口/));
+    await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
+    await waitFor(() => expect(section).not.toHaveClass('closing'), { timeout: 2000 });
+  });
 });
 
 describe('一键去重', () => {

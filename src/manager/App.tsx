@@ -14,7 +14,7 @@ import { I18nProvider, resolveLanguage, useLanguage, useT } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
 import { useTabs } from '../hooks/useTabs';
 import { closeTabsWithEffect } from '../lib/effects/batch';
-import { animateElementOut, EXIT_MS } from '../lib/effects/exit';
+import { animateElementOut, undoAnimateElementOut, EXIT_MS } from '../lib/effects/exit';
 import { playCloseSound } from '../lib/effects/sound';
 import { shootConfetti } from '../lib/effects/confetti';
 import { findDuplicateGroups, planDedupe, type TabWithId } from '../lib/dedupe';
@@ -162,11 +162,16 @@ function AppInner({
         void chrome.tabs.remove(winVisible.map((x) => x.id)).catch(() => {
           // 动画期间用户可能已手动关闭这些 tab，remove 会 reject；
           // 吞掉即可——useTabs 的事件驱动刷新会自愈状态
+          // 但整个区块已经带上 .closing，remove 失败意味着窗口其实还活着，
+          // 不摘掉的话这个区块会永久消失
+          if (sectionEl) undoAnimateElementOut(sectionEl);
         });
       } else if (win.id !== undefined) {
         void chrome.windows.remove(win.id).catch(() => {
           // 动画期间用户可能已手动关闭该窗口，remove 会 reject；
           // 吞掉即可——useTabs 的事件驱动刷新会自愈状态
+          // 同上：窗口其实还活着，需摘掉 .closing 避免区块永久消失
+          if (sectionEl) undoAnimateElementOut(sectionEl);
         });
       }
     }, EXIT_MS);
