@@ -27,6 +27,7 @@ This repo documents its own **contracts** and **specs** under `docs/` (contract 
 - Error format and error code registry → `docs/`
 - Response envelope format, retry/backoff strategies, auth contracts → `docs/`
 - Project-private convention documents → `docs/` (see [Convention Documents](#convention-documents))
+  - [docs/naming.md](docs/naming.md) — 产品命名约定（normative）：最终名称 `Tab Station` / 标签工作站、各处写法规范、命名判据、落选候选记录
 - Feature / domain design specs → `docs/specs/`
 - Implementation plans → `docs/plans/`
 
@@ -129,6 +130,7 @@ tabstage/
 ├── CONTEXT.md         # Domain glossary (ubiquitous language) — read before writing specs/code
 ├── ROADMAP.md         # Deferred-but-wanted items (perf/features postponed from V1)
 └── docs/
+    ├── naming.md      # 产品命名约定 (normative) — 名称 `Tab Station`、写法规范、判据、查重记录
     ├── specs/         # Feature / design specifications (the "what")
     ├── plans/         # Implementation plans (the "how")
     └── ...            # API specs, error codes, convention docs (contracts live directly here)
