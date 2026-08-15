@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { getChromeMock } from '../test/chrome-mock';
@@ -39,6 +39,51 @@ describe('App', () => {
     expect(screen.queryAllByRole('heading', { level: 2 })).toHaveLength(0);
     const titles = screen.getAllByText(/^(A1|B1)$/).map((el) => el.textContent);
     expect(titles).toEqual(['A1', 'B1']);
+  });
+
+  it('移动到·其他窗口：调用 chrome.tabs.move，且菜单不含 tab 自己所在窗口', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    render(<App />);
+    const a1 = await screen.findByText('A1');
+    const row = a1.closest('li');
+    if (!row) throw new Error('A1 所在行未找到');
+    await userEvent.click(within(row).getByTitle('移动到'));
+    // A1 在窗口 1，目标菜单应只含窗口 2（不含自己所在的窗口 1）
+    expect(within(row).queryByText(/^窗口 1 ·/)).not.toBeInTheDocument();
+    const target = within(row).getByText('窗口 2 · B1 (1 个 tab)');
+    await userEvent.click(target);
+    expect(chromeMock.tabs.move).toHaveBeenCalledWith(1, { windowId: 2, index: -1 });
+  });
+
+  it('移动到·新窗口（全屏）：create 后 update 为 maximized', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    render(<App />);
+    const b1 = await screen.findByText('B1');
+    const row = b1.closest('li');
+    if (!row) throw new Error('B1 所在行未找到');
+    await userEvent.click(within(row).getByTitle('移动到'));
+    await userEvent.click(within(row).getByText('新窗口（全屏）'));
+    expect(chromeMock.windows.create).toHaveBeenCalledWith(expect.objectContaining({ tabId: 3 }));
+    expect(chromeMock.windows.update).toHaveBeenCalledWith(9002, { state: 'maximized' });
+  });
+
+  it('移动到·新窗口（同尺寸）：left/top 各 +40，width/height 与源窗口一致', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    chromeMock.windows.get.mockResolvedValue(
+      makeWindow({ id: 1, left: 100, top: 50, width: 800, height: 600 }),
+    );
+    render(<App />);
+    const a1 = await screen.findByText('A1');
+    const row = a1.closest('li');
+    if (!row) throw new Error('A1 所在行未找到');
+    await userEvent.click(within(row).getByTitle('移动到'));
+    await userEvent.click(within(row).getByText('新窗口（同尺寸）'));
+    expect(chromeMock.windows.create).toHaveBeenCalledWith(
+      expect.objectContaining({ tabId: 1, left: 140, top: 90, width: 800, height: 600 }),
+    );
   });
 });
 

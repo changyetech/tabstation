@@ -81,4 +81,36 @@ describe('TabRow', () => {
     await userEvent.click(screen.getByTitle('关闭'));
     expect(onClose).toHaveBeenCalledWith(tab);
   });
+
+  it('pinned 的 tab 不渲染「移动到」按钮（spec §4.4）', () => {
+    const tab = makeTab({ id: 6, pinned: true });
+    renderRow(
+      <TabRow
+        tab={tab}
+        draggable={false}
+        now={Date.now()}
+        registerRow={noop}
+        onClose={noop}
+        getMoveTargets={() => []}
+        onMove={noop}
+      />,
+    );
+    expect(screen.queryByTitle('移动到')).not.toBeInTheDocument();
+  });
+
+  it('非 pinned 的 tab 渲染「移动到」按钮（spec §4.4）', () => {
+    const tab = makeTab({ id: 7, pinned: false });
+    renderRow(
+      <TabRow
+        tab={tab}
+        draggable={false}
+        now={Date.now()}
+        registerRow={noop}
+        onClose={noop}
+        getMoveTargets={() => []}
+        onMove={noop}
+      />,
+    );
+    expect(screen.getByTitle('移动到')).toBeInTheDocument();
+  });
 });
