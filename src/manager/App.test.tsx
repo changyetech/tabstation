@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getChromeMock } from '../test/chrome-mock';
 import { makeTab, makeWindow } from '../test/factories';
 import App from './App';
@@ -84,6 +84,36 @@ describe('App', () => {
     expect(chromeMock.windows.create).toHaveBeenCalledWith(
       expect.objectContaining({ tabId: 1, left: 140, top: 90, width: 800, height: 600 }),
     );
+  });
+
+  it('关闭窗口·窗口含管理页：只关非管理页 tab，窗口存活', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2));
+    // 窗口 1：A1 + 管理页（隐身）；管理页在场 → 只关 A1，窗口本身要留活
+    const heading = screen.getByRole('heading', { level: 2, name: /窗口 1/ });
+    const section = heading.closest('section');
+    if (!section) throw new Error('窗口 1 分区未找到');
+    await userEvent.click(within(section).getByText(/关闭窗口/));
+    await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
+    expect(chromeMock.windows.remove).not.toHaveBeenCalled();
+  });
+
+  it('关闭窗口·窗口不含管理页：关整个窗口', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2));
+    // 窗口 2：只有 B1，没有管理页 → 关整个窗口
+    const heading = screen.getByRole('heading', { level: 2, name: /窗口 2/ });
+    const section = heading.closest('section');
+    if (!section) throw new Error('窗口 2 分区未找到');
+    await userEvent.click(within(section).getByText(/关闭窗口/));
+    await waitFor(() => expect(chromeMock.windows.remove).toHaveBeenCalledWith(2));
+    expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
   });
 });
 
