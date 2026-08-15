@@ -15,3 +15,56 @@ body {
     transform 0.3s;
   pointer-events: none;
 }
+
+.tab-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  list-style: none;
+}
+.tab-row:hover {
+  background: #f4f4f4;
+}
+.tab-row .favicon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.favicon-placeholder {
+  display: inline-block;
+  background: #ddd;
+  border-radius: 3px;
+}
+.tab-row .title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab-row .domain,
+.tab-row .time {
+  color: #888;
+  font-size: 12px;
+  flex: none;
+}
+.dup-badge {
+  color: #b35a5a;
+  font-size: 12px;
+  border: 1px solid #b35a5a;
+  border-radius: 8px;
+  padding: 0 6px;
+}
+.tab-row .actions {
+  visibility: hidden;
+  display: flex;
+  gap: 4px;
+}
+.tab-row:hover .actions {
+  visibility: visible;
+}
+.tab-row .actions button {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
