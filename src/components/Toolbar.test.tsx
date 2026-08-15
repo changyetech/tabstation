@@ -13,6 +13,7 @@ function renderToolbar(over: Partial<React.ComponentProps<typeof Toolbar>> = {})
     onView: vi.fn(),
     onDedupe: vi.fn(),
     onDedupeHover: vi.fn(),
+    onSettings: vi.fn(),
     ...over,
   };
   render(

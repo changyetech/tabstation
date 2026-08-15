@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import Toolbar, { type Mode, type View } from '../components/Toolbar';
+import SettingsDialog from '../components/SettingsDialog';
 import WindowSection from '../components/WindowSection';
 import DomainGroupList from '../components/DomainGroupList';
 import TabRow from '../components/TabRow';
@@ -35,22 +36,29 @@ import {
 } from '../lib/storage';
 
 export default function App() {
-  const [settings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
+  const [settings, setSettings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
   const language = resolveLanguage(settings.language, navigator.language);
 
   return (
     <I18nProvider language={language}>
-      <AppInner settings={settings} />
+      <AppInner settings={settings} setSettings={setSettings} />
     </I18nProvider>
   );
 }
 
-function AppInner({ settings }: { settings: Settings }) {
+function AppInner({
+  settings,
+  setSettings,
+}: {
+  settings: Settings;
+  setSettings: (next: Settings) => Promise<void>;
+}) {
   const { tabs, windows, currentWindowId } = useTabs();
   const t = useT();
   const language = useLanguage();
   const [mode, setMode] = useState<Mode>('window');
   const [view, setView] = useState<View>('list');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const rowEls = useRef(new Map<number, HTMLElement>());
 
   // 整行是拖拽把手，需位移阈值，否则行内按钮的 pointerdown 会被判成起拖
@@ -291,6 +299,7 @@ function AppInner({ settings }: { settings: Settings }) {
         onView={setView}
         onDedupe={runDedupe}
         onDedupeHover={setDedupePreview}
+        onSettings={() => setSettingsOpen(true)}
       />
       <div className="layout">
         <main className="main">
@@ -369,6 +378,12 @@ function AppInner({ settings }: { settings: Settings }) {
         )}
       </div>
       <Toast message={toast} />
+      <SettingsDialog
+        open={settingsOpen}
+        settings={settings}
+        onChange={(next) => void setSettings(next)}
+        onClose={() => setSettingsOpen(false)}
+      />
     </>
   );
 }

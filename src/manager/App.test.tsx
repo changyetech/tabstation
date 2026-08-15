@@ -270,6 +270,28 @@ describe('保存窗口', () => {
   });
 });
 
+describe('设置对话框', () => {
+  it('点击 ⚙ 打开对话框', async () => {
+    seedTwoWindows();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
+    expect(screen.queryByText('管理页单例')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText(/⚙ 设置/));
+    expect(screen.getByText('管理页单例')).toBeInTheDocument();
+  });
+
+  it('语言切换立即生效：写入 storage 且界面文案切换为英文', async () => {
+    const { storageData } = getChromeMock();
+    seedTwoWindows();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('全部模式')).toBeInTheDocument());
+    await userEvent.click(screen.getByText(/⚙ 设置/));
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'en');
+    await waitFor(() => expect((storageData.settings as { language: string }).language).toBe('en'));
+    expect(await screen.findByText('All tabs')).toBeInTheDocument();
+  });
+});
+
 describe('测试 harness 冒烟', () => {
   it('chrome mock：storage 读写往返且触发 onChanged', async () => {
     const { chromeMock } = getChromeMock();

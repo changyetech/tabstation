@@ -245,3 +245,28 @@ body {
 .session-tab-row:hover .session-tab-delete {
   visibility: visible;
 }
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+.dialog {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dialog fieldset {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

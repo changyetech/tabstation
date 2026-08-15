@@ -10,6 +10,7 @@ export interface ToolbarProps {
   onView: (v: View) => void;
   onDedupe: () => void;
   onDedupeHover: (hovering: boolean) => void;
+  onSettings: () => void;
 }
 
 export default function Toolbar({
@@ -19,6 +20,7 @@ export default function Toolbar({
   onView,
   onDedupe,
   onDedupeHover,
+  onSettings,
 }: ToolbarProps) {
   const t = useT();
   const seg = (active: boolean) => `seg${active ? ' seg-active' : ''}`;
@@ -53,6 +55,7 @@ export default function Toolbar({
       <button onClick={() => void chrome.tabs.create({ url: 'chrome://history' })}>
         🕘 {t('toolbar.history')}
       </button>
+      <button onClick={onSettings}>⚙ {t('toolbar.settings')}</button>
     </div>
   );
 }
