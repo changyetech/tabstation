@@ -1,4 +1,4 @@
-# tabstage
+# tabstation
 
 ## Architecture
 
@@ -124,7 +124,7 @@ Universal cross-cutting conventions (HTTP/API design, observability, testing, co
 A static map of the repo. Contract and convention documents live directly under `docs/`; `docs/specs/` and `docs/plans/` accumulate dated documents over time.
 
 ```
-tabstage/
+tabstation/
 ├── CLAUDE.md          # This file - project rules, conventions, and module guide
 ├── AGENTS.md          # → @CLAUDE.md
 ├── CONTEXT.md         # Domain glossary (ubiquitous language) — read before writing specs/code

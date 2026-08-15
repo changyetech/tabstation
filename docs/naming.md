@@ -118,4 +118,11 @@
 
 ## 9. 旧名处置
 
-`tabstage` 为定名前的临时初稿名，**已作废**。仓库内 `CLAUDE.md`、`CONTEXT.md`、`docs/specs/`、`docs/plans/`、`manifest.json`、`_locales/`、`src/lib/manager-url.ts` 等处的 `tabstage` 字样待统一替换为 `tabstation`（英文品牌名 `Tab Station`）。替换前，遇到 `tabstage` 一律理解为本产品。
+`tabstage` 为定名前的临时初稿名，**已作废**。2026-08-15 已完成全仓库替换：`package.json`、`Makefile`、`_locales/{en,zh_CN}/messages.json`、`src/manager/index.html`、`CLAUDE.md`、`CONTEXT.md`，以及 `docs/specs/`、`docs/plans/` 的文件名与正文，一律按 §2 写法（标识符 `tabstation`／品牌名 `Tab Station`）。`manifest.json` 用 `__MSG_extName__` 占位，随 `_locales` 自动生效；`src/lib/manager-url.ts` 只含扩展内相对路径，不含旧名。
+
+两处**有意保留**旧名：
+
+- `.superpowers/sdd/2026-08-15-tabstage/` —— SDD 执行过程归档（任务报告与 diff），属历史快照，改名即篡改记录
+- 定名前的 git 提交历史与提交信息
+
+除以上两处外，仓库内不应再出现 `tabstage`；若出现，即为回归缺陷。

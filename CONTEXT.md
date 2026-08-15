@@ -1,4 +1,4 @@
-# tabstage
+# tabstation
 
 Chrome MV3 扩展的 TAB 管理上下文：一个集中管理页操作真实浏览器 tab，附带稍后阅读与窗口会话两类本地持久化数据。
 
@@ -7,7 +7,7 @@ Chrome MV3 扩展的 TAB 管理上下文：一个集中管理页操作真实浏�
 ### 页面与展示
 
 **管理页（Manager Page）**:
-tabstage 自身的集中管理页面。它本身是一个 tab，但在一切列表、计数、去重统计中不可见。
+Tab Station 自身的集中管理页面。它本身是一个 tab，但在一切列表、计数、去重统计中不可见。
 _Avoid_: 管理器、面板、dashboard
 
 **模式（Mode）**:

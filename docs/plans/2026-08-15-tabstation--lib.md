@@ -1,4 +1,4 @@
-# tabstage 子计划：纯函数层（--lib）
+# Tab Station 子计划：纯函数层（--lib）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` (recommended) or `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

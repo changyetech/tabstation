@@ -1,4 +1,4 @@
-# tabstage 子计划：多语言（--i18n）
+# Tab Station 子计划：多语言（--i18n）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` (recommended) or `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

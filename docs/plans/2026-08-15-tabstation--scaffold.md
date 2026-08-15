@@ -1,4 +1,4 @@
-# tabstage 子计划：脚手架（--scaffold）
+# Tab Station 子计划：脚手架（--scaffold）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` (recommended) or `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -31,7 +31,7 @@
 
 ```json
 {
-  "name": "tabstage",
+  "name": "tabstation",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -153,7 +153,7 @@ export default defineConfig({
 
 ```json
 {
-  "extName": { "message": "tabstage" },
+  "extName": { "message": "Tab Station" },
   "extDescription": { "message": "Centralized tab manager: sort, move, dedupe, read later, and window sessions. 100% local." },
   "cmdOpenManager": { "message": "Open tab manager" }
 }
@@ -163,7 +163,7 @@ export default defineConfig({
 
 ```json
 {
-  "extName": { "message": "tabstage" },
+  "extName": { "message": "Tab Station" },
   "extDescription": { "message": "集中式 TAB 管理：排序、移动、去重、稍后阅读与窗口会话。100% 本地运行。" },
   "cmdOpenManager": { "message": "打开 TAB 管理页" }
 }
@@ -189,7 +189,7 @@ export function managerUrl(): string {
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>tabstage</title>
+    <title>Tab Station</title>
   </head>
   <body>
     <div id="root"></div>
@@ -212,7 +212,7 @@ createRoot(document.getElementById('root')!).render(<App />);
 
 ```tsx
 export default function App() {
-  return <h1>tabstage</h1>;
+  return <h1>Tab Station</h1>;
 }
 ```
 
@@ -274,7 +274,7 @@ import { getChromeMock } from '../test/chrome-mock';
 describe('测试 harness 冒烟', () => {
   it('App 渲染标题', () => {
     render(<App />);
-    expect(screen.getByText('tabstage')).toBeInTheDocument();
+    expect(screen.getByText('Tab Station')).toBeInTheDocument();
   });
 
   it('chrome mock：storage 读写往返且触发 onChanged', async () => {

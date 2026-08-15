@@ -1,4 +1,4 @@
-# tabstage 设计规格（Design Spec）
+# Tab Station 设计规格（Design Spec）
 
 - 日期：2026-08-15
 - 状态：已评审（2026-08-15 拷问评审通过，结论见 §10）
@@ -6,7 +6,7 @@
 
 ## 1. 概述
 
-tabstage 是一个 Chrome 浏览器扩展（Manifest V3），提供一个集中式 TAB 管理页面：查看、排序、移动、去重所有打开的 tab，并支持稍后阅读与窗口会话保存。100% 本地运行，无服务端、无外部 API 调用。
+Tab Station 是一个 Chrome 浏览器扩展（Manifest V3），提供一个集中式 TAB 管理页面：查看、排序、移动、去重所有打开的 tab，并支持稍后阅读与窗口会话保存。100% 本地运行，无服务端、无外部 API 调用。
 
 ## 2. 目标与非目标
 
@@ -242,7 +242,7 @@ interface Settings {
 架构原则：**管理页直连 Chrome API**。页面直接调用 `chrome.tabs / windows` 读写并监听事件；background service worker 只处理图标点击/快捷键的单例逻辑。不设 background 中心化状态代理（MV3 service worker 随时休眠，中间层只增加复杂度）。
 
 ```
-tabstage/
+tabstation/
 ├── manifest.json            # MV3；permissions: ["tabs","storage"]
 ├── vite.config.ts           # 两个入口：manager 页面 + background
 ├── _locales/                # en / zh_CN（manifest 文案）
@@ -275,7 +275,7 @@ manifest 要点：
   "default_locale": "en",
   "permissions": ["tabs", "storage"],
   "background": { "service_worker": "background.js" },
-  "action": { "default_title": "tabstage" },
+  "action": { "default_title": "Tab Station" },
   "commands": { "open-manager": { "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" } } }
 }
 ```

@@ -1,4 +1,4 @@
-# tabstage 子计划：稍后阅读 / 会话 / 设置（--ui-panels）
+# Tab Station 子计划：稍后阅读 / 会话 / 设置（--ui-panels）
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` (recommended) or `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -880,7 +880,7 @@ rtk git commit -m "feat(ui): 设置对话框（单例范围/保存后关窗/语�
 ### Task 5: 手动验收（spec §9 清单）
 
 **Files:**
-- Modify: `docs/specs/2026-08-15-tabstage-design.md`（勾选 §9 手动验收清单）
+- Modify: `docs/specs/2026-08-15-tabstation-design.md`（勾选 §9 手动验收清单）
 
 - [ ] **Step 1: 构建并装载**
 
@@ -888,7 +888,7 @@ Run: `make build`，`chrome://extensions` 重新加载 `dist/`。
 
 - [ ] **Step 2: 逐条执行 spec §9 手动验收清单**
 
-打开 `docs/specs/2026-08-15-tabstage-design.md` §9 第 3 节，从「点击图标/快捷键打开管理页」到「两个管理页互相同步」逐条操作验证，通过的在 spec 里勾选 `- [x]`。
+打开 `docs/specs/2026-08-15-tabstation-design.md` §9 第 3 节，从「点击图标/快捷键打开管理页」到「两个管理页互相同步」逐条操作验证，通过的在 spec 里勾选 `- [x]`。
 
 - [ ] **Step 3: 发现问题 → 修复 → 重跑对应条目**
 
@@ -897,6 +897,6 @@ Run: `make build`，`chrome://extensions` 重新加载 `dist/`。
 - [ ] **Step 4: Commit**
 
 ```bash
-rtk git add docs/specs/2026-08-15-tabstage-design.md
+rtk git add docs/specs/2026-08-15-tabstation-design.md
 rtk git commit -m "docs(spec): 手动验收清单通过勾选"
 ```

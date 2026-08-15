@@ -1,10 +1,10 @@
 # ==============================================================================
-# tabstage - Makefile
+# tabstation - Makefile
 # ==============================================================================
 
 # --- Variables ----------------------------------------------------------------
 
-APP_NAME        := tabstage
+APP_NAME        := tabstation
 
 # Colors
 CYAN  := \033[36m
@@ -20,7 +20,7 @@ BOLD  := \033[1m
 .PHONY: help
 help: ## Show this help
 	@echo ""
-	@echo "$(BOLD)tabstage$(RESET)"
+	@echo "$(BOLD)Tab Station$(RESET)"
 	@echo ""
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@echo ""
