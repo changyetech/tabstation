@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TabWithId } from '../lib/dedupe';
@@ -10,11 +9,19 @@ export interface TabRowProps {
   tab: TabWithId;
   dupCount?: number;
   draggable: boolean;
+  now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onClose: (tab: TabWithId) => void;
 }
 
-export default function TabRow({ tab, dupCount, draggable, registerRow, onClose }: TabRowProps) {
+export default function TabRow({
+  tab,
+  dupCount,
+  draggable,
+  now,
+  registerRow,
+  onClose,
+}: TabRowProps) {
   const t = useT();
   const lang = useLanguage();
 
@@ -25,8 +32,6 @@ export default function TabRow({ tab, dupCount, draggable, registerRow, onClose 
     data: { tabId: tab.id, windowId: tab.windowId, index: tab.index },
   });
 
-  // Date.now() 不能直接在渲染中调用（react-hooks/purity），挂载时取一次快照
-  const [now] = useState(() => Date.now());
   const display = lastAccessedDisplay(tab.lastAccessed, now);
   const timeText =
     display.kind === 'missing'

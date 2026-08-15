@@ -32,7 +32,14 @@ describe('TabRow', () => {
       lastAccessed: Date.now() - 3 * 60_000,
     });
     renderRow(
-      <TabRow tab={tab} dupCount={2} draggable={false} registerRow={noop} onClose={noop} />,
+      <TabRow
+        tab={tab}
+        dupCount={2}
+        draggable={false}
+        now={Date.now()}
+        registerRow={noop}
+        onClose={noop}
+      />,
     );
     expect(screen.getByText('My Page')).toBeInTheDocument();
     expect(screen.getByText('www.a.com')).toBeInTheDocument();
@@ -41,12 +48,13 @@ describe('TabRow', () => {
   });
 
   it('lastAccessed 缺失显示 —，60 秒内显示 刚刚', () => {
+    const now = Date.now();
     const t1 = makeTab({ id: 1, lastAccessed: undefined });
-    const t2 = makeTab({ id: 2, lastAccessed: Date.now() - 10_000 });
+    const t2 = makeTab({ id: 2, lastAccessed: now - 10_000 });
     renderRow(
       <>
-        <TabRow tab={t1} draggable={false} registerRow={noop} onClose={noop} />
-        <TabRow tab={t2} draggable={false} registerRow={noop} onClose={noop} />
+        <TabRow tab={t1} draggable={false} now={now} registerRow={noop} onClose={noop} />
+        <TabRow tab={t2} draggable={false} now={now} registerRow={noop} onClose={noop} />
       </>,
     );
     expect(screen.getByText('—')).toBeInTheDocument();
@@ -56,7 +64,9 @@ describe('TabRow', () => {
   it('跳转：聚焦所在窗口并激活 tab', async () => {
     const { chromeMock } = getChromeMock();
     const tab = makeTab({ id: 5, windowId: 3 });
-    renderRow(<TabRow tab={tab} draggable={false} registerRow={noop} onClose={noop} />);
+    renderRow(
+      <TabRow tab={tab} draggable={false} now={Date.now()} registerRow={noop} onClose={noop} />,
+    );
     await userEvent.click(screen.getByTitle('跳转'));
     expect(chromeMock.windows.update).toHaveBeenCalledWith(3, { focused: true });
     expect(chromeMock.tabs.update).toHaveBeenCalledWith(5, { active: true });
@@ -65,7 +75,9 @@ describe('TabRow', () => {
   it('关闭按钮回调 onClose', async () => {
     const onClose = vi.fn();
     const tab = makeTab({ id: 5 });
-    renderRow(<TabRow tab={tab} draggable={false} registerRow={noop} onClose={onClose} />);
+    renderRow(
+      <TabRow tab={tab} draggable={false} now={Date.now()} registerRow={noop} onClose={onClose} />,
+    );
     await userEvent.click(screen.getByTitle('关闭'));
     expect(onClose).toHaveBeenCalledWith(tab);
   });

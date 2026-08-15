@@ -10,6 +10,7 @@ export interface WindowSectionProps {
   isCurrent: boolean;
   draggable: boolean;
   dupCountByTabId: Map<number, number>;
+  now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onCloseTab: (tab: TabWithId) => void;
 }
@@ -21,6 +22,7 @@ export default function WindowSection({
   isCurrent,
   draggable,
   dupCountByTabId,
+  now,
   registerRow,
   onCloseTab,
 }: WindowSectionProps) {
@@ -42,6 +44,7 @@ export default function WindowSection({
               tab={tab}
               dupCount={dupCountByTabId.get(tab.id)}
               draggable={draggable}
+              now={now}
               registerRow={registerRow}
               onClose={onCloseTab}
             />
