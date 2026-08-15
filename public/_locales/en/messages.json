@@ -1,0 +1,7 @@
+{
+  "extName": { "message": "tabstage" },
+  "extDescription": {
+    "message": "Centralized tab manager: sort, move, dedupe, read later, and window sessions. 100% local."
+  },
+  "cmdOpenManager": { "message": "Open tab manager" }
+}

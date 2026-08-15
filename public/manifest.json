@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDescription__",
+  "version": "0.1.0",
+  "default_locale": "en",
+  "permissions": ["tabs", "storage"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "__MSG_extName__" },
+  "commands": {
+    "open-manager": {
+      "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
+      "description": "__MSG_cmdOpenManager__"
+    }
+  }
+}
