@@ -22,6 +22,7 @@ export interface WindowSectionProps {
   getMoveTargets?: (tab: TabWithId) => MoveTarget[];
   onMove?: (tab: TabWithId, target: MoveTarget) => void;
   onCloseWindow?: (win: chrome.windows.Window, sectionEl: HTMLElement | null) => void;
+  onReadLater?: (tab: TabWithId) => void;
 }
 
 export default function WindowSection({
@@ -39,6 +40,7 @@ export default function WindowSection({
   getMoveTargets,
   onMove,
   onCloseWindow,
+  onReadLater,
 }: WindowSectionProps) {
   const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
@@ -81,6 +83,7 @@ export default function WindowSection({
           onCloseTab={onCloseTab}
           getMoveTargets={getMoveTargets}
           onMove={onMove}
+          onReadLater={onReadLater}
         />
       ) : (
         <SortableContext items={tabs.map((x) => x.id)} strategy={verticalListSortingStrategy}>
@@ -97,6 +100,7 @@ export default function WindowSection({
                 onClose={onCloseTab}
                 getMoveTargets={getMoveTargets}
                 onMove={onMove}
+                onReadLater={onReadLater}
               />
             ))}
           </ul>

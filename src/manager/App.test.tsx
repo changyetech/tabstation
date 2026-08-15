@@ -166,6 +166,31 @@ describe('一键去重', () => {
   });
 });
 
+describe('稍后阅读', () => {
+  it('行内「稍后阅读」→ 落盘 + 关闭该 tab；侧栏出现', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({ id: 1, windowId: 1, index: 0, title: 'A1', url: 'https://a.com/', active: true }),
+      makeTab({ id: 2, windowId: 1, index: 1, title: 'A2', url: 'https://x.com/' }),
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
+    // 侧栏无记录不渲染（标题是 h3「📚 稍后阅读」）
+    expect(screen.queryByText(/稍后阅读/, { selector: 'h3' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getAllByTitle('稍后阅读')[0]);
+    await waitFor(() => {
+      expect((storageData.readLater as unknown[]).length).toBe(1);
+    });
+    await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]), {
+      timeout: 2000,
+    });
+    expect(screen.getByText(/稍后阅读/, { selector: 'h3' })).toBeInTheDocument();
+  });
+});
+
 describe('测试 harness 冒烟', () => {
   it('chrome mock：storage 读写往返且触发 onChanged', async () => {
     const { chromeMock } = getChromeMock();

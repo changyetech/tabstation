@@ -14,6 +14,7 @@ export interface DomainGroupListProps {
   onCloseTab: (tab: TabWithId) => void;
   getMoveTargets?: (tab: TabWithId) => MoveTarget[];
   onMove?: (tab: TabWithId, target: MoveTarget) => void;
+  onReadLater?: (tab: TabWithId) => void;
 }
 
 // 域名视图（spec §5.7）：按 hostname 聚合、tab 数降序、组可折叠、只读（不可拖拽）
@@ -26,6 +27,7 @@ export default function DomainGroupList({
   onCloseTab,
   getMoveTargets,
   onMove,
+  onReadLater,
 }: DomainGroupListProps) {
   const t = useT();
   const label = (key: string) =>
@@ -58,6 +60,7 @@ export default function DomainGroupList({
                   onClose={onCloseTab}
                   getMoveTargets={getMoveTargets}
                   onMove={onMove}
+                  onReadLater={onReadLater}
                 />
               ))}
             </ul>

@@ -5,6 +5,7 @@ import Toolbar, { type Mode, type View } from '../components/Toolbar';
 import WindowSection from '../components/WindowSection';
 import DomainGroupList from '../components/DomainGroupList';
 import TabRow from '../components/TabRow';
+import ReadLaterSidebar from '../components/ReadLaterSidebar';
 import type { MoveTarget } from '../components/MoveMenu';
 import { I18nProvider, resolveLanguage, useT } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
@@ -17,7 +18,13 @@ import { findDuplicateGroups, planDedupe, type TabWithId } from '../lib/dedupe';
 import { dragEndToMove, type DragTabData } from '../lib/dnd';
 import { sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
 import { managerUrl } from '../lib/manager-url';
-import { DEFAULT_SETTINGS, type Settings } from '../lib/storage';
+import {
+  DEFAULT_SETTINGS,
+  removeReadLater,
+  upsertReadLater,
+  type ReadLaterItem,
+  type Settings,
+} from '../lib/storage';
 
 export default function App() {
   const [settings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
@@ -83,6 +90,36 @@ function AppInner() {
 
   const closeTab = (tab: TabWithId) =>
     void closeTabsWithEffect([{ tabId: tab.id, el: rowEls.current.get(tab.id) ?? null }]);
+
+  const [readLater, setReadLater] = useStorageState<ReadLaterItem[]>('readLater', []);
+
+  // 保存即关 tab（spec §5.4）；同 URL 归一化合并在 upsertReadLater 内
+  const saveReadLater = (tab: TabWithId) => {
+    const url = tab.url;
+    if (!url) return;
+    void setReadLater(
+      upsertReadLater(
+        readLater,
+        { url, title: tab.title ?? url, favIconUrl: tab.favIconUrl },
+        Date.now(),
+        crypto.randomUUID(),
+      ),
+    );
+    void closeTabsWithEffect([{ tabId: tab.id, el: rowEls.current.get(tab.id) ?? null }]);
+  };
+
+  // 打开即移除（spec §5.4）
+  const openReadLater = (item: ReadLaterItem) => {
+    void chrome.tabs.create({ url: item.url });
+    void setReadLater(removeReadLater(readLater, item.id));
+  };
+
+  // 直接删除：仅退场动画，无音效/纸屑/确认（spec §5.4）
+  const deleteReadLater = (item: ReadLaterItem, el: HTMLElement | null) => {
+    const commit = () => void setReadLater(removeReadLater(readLater, item.id));
+    if (el) animateElementOut(el, commit);
+    else commit();
+  };
 
   // 关闭窗口：区块级一次动效；管理页所在窗口只关其他 tab、保留管理页（spec §4.3）
   const closeWindow = (win: chrome.windows.Window, sectionEl: HTMLElement | null) => {
@@ -187,64 +224,72 @@ function AppInner() {
         onDedupe={runDedupe}
         onDedupeHover={setDedupePreview}
       />
-      <main className="main">
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {mode === 'window' ? (
-            windowsWithTabs.map(({ window: w, tabs: winTabs }) => (
-              <WindowSection
-                key={w.id}
-                window={w}
-                windowNumber={numberByWindowId.get(w.id) ?? 0}
-                tabs={winTabs}
-                isCurrent={w.id === currentWindowId}
-                draggable={view === 'list'}
-                view={view}
+      <div className="layout">
+        <main className="main">
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            {mode === 'window' ? (
+              windowsWithTabs.map(({ window: w, tabs: winTabs }) => (
+                <WindowSection
+                  key={w.id}
+                  window={w}
+                  windowNumber={numberByWindowId.get(w.id) ?? 0}
+                  tabs={winTabs}
+                  isCurrent={w.id === currentWindowId}
+                  draggable={view === 'list'}
+                  view={view}
+                  dupCountByTabId={dupCountByTabId}
+                  previewByTabId={previewByTabId}
+                  now={now}
+                  registerRow={registerRow}
+                  onCloseTab={closeTab}
+                  getMoveTargets={getMoveTargets}
+                  onMove={moveTab}
+                  onCloseWindow={closeWindow}
+                  onReadLater={saveReadLater}
+                />
+              ))
+            ) : view === 'domain' ? (
+              <DomainGroupList
+                tabs={mergedTabs}
+                now={now}
                 dupCountByTabId={dupCountByTabId}
                 previewByTabId={previewByTabId}
-                now={now}
                 registerRow={registerRow}
                 onCloseTab={closeTab}
                 getMoveTargets={getMoveTargets}
                 onMove={moveTab}
-                onCloseWindow={closeWindow}
+                onReadLater={saveReadLater}
               />
-            ))
-          ) : view === 'domain' ? (
-            <DomainGroupList
-              tabs={mergedTabs}
-              now={now}
-              dupCountByTabId={dupCountByTabId}
-              previewByTabId={previewByTabId}
-              registerRow={registerRow}
-              onCloseTab={closeTab}
-              getMoveTargets={getMoveTargets}
-              onMove={moveTab}
-            />
-          ) : (
-            <SortableContext
-              items={mergedTabs.map((x) => x.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <ul className="tab-list">
-                {mergedTabs.map((tab) => (
-                  <TabRow
-                    key={tab.id}
-                    tab={tab}
-                    dupCount={dupCountByTabId.get(tab.id)}
-                    dupPreview={previewByTabId.get(tab.id)}
-                    draggable={false}
-                    now={now}
-                    registerRow={registerRow}
-                    onClose={closeTab}
-                    getMoveTargets={getMoveTargets}
-                    onMove={moveTab}
-                  />
-                ))}
-              </ul>
-            </SortableContext>
-          )}
-        </DndContext>
-      </main>
+            ) : (
+              <SortableContext
+                items={mergedTabs.map((x) => x.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className="tab-list">
+                  {mergedTabs.map((tab) => (
+                    <TabRow
+                      key={tab.id}
+                      tab={tab}
+                      dupCount={dupCountByTabId.get(tab.id)}
+                      dupPreview={previewByTabId.get(tab.id)}
+                      draggable={false}
+                      now={now}
+                      registerRow={registerRow}
+                      onClose={closeTab}
+                      getMoveTargets={getMoveTargets}
+                      onMove={moveTab}
+                      onReadLater={saveReadLater}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            )}
+          </DndContext>
+        </main>
+        {readLater.length > 0 && (
+          <ReadLaterSidebar items={readLater} onOpen={openReadLater} onDelete={deleteReadLater} />
+        )}
+      </div>
     </>
   );
 }

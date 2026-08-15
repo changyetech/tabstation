@@ -16,6 +16,7 @@ export interface TabRowProps {
   onClose: (tab: TabWithId) => void;
   getMoveTargets?: (tab: TabWithId) => MoveTarget[];
   onMove?: (tab: TabWithId, target: MoveTarget) => void;
+  onReadLater?: (tab: TabWithId) => void;
 }
 
 export default function TabRow({
@@ -28,6 +29,7 @@ export default function TabRow({
   onClose,
   getMoveTargets,
   onMove,
+  onReadLater,
 }: TabRowProps) {
   const t = useT();
   const lang = useLanguage();
@@ -84,6 +86,12 @@ export default function TabRow({
         <button title={t('tab.activate')} onClick={() => void activate()}>
           ↗
         </button>
+        {/* 稍后阅读仅 http(s)、非 pinned（spec §4.4） */}
+        {onReadLater && !tab.pinned && /^https?:\/\//.test(tab.url ?? '') && (
+          <button title={t('tab.readLater')} onClick={() => onReadLater(tab)}>
+            📚
+          </button>
+        )}
         {!tab.pinned && getMoveTargets && onMove && (
           <MoveMenu targets={getMoveTargets(tab)} onPick={(target) => onMove(tab, target)} />
         )}
