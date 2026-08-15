@@ -31,7 +31,7 @@ help: ## Show this help
 
 .PHONY: build
 build: ## Build for production
-	@echo "TODO: define build command"
+	pnpm build
 
 # ==============================================================================
 # DEV
@@ -39,7 +39,7 @@ build: ## Build for production
 
 .PHONY: dev
 dev: ## Start dev server
-	@echo "TODO: define dev command"
+	pnpm dev
 
 # ==============================================================================
 # DEPENDENCY MANAGEMENT
@@ -47,7 +47,7 @@ dev: ## Start dev server
 
 .PHONY: install
 install: ## Install dependencies
-	@echo "TODO: define install command"
+	pnpm install
 
 # ==============================================================================
 # TESTING
@@ -55,7 +55,7 @@ install: ## Install dependencies
 
 .PHONY: test
 test: ## Run tests
-	@echo "TODO: define test command"
+	pnpm test
 
 # ==============================================================================
 # CODE QUALITY
@@ -63,14 +63,18 @@ test: ## Run tests
 
 .PHONY: lint
 lint: ## Run linter
-	@echo "TODO: define lint command"
+	pnpm lint
 
 .PHONY: fmt
 fmt: ## Format code
-	@echo "TODO: define fmt command"
+	pnpm format
+
+.PHONY: fmt-check
+fmt-check: ## Verify formatting without writing
+	pnpm format:check
 
 .PHONY: check
-check: fmt lint test ## Run all quality checks (fmt + lint + test)
+check: fmt-check lint test ## Run all quality checks (fmt-check + lint + test)
 
 # ==============================================================================
 # HOUSEKEEPING
@@ -78,4 +82,4 @@ check: fmt lint test ## Run all quality checks (fmt + lint + test)
 
 .PHONY: clean
 clean: ## Remove build artifacts and generated files
-	@echo "TODO: define clean command"
+	rm -rf dist
