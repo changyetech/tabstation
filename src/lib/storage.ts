@@ -1,0 +1,128 @@
+import { normalizeUrl } from './url';
+
+// ===== 数据模型（spec §6）=====
+
+export interface ReadLaterItem {
+  id: string;
+  url: string;
+  title: string;
+  favIconUrl?: string;
+  savedAt: number;
+}
+
+export interface SessionTab {
+  url: string;
+  title: string;
+  favIconUrl?: string;
+  pinned?: boolean;
+}
+
+export interface SavedSession {
+  id: string;
+  name: string;
+  createdAt: number;
+  tabs: SessionTab[];
+}
+
+export interface Settings {
+  managerPageScope: 'global' | 'per-window';
+  closeWindowAfterSave: boolean;
+  language: 'auto' | 'en' | 'zh-CN';
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  managerPageScope: 'global',
+  closeWindowAfterSave: false,
+  language: 'auto',
+};
+
+// ===== 稍后阅读纯操作（spec §5.4）=====
+
+// 归一化后同 URL 只更新 savedAt（不重复）；否则追加
+export function upsertReadLater(
+  list: ReadLaterItem[],
+  tab: { url: string; title: string; favIconUrl?: string },
+  now: number,
+  newId: string,
+): ReadLaterItem[] {
+  const key = normalizeUrl(tab.url);
+  const existing = list.find((i) => normalizeUrl(i.url) === key);
+  if (existing) return list.map((i) => (i === existing ? { ...i, savedAt: now } : i));
+  return [
+    ...list,
+    { id: newId, url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, savedAt: now },
+  ];
+}
+
+export function removeReadLater(list: ReadLaterItem[], id: string): ReadLaterItem[] {
+  return list.filter((i) => i.id !== id);
+}
+
+// ===== 会话纯操作（spec §5.5）=====
+
+// 快照过滤：排除管理页自身与 chrome://；记录 pinned
+export function snapshotWindow(tabs: chrome.tabs.Tab[], managerUrl: string): SessionTab[] {
+  return tabs.flatMap((t) => {
+    const url = t.url;
+    if (!url || url.startsWith(managerUrl) || url.startsWith('chrome://')) return [];
+    return [
+      {
+        url,
+        title: t.title ?? url,
+        favIconUrl: t.favIconUrl,
+        ...(t.pinned ? { pinned: true as const } : {}),
+      },
+    ];
+  });
+}
+
+// 删条目；删到空自动删除整个会话（不留空会话）
+export function removeSessionTab(
+  sessions: SavedSession[],
+  sessionId: string,
+  index: number,
+): SavedSession[] {
+  return sessions.flatMap((s) => {
+    if (s.id !== sessionId) return [s];
+    const tabs = s.tabs.filter((_, i) => i !== index);
+    return tabs.length === 0 ? [] : [{ ...s, tabs }];
+  });
+}
+
+export function reorderSessionTab(
+  sessions: SavedSession[],
+  sessionId: string,
+  from: number,
+  to: number,
+): SavedSession[] {
+  return sessions.map((s) => {
+    if (s.id !== sessionId) return s;
+    // 下标越界（可能来自陈旧的拖拽状态）时原样返回，避免把 undefined 插进 tabs
+    if (from < 0 || from >= s.tabs.length || to < 0 || to >= s.tabs.length) return s;
+    const tabs = [...s.tabs];
+    const [moved] = tabs.splice(from, 1);
+    tabs.splice(to, 0, moved);
+    return { ...s, tabs };
+  });
+}
+
+export function renameSession(
+  sessions: SavedSession[],
+  sessionId: string,
+  name: string,
+): SavedSession[] {
+  return sessions.map((s) => (s.id === sessionId ? { ...s, name } : s));
+}
+
+// ===== storage IO 薄层 =====
+
+export type StorageKey = 'readLater' | 'sessions' | 'settings';
+
+export async function readKey<T>(key: StorageKey, fallback: T): Promise<T> {
+  const res = await chrome.storage.local.get(key);
+  return (res[key] as T | undefined) ?? fallback;
+}
+
+export async function writeKey<T>(key: StorageKey, value: T): Promise<void> {
+  await chrome.storage.local.set({ [key]: value });
+}

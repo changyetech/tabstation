@@ -1,0 +1,137 @@
+import { describe, expect, it } from 'vitest';
+import { makeTab } from '../test/factories';
+import { getChromeMock } from '../test/chrome-mock';
+import {
+  readKey,
+  removeReadLater,
+  removeSessionTab,
+  renameSession,
+  reorderSessionTab,
+  snapshotWindow,
+  upsertReadLater,
+  writeKey,
+  type ReadLaterItem,
+  type SavedSession,
+} from './storage';
+
+const MANAGER = 'chrome-extension://test-id/src/manager/index.html';
+
+const item = (over: Partial<ReadLaterItem>): ReadLaterItem => ({
+  id: 'i1',
+  url: 'https://a.com/',
+  title: 'A',
+  savedAt: 100,
+  ...over,
+});
+const session = (over: Partial<SavedSession>): SavedSession => ({
+  id: 's1',
+  name: 'S',
+  createdAt: 100,
+  tabs: [
+    { url: 'https://a.com/', title: 'A' },
+    { url: 'https://b.com/', title: 'B' },
+  ],
+  ...over,
+});
+
+describe('upsertReadLater', () => {
+  it('新 URL 追加条目', () => {
+    const next = upsertReadLater([], { url: 'https://a.com/', title: 'A' }, 200, 'new-id');
+    expect(next).toEqual([
+      { id: 'new-id', url: 'https://a.com/', title: 'A', favIconUrl: undefined, savedAt: 200 },
+    ]);
+  });
+  it('归一化后同 URL（hash 不同）只更新 savedAt，不产生重复条目', () => {
+    const list = [item({ url: 'https://a.com/p#x', savedAt: 100 })];
+    const next = upsertReadLater(list, { url: 'https://a.com/p#y', title: 'A2' }, 200, 'new-id');
+    expect(next).toHaveLength(1);
+    expect(next[0].savedAt).toBe(200);
+    expect(next[0].id).toBe('i1');
+  });
+});
+
+describe('removeReadLater', () => {
+  it('按 id 删除', () => {
+    expect(removeReadLater([item({ id: 'x' }), item({ id: 'y' })], 'x').map((i) => i.id)).toEqual([
+      'y',
+    ]);
+  });
+});
+
+describe('snapshotWindow', () => {
+  it('排除管理页与 chrome://，记录 pinned', () => {
+    const tabs = [
+      makeTab({ url: MANAGER }),
+      makeTab({ url: 'chrome://settings/' }),
+      makeTab({ url: 'https://a.com/', title: 'A', pinned: true }),
+      makeTab({ url: 'https://b.com/', title: 'B' }),
+    ];
+    expect(snapshotWindow(tabs, MANAGER)).toEqual([
+      { url: 'https://a.com/', title: 'A', favIconUrl: undefined, pinned: true },
+      { url: 'https://b.com/', title: 'B', favIconUrl: undefined },
+    ]);
+  });
+  it('全被排除时返回空数组（调用方据此不创建会话并 toast）', () => {
+    expect(snapshotWindow([makeTab({ url: 'chrome://history/' })], MANAGER)).toEqual([]);
+  });
+});
+
+describe('会话条目操作', () => {
+  it('removeSessionTab 删指定下标', () => {
+    const next = removeSessionTab([session({})], 's1', 0);
+    expect(next[0].tabs.map((t) => t.url)).toEqual(['https://b.com/']);
+  });
+  it('removeSessionTab 删到空 → 整个会话消亡', () => {
+    const s = session({ tabs: [{ url: 'https://a.com/', title: 'A' }] });
+    expect(removeSessionTab([s], 's1', 0)).toEqual([]);
+  });
+  it('reorderSessionTab 移动条目', () => {
+    const next = reorderSessionTab([session({})], 's1', 0, 1);
+    expect(next[0].tabs.map((t) => t.url)).toEqual(['https://b.com/', 'https://a.com/']);
+  });
+  it('reorderSessionTab from 越界 → 会话原样返回', () => {
+    const s = session({});
+    const next = reorderSessionTab([s], 's1', 5, 0);
+    expect(next[0]).toEqual(s);
+    expect(next[0].tabs).toEqual(s.tabs);
+  });
+  it('reorderSessionTab to 越界 → 会话原样返回', () => {
+    const s = session({});
+    const next = reorderSessionTab([s], 's1', 0, 5);
+    expect(next[0]).toEqual(s);
+    expect(next[0].tabs).toEqual(s.tabs);
+  });
+  it('renameSession 改名', () => {
+    expect(renameSession([session({})], 's1', '新名')[0].name).toBe('新名');
+  });
+  it('操作只影响目标会话', () => {
+    const other = session({ id: 's2' });
+    expect(removeSessionTab([session({}), other], 's1', 0)[1]).toEqual(other);
+  });
+});
+
+describe('storage IO', () => {
+  it('readKey：key 不存在时返回 fallback', async () => {
+    const fallback = {
+      managerPageScope: 'global' as const,
+      closeWindowAfterSave: false,
+      language: 'auto' as const,
+    };
+    expect(await readKey('settings', fallback)).toEqual(fallback);
+  });
+
+  it('readKey：key 存在时返回存储的值', async () => {
+    const { storageData } = getChromeMock();
+    const stored = [item({ id: 'stored' })];
+    storageData.readLater = stored;
+    expect(await readKey('readLater', [])).toEqual(stored);
+  });
+
+  it('writeKey：写入后落入 storageData，且 readKey 能读回', async () => {
+    const { storageData } = getChromeMock();
+    const sessions = [session({})];
+    await writeKey('sessions', sessions);
+    expect(storageData.sessions).toEqual(sessions);
+    expect(await readKey('sessions', [])).toEqual(sessions);
+  });
+});
