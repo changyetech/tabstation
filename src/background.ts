@@ -31,7 +31,19 @@ export async function openManager(): Promise<void> {
   }
 }
 
-chrome.action.onClicked.addListener(() => void openManager());
+// openManager 内部有 windows.update/tabs.update/tabs.create 等写操作，
+// 快照与写入之间用户可能已手动关闭目标 tab/窗口，导致 reject；
+// service worker 里的未捕获 rejection 没有页面可见、用户不会去看 console，
+// 吞掉即可——点击图标无反应本身就是最坏情况的全部代价，不吞会更糟（无诊断且报错刷屏）
+export async function safeOpenManager(): Promise<void> {
+  try {
+    await openManager();
+  } catch {
+    // 见上方注释：吞掉即可，避免变成 SW 里无人看见的静默失败
+  }
+}
+
+chrome.action.onClicked.addListener(() => void safeOpenManager());
 chrome.commands.onCommand.addListener((command) => {
-  if (command === 'open-manager') void openManager();
+  if (command === 'open-manager') void safeOpenManager();
 });

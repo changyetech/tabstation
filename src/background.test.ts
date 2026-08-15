@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getChromeMock } from './test/chrome-mock';
 import { makeTab, makeWindow } from './test/factories';
-import { openManager } from './background';
+import { openManager, safeOpenManager } from './background';
 
 const MANAGER = 'chrome-extension://test-id/src/manager/index.html';
 
@@ -45,5 +45,26 @@ describe('openManager', () => {
     chromeMock.tabs.query.mockResolvedValue([]);
     await openManager();
     expect(chromeMock.tabs.create).toHaveBeenCalledWith({ url: MANAGER });
+  });
+});
+
+describe('safeOpenManager', () => {
+  beforeEach(() => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.windows.getLastFocused.mockResolvedValue(makeWindow({ id: 1 }));
+  });
+
+  it('openManager 内部写操作（windows.update）reject：不向外抛出', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([makeTab({ id: 7, url: MANAGER, windowId: 2 })]);
+    chromeMock.windows.update.mockRejectedValueOnce(new Error('No window with id: 2'));
+    await expect(safeOpenManager()).resolves.toBeUndefined();
+  });
+
+  it('openManager 内部写操作（tabs.create）reject：不向外抛出', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([]);
+    chromeMock.tabs.create.mockRejectedValueOnce(new Error('No window with id: 1'));
+    await expect(safeOpenManager()).resolves.toBeUndefined();
   });
 });
