@@ -67,12 +67,12 @@
 
 ## 6. 待确认事项
 
-- [ ] `tabstation.com` / `.app` / `.io` 域名可用性
+- [x] 域名可用性（2026-08-15 whois 查证）：`tabstation.com` **已被注册**；`tabstation.io` **可注册**（建议尽快落袋）；`tabstation.app` whois 受限未确认
 - [ ] USPTO / 中国商标局 "TAB STATION" 商标检索（搜索引擎结果**不能**替代商标检索）
 
 ## 7. 落选候选与查重记录（2026-08-15）
 
-记录在案以防后续重复提议。
+记录在案以防后续重复提议。共两轮：第一轮为定名评估；第二轮（2026-08-15，定名后复核）按 §4 判据评估 8 个新候选并全部驳回，**维持 `Tab Station` 定名**——挑战者的优势集中在低权重项（域名/音节/调性），而 C1/C2 两项最高权重判据均由 `Tab Station` 胜出。
 
 | 候选 | 结论 | 原因 |
 |---|---|---|
@@ -92,6 +92,14 @@
 | Tabmarshal | ❌ | C2：中文无感；C4：9 字母偏长；开发者语境有 marshalling（序列化）歧义 |
 | Tabboard / Tabdock / Tabroom / Tabzone | ❌ | 分别为：双 b + 撞名 / macOS 程序坞联想 / 撞 tabroom.com / 语义空洞 |
 | Tabconsole / Tabpanel | ❌ | C1：强烈误导为 DevTools 调试工具 |
+| **Tab Captain** | ❌ | **第二轮最强挑战者**：C3 最干净（Store 无同名，tabcaptain.com/.io 均可注册）、C4 2 音节、C5 人格感配动效。但 C1 失败：captain 与 pilot 同族，2026 语境易被预读为 AI copilot 类工具（与 Tabpilot 出局理由同构）；C2 失败：中文名「标签船长」不自解释品类；「替你指挥」的语义重心弱化「亲手操作」预期，按 §3 主张应驳回 |
+| Tab Commander | ❌ | C3：[Tab Commander](https://chromewebstore.google.com/detail/tab-commander/hionageldjijhodeffdfbkecppfiadob) 在架 |
+| Tab Master | ❌ | C3：至少 3 个同名在架（[Tab Master](https://chromewebstore.google.com/detail/tab-master/gbfklalklelnaghdibpajnadcgahnlln) ×2、TabMaster、Tab Master 5000），其一同为拖拽式管理器 |
+| tabOS | ❌ | C3：[tabOS](https://chromewebstore.google.com/detail/tabos-tab-management-chat/kjmamngookndcomlilkjckmbcneipnop) 在架（4.6 星，tab 管理品类） |
+| Tab Studio | ❌ | C3：无精确同名但近邻密集——[Tabs Studio](https://tabsstudio.com/)（VS 知名扩展 + 域名被占）、New Tab Studio ×2、Wix Studio Tab，搜索权重被瓜分 |
+| Tab Central | ❌ | C3：[CentralTab](https://centraltab.com/) 在架且中文口语近音 |
+| Tab HQ | ❌ | C2：HQ 缩写对非游戏圈中文用户认知弱、口语念「H-Q」不顺；tabhq.com 已被注册 |
+| Tab Cockpit | ❌ | C2：cockpit 中文认知度低 |
 
 **近邻提示**：Firefox 有知名扩展 **Tab Stash**，前缀相近但不同音，不构成撞名。
 
