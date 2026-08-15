@@ -2,6 +2,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
 import type { View } from './Toolbar';
+import type { MoveTarget } from './MoveMenu';
 import DomainGroupList from './DomainGroupList';
 import TabRow from './TabRow';
 
@@ -16,6 +17,8 @@ export interface WindowSectionProps {
   now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onCloseTab: (tab: TabWithId) => void;
+  getMoveTargets?: (tab: TabWithId) => MoveTarget[];
+  onMove?: (tab: TabWithId, target: MoveTarget) => void;
 }
 
 export default function WindowSection({
@@ -29,6 +32,8 @@ export default function WindowSection({
   now,
   registerRow,
   onCloseTab,
+  getMoveTargets,
+  onMove,
 }: WindowSectionProps) {
   const t = useT();
   // 窗口标识：序号 + 活动 tab 标题 + tab 数（spec §4.3）
@@ -47,6 +52,8 @@ export default function WindowSection({
           dupCountByTabId={dupCountByTabId}
           registerRow={registerRow}
           onCloseTab={onCloseTab}
+          getMoveTargets={getMoveTargets}
+          onMove={onMove}
         />
       ) : (
         <SortableContext items={tabs.map((x) => x.id)} strategy={verticalListSortingStrategy}>
@@ -60,6 +67,8 @@ export default function WindowSection({
                 now={now}
                 registerRow={registerRow}
                 onClose={onCloseTab}
+                getMoveTargets={getMoveTargets}
+                onMove={onMove}
               />
             ))}
           </ul>

@@ -4,6 +4,7 @@ import type { TabWithId } from '../lib/dedupe';
 import { hostnameOf } from '../lib/grouping';
 import { useLanguage, useT } from '../i18n';
 import { lastAccessedDisplay } from '../lib/time';
+import MoveMenu, { type MoveTarget } from './MoveMenu';
 
 export interface TabRowProps {
   tab: TabWithId;
@@ -12,6 +13,8 @@ export interface TabRowProps {
   now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onClose: (tab: TabWithId) => void;
+  getMoveTargets?: (tab: TabWithId) => MoveTarget[];
+  onMove?: (tab: TabWithId, target: MoveTarget) => void;
 }
 
 export default function TabRow({
@@ -21,6 +24,8 @@ export default function TabRow({
   now,
   registerRow,
   onClose,
+  getMoveTargets,
+  onMove,
 }: TabRowProps) {
   const t = useT();
   const lang = useLanguage();
@@ -72,6 +77,9 @@ export default function TabRow({
         <button title={t('tab.activate')} onClick={() => void activate()}>
           ↗
         </button>
+        {!tab.pinned && getMoveTargets && onMove && (
+          <MoveMenu targets={getMoveTargets(tab)} onPick={(target) => onMove(tab, target)} />
+        )}
         <button title={t('tab.close')} onClick={() => onClose(tab)}>
           ✕
         </button>

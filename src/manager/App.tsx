@@ -5,7 +5,8 @@ import Toolbar, { type Mode, type View } from '../components/Toolbar';
 import WindowSection from '../components/WindowSection';
 import DomainGroupList from '../components/DomainGroupList';
 import TabRow from '../components/TabRow';
-import { I18nProvider, resolveLanguage } from '../i18n';
+import type { MoveTarget } from '../components/MoveMenu';
+import { I18nProvider, resolveLanguage, useT } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
 import { useTabs } from '../hooks/useTabs';
 import { closeTabsWithEffect } from '../lib/effects/batch';
@@ -16,8 +17,19 @@ import { managerUrl } from '../lib/manager-url';
 import { DEFAULT_SETTINGS, type Settings } from '../lib/storage';
 
 export default function App() {
-  const { tabs, windows, currentWindowId } = useTabs();
   const [settings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
+  const language = resolveLanguage(settings.language, navigator.language);
+
+  return (
+    <I18nProvider language={language}>
+      <AppInner />
+    </I18nProvider>
+  );
+}
+
+function AppInner() {
+  const { tabs, windows, currentWindowId } = useTabs();
+  const t = useT();
   const [mode, setMode] = useState<Mode>('window');
   const [view, setView] = useState<View>('list');
   const rowEls = useRef(new Map<number, HTMLElement>());
@@ -84,10 +96,43 @@ export default function App() {
     );
   }, [visible, windows]);
 
-  const language = resolveLanguage(settings.language, navigator.language);
+  // 移动目标：除源窗口外的其他所有窗口（标识同 §4.3）+ 两种新窗口
+  const getMoveTargets = (tab: TabWithId): MoveTarget[] => {
+    const others = windows.flatMap((w) => {
+      if (w.id === undefined || w.id === tab.windowId) return [];
+      const winTabs = visible.filter((x) => x.windowId === w.id);
+      const activeTitle = winTabs.find((x) => x.active)?.title ?? winTabs[0]?.title ?? '';
+      return [
+        {
+          kind: 'window' as const,
+          windowId: w.id,
+          label: `${t('window.label', { n: numberByWindowId.get(w.id) ?? 0 })} · ${activeTitle} (${t('window.tabCount', { n: winTabs.length })})`,
+        },
+      ];
+    });
+    return [...others, { kind: 'new-maximized' }, { kind: 'new-same-size' }];
+  };
+
+  const moveTab = async (tab: TabWithId, target: MoveTarget) => {
+    if (target.kind === 'window') {
+      await chrome.tabs.move(tab.id, { windowId: target.windowId, index: -1 });
+    } else if (target.kind === 'new-maximized') {
+      const win = await chrome.windows.create({ tabId: tab.id });
+      if (win?.id !== undefined) await chrome.windows.update(win.id, { state: 'maximized' });
+    } else {
+      const src = await chrome.windows.get(tab.windowId);
+      await chrome.windows.create({
+        tabId: tab.id,
+        left: (src.left ?? 0) + 40,
+        top: (src.top ?? 0) + 40,
+        width: src.width,
+        height: src.height,
+      });
+    }
+  };
 
   return (
-    <I18nProvider language={language}>
+    <>
       <Toolbar mode={mode} view={view} onMode={setMode} onView={setView} />
       <main className="main">
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -105,6 +150,8 @@ export default function App() {
                 now={now}
                 registerRow={registerRow}
                 onCloseTab={closeTab}
+                getMoveTargets={getMoveTargets}
+                onMove={moveTab}
               />
             ))
           ) : view === 'domain' ? (
@@ -114,6 +161,8 @@ export default function App() {
               dupCountByTabId={dupCountByTabId}
               registerRow={registerRow}
               onCloseTab={closeTab}
+              getMoveTargets={getMoveTargets}
+              onMove={moveTab}
             />
           ) : (
             <SortableContext
@@ -130,6 +179,8 @@ export default function App() {
                     now={now}
                     registerRow={registerRow}
                     onClose={closeTab}
+                    getMoveTargets={getMoveTargets}
+                    onMove={moveTab}
                   />
                 ))}
               </ul>
@@ -137,6 +188,6 @@ export default function App() {
           )}
         </DndContext>
       </main>
-    </I18nProvider>
+    </>
   );
 }

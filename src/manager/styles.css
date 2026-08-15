@@ -108,3 +108,25 @@ body {
   border-radius: 8px;
   z-index: 10000;
 }
+.move-menu {
+  position: relative;
+}
+.move-menu-list {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px;
+  z-index: 100;
+  min-width: 200px;
+  list-style: none;
+  margin: 0;
+}
+.move-menu-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 4px 8px;
+}

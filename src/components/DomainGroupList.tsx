@@ -2,6 +2,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
 import { groupByDomain } from '../lib/grouping';
+import type { MoveTarget } from './MoveMenu';
 import TabRow from './TabRow';
 
 export interface DomainGroupListProps {
@@ -10,6 +11,8 @@ export interface DomainGroupListProps {
   dupCountByTabId: Map<number, number>;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onCloseTab: (tab: TabWithId) => void;
+  getMoveTargets?: (tab: TabWithId) => MoveTarget[];
+  onMove?: (tab: TabWithId, target: MoveTarget) => void;
 }
 
 // 域名视图（spec §5.7）：按 hostname 聚合、tab 数降序、组可折叠、只读（不可拖拽）
@@ -19,6 +22,8 @@ export default function DomainGroupList({
   dupCountByTabId,
   registerRow,
   onCloseTab,
+  getMoveTargets,
+  onMove,
 }: DomainGroupListProps) {
   const t = useT();
   const label = (key: string) =>
@@ -48,6 +53,8 @@ export default function DomainGroupList({
                   draggable={false}
                   registerRow={registerRow}
                   onClose={onCloseTab}
+                  getMoveTargets={getMoveTargets}
+                  onMove={onMove}
                 />
               ))}
             </ul>
