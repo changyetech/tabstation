@@ -117,6 +117,55 @@ describe('App', () => {
   });
 });
 
+describe('一键去重', () => {
+  function seedDuplicates() {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({
+        id: 1,
+        windowId: 1,
+        index: 0,
+        title: 'D1',
+        url: 'https://d.com/',
+        lastAccessed: 100,
+      }),
+      makeTab({
+        id: 2,
+        windowId: 1,
+        index: 1,
+        title: 'D2',
+        url: 'https://d.com/',
+        lastAccessed: 200,
+      }),
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    return chromeMock;
+  }
+
+  it('常驻 ×2 徽标；hover 去重按钮 → 待删行出现删除线样式', async () => {
+    seedDuplicates();
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByText('×2')).toHaveLength(2));
+
+    await userEvent.hover(screen.getByText(/一键去重/));
+    // lastAccessed 较旧的 D1 将被关闭
+    expect(screen.getByText('D1').closest('li')).toHaveClass('dup-doomed');
+    expect(screen.getByText('D2').closest('li')).toHaveClass('dup-keep');
+
+    await userEvent.unhover(screen.getByText(/一键去重/));
+    expect(screen.getByText('D1').closest('li')).not.toHaveClass('dup-doomed');
+  });
+
+  it('点击一键去重 → 关闭待删 tab（保留最近浏览）', async () => {
+    const chromeMock = seedDuplicates();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('D1')).toBeInTheDocument());
+    await userEvent.click(screen.getByText(/一键去重/));
+    await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
+  });
+});
+
 describe('测试 harness 冒烟', () => {
   it('chrome mock：storage 读写往返且触发 onChanged', async () => {
     const { chromeMock } = getChromeMock();

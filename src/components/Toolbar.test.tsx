@@ -11,6 +11,8 @@ function renderToolbar(over: Partial<React.ComponentProps<typeof Toolbar>> = {})
     view: 'list' as const,
     onMode: vi.fn(),
     onView: vi.fn(),
+    onDedupe: vi.fn(),
+    onDedupeHover: vi.fn(),
     ...over,
   };
   render(

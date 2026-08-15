@@ -8,9 +8,18 @@ export interface ToolbarProps {
   view: View;
   onMode: (m: Mode) => void;
   onView: (v: View) => void;
+  onDedupe: () => void;
+  onDedupeHover: (hovering: boolean) => void;
 }
 
-export default function Toolbar({ mode, view, onMode, onView }: ToolbarProps) {
+export default function Toolbar({
+  mode,
+  view,
+  onMode,
+  onView,
+  onDedupe,
+  onDedupeHover,
+}: ToolbarProps) {
   const t = useT();
   const seg = (active: boolean) => `seg${active ? ' seg-active' : ''}`;
   return (
@@ -32,6 +41,14 @@ export default function Toolbar({ mode, view, onMode, onView }: ToolbarProps) {
         </button>
       </div>
       <span className="toolbar-spacer" />
+      {/* 一键去重（spec §5.6）：hover 预览、点击无确认直接执行 */}
+      <button
+        onMouseEnter={() => onDedupeHover(true)}
+        onMouseLeave={() => onDedupeHover(false)}
+        onClick={onDedupe}
+      >
+        {t('toolbar.dedupe')}
+      </button>
       {/* 历史直达入口（spec §5.8）：无内嵌面板、无 history 权限 */}
       <button onClick={() => void chrome.tabs.create({ url: 'chrome://history' })}>
         🕘 {t('toolbar.history')}

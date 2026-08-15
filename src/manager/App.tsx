@@ -13,7 +13,7 @@ import { closeTabsWithEffect } from '../lib/effects/batch';
 import { animateElementOut, EXIT_MS } from '../lib/effects/exit';
 import { playCloseSound } from '../lib/effects/sound';
 import { shootConfetti } from '../lib/effects/confetti';
-import { findDuplicateGroups, type TabWithId } from '../lib/dedupe';
+import { findDuplicateGroups, planDedupe, type TabWithId } from '../lib/dedupe';
 import { dragEndToMove, type DragTabData } from '../lib/dnd';
 import { sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
 import { managerUrl } from '../lib/manager-url';
@@ -57,6 +57,24 @@ function AppInner() {
     for (const g of dupGroups) for (const tab of g.tabs) m.set(tab.id, g.tabs.length);
     return m;
   }, [dupGroups]);
+
+  // 一键去重（spec §5.6）：hover 常驻预览，点击无确认直接执行
+  const [dedupePreview, setDedupePreview] = useState(false);
+  const dedupePlan = useMemo(() => planDedupe(dupGroups), [dupGroups]);
+  const previewByTabId = useMemo(() => {
+    const m = new Map<number, 'keep' | 'close'>();
+    if (!dedupePreview) return m;
+    dedupePlan.closeIds.forEach((id) => m.set(id, 'close'));
+    dedupePlan.keepIds.forEach((id) => m.set(id, 'keep'));
+    return m;
+  }, [dedupePreview, dedupePlan]);
+
+  const runDedupe = () => {
+    setDedupePreview(false);
+    void closeTabsWithEffect(
+      dedupePlan.closeIds.map((id) => ({ tabId: id, el: rowEls.current.get(id) ?? null })),
+    );
+  };
 
   const registerRow = (tabId: number, el: HTMLElement | null) => {
     if (el) rowEls.current.set(tabId, el);
@@ -161,7 +179,14 @@ function AppInner() {
 
   return (
     <>
-      <Toolbar mode={mode} view={view} onMode={setMode} onView={setView} />
+      <Toolbar
+        mode={mode}
+        view={view}
+        onMode={setMode}
+        onView={setView}
+        onDedupe={runDedupe}
+        onDedupeHover={setDedupePreview}
+      />
       <main className="main">
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           {mode === 'window' ? (
@@ -175,6 +200,7 @@ function AppInner() {
                 draggable={view === 'list'}
                 view={view}
                 dupCountByTabId={dupCountByTabId}
+                previewByTabId={previewByTabId}
                 now={now}
                 registerRow={registerRow}
                 onCloseTab={closeTab}
@@ -188,6 +214,7 @@ function AppInner() {
               tabs={mergedTabs}
               now={now}
               dupCountByTabId={dupCountByTabId}
+              previewByTabId={previewByTabId}
               registerRow={registerRow}
               onCloseTab={closeTab}
               getMoveTargets={getMoveTargets}
@@ -204,6 +231,7 @@ function AppInner() {
                     key={tab.id}
                     tab={tab}
                     dupCount={dupCountByTabId.get(tab.id)}
+                    dupPreview={previewByTabId.get(tab.id)}
                     draggable={false}
                     now={now}
                     registerRow={registerRow}

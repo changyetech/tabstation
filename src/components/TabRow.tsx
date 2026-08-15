@@ -9,6 +9,7 @@ import MoveMenu, { type MoveTarget } from './MoveMenu';
 export interface TabRowProps {
   tab: TabWithId;
   dupCount?: number;
+  dupPreview?: 'keep' | 'close';
   draggable: boolean;
   now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
@@ -20,6 +21,7 @@ export interface TabRowProps {
 export default function TabRow({
   tab,
   dupCount,
+  dupPreview,
   draggable,
   now,
   registerRow,
@@ -50,6 +52,10 @@ export default function TabRow({
     await chrome.tabs.update(tab.id, { active: true });
   };
 
+  // 去重预览（spec §5.6）：保留行高亮，待删行标题删除线 + 行尾删除符号
+  const previewClass =
+    dupPreview === 'close' ? ' dup-doomed' : dupPreview === 'keep' ? ' dup-keep' : '';
+
   return (
     <li
       ref={(el) => {
@@ -57,7 +63,7 @@ export default function TabRow({
         registerRow(tab.id, el);
       }}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="tab-row"
+      className={`tab-row${previewClass}`}
       {...attributes}
       {...listeners}
     >
@@ -73,6 +79,7 @@ export default function TabRow({
       {dupCount !== undefined && (
         <span className="dup-badge">{t('dup.badge', { n: dupCount })}</span>
       )}
+      {dupPreview === 'close' && <span className="doom-mark">✕</span>}
       <span className="actions">
         <button title={t('tab.activate')} onClick={() => void activate()}>
           ↗

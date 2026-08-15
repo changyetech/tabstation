@@ -24,6 +24,7 @@ function renderSection(props: Partial<React.ComponentProps<typeof WindowSection>
           draggable={false}
           view="list"
           dupCountByTabId={new Map()}
+          previewByTabId={new Map()}
           now={Date.now()}
           registerRow={noop}
           onCloseTab={noop}

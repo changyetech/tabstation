@@ -22,6 +22,7 @@ describe('DomainGroupList', () => {
             tabs={tabs}
             now={Date.now()}
             dupCountByTabId={new Map()}
+            previewByTabId={new Map()}
             registerRow={noop}
             onCloseTab={noop}
           />

@@ -9,6 +9,7 @@ export interface DomainGroupListProps {
   tabs: TabWithId[];
   now: number;
   dupCountByTabId: Map<number, number>;
+  previewByTabId: Map<number, 'keep' | 'close'>;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onCloseTab: (tab: TabWithId) => void;
   getMoveTargets?: (tab: TabWithId) => MoveTarget[];
@@ -20,6 +21,7 @@ export default function DomainGroupList({
   tabs,
   now,
   dupCountByTabId,
+  previewByTabId,
   registerRow,
   onCloseTab,
   getMoveTargets,
@@ -50,6 +52,7 @@ export default function DomainGroupList({
                   tab={tab}
                   now={now}
                   dupCount={dupCountByTabId.get(tab.id)}
+                  dupPreview={previewByTabId.get(tab.id)}
                   draggable={false}
                   registerRow={registerRow}
                   onClose={onCloseTab}

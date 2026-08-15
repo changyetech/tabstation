@@ -130,3 +130,17 @@ body {
   text-align: left;
   padding: 4px 8px;
 }
+.dup-keep {
+  background: #fff7ec;
+}
+.dup-doomed {
+  background: #fdeeee;
+}
+.dup-doomed .title {
+  text-decoration: line-through;
+  color: #999;
+}
+.doom-mark {
+  color: #b35a5a;
+  font-weight: 700;
+}
