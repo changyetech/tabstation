@@ -1,7 +1,9 @@
 // 测试数据工厂：只填必要字段，其余给默认值
+import type { TabWithId } from '../lib/dedupe';
+
 let nextId = 1;
 
-export function makeTab(partial: Partial<chrome.tabs.Tab> = {}): chrome.tabs.Tab {
+export function makeTab(partial: Partial<chrome.tabs.Tab> = {}): TabWithId {
   return {
     id: partial.id ?? nextId++,
     index: 0,
@@ -18,7 +20,7 @@ export function makeTab(partial: Partial<chrome.tabs.Tab> = {}): chrome.tabs.Tab
     groupId: -1,
     frozen: false,
     ...partial,
-  } as chrome.tabs.Tab;
+  } as TabWithId;
 }
 
 export function makeWindow(partial: Partial<chrome.windows.Window> = {}): chrome.windows.Window {

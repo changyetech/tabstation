@@ -1,6 +1,9 @@
-// 管理页在一切列表与计数中隐身（spec §4.3）
-export function visibleTabs(tabs: chrome.tabs.Tab[], managerUrl: string): chrome.tabs.Tab[] {
-  return tabs.filter((t) => !t.url?.startsWith(managerUrl));
+import { hasId, type TabWithId } from './dedupe';
+
+// 管理页在一切列表与计数中隐身（spec §4.3）；同时收窄掉无 id 的 tab，
+// 使 UI 层拿到的一律是 TabWithId，无需再做非空断言
+export function visibleTabs(tabs: chrome.tabs.Tab[], managerUrl: string): TabWithId[] {
+  return tabs.filter((t) => !t.url?.startsWith(managerUrl)).filter(hasId);
 }
 
 // 从 URL 取 hostname；无 URL 或非法 URL 返回空串。全项目唯一实现——TabRow 与 domainGroupKey 共用
@@ -27,13 +30,13 @@ export function domainGroupKey(url: string): string {
   }
 }
 
-export interface DomainGroup {
+export interface DomainGroup<T extends chrome.tabs.Tab = chrome.tabs.Tab> {
   key: string;
-  tabs: chrome.tabs.Tab[];
+  tabs: T[];
 }
 
-export function groupByDomain(tabs: chrome.tabs.Tab[]): DomainGroup[] {
-  const map = new Map<string, chrome.tabs.Tab[]>();
+export function groupByDomain<T extends chrome.tabs.Tab>(tabs: T[]): DomainGroup<T>[] {
+  const map = new Map<string, T[]>();
   for (const tab of tabs) {
     const key = domainGroupKey(tab.url ?? '');
     map.set(key, [...(map.get(key) ?? []), tab]);

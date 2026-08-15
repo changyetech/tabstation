@@ -4,7 +4,7 @@ import { normalizeUrl } from './url';
 // 用类型收窄代替非空断言，消费方拿到的 id 一定是 number
 export type TabWithId = chrome.tabs.Tab & { id: number };
 
-function hasId(tab: chrome.tabs.Tab): tab is TabWithId {
+export function hasId(tab: chrome.tabs.Tab): tab is TabWithId {
   return tab.id !== undefined;
 }
 

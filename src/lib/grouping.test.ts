@@ -15,6 +15,14 @@ describe('visibleTabs', () => {
     const tabs = [makeTab({ id: 1, url: MANAGER }), makeTab({ id: 2, url: 'https://a.com/' })];
     expect(visibleTabs(tabs, MANAGER).map((t) => t.id)).toEqual([2]);
   });
+
+  it('丢弃没有 id 的 tab', () => {
+    const tabs = [
+      { ...makeTab({ url: 'https://a.com/' }), id: undefined } as chrome.tabs.Tab,
+      makeTab({ id: 2, url: 'https://a.com/' }),
+    ];
+    expect(visibleTabs(tabs, MANAGER).map((t) => t.id)).toEqual([2]);
+  });
 });
 
 describe('domainGroupKey', () => {
