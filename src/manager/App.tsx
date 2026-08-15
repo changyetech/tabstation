@@ -10,6 +10,9 @@ import { I18nProvider, resolveLanguage, useT } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
 import { useTabs } from '../hooks/useTabs';
 import { closeTabsWithEffect } from '../lib/effects/batch';
+import { animateElementOut, EXIT_MS } from '../lib/effects/exit';
+import { playCloseSound } from '../lib/effects/sound';
+import { shootConfetti } from '../lib/effects/confetti';
 import { findDuplicateGroups, type TabWithId } from '../lib/dedupe';
 import { dragEndToMove, type DragTabData } from '../lib/dnd';
 import { sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
@@ -62,6 +65,31 @@ function AppInner() {
 
   const closeTab = (tab: TabWithId) =>
     void closeTabsWithEffect([{ tabId: tab.id, el: rowEls.current.get(tab.id) ?? null }]);
+
+  // 关闭窗口：区块级一次动效；管理页所在窗口只关其他 tab、保留管理页（spec §4.3）
+  const closeWindow = (win: chrome.windows.Window, sectionEl: HTMLElement | null) => {
+    const winVisible = visible.filter((x) => x.windowId === win.id);
+    const containsManager = tabs.some((x) => x.windowId === win.id && x.url?.startsWith(mUrl));
+    playCloseSound();
+    if (sectionEl) {
+      const rect = sectionEl.getBoundingClientRect();
+      shootConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      animateElementOut(sectionEl);
+    }
+    window.setTimeout(() => {
+      if (containsManager) {
+        void chrome.tabs.remove(winVisible.map((x) => x.id)).catch(() => {
+          // 动画期间用户可能已手动关闭这些 tab，remove 会 reject；
+          // 吞掉即可——useTabs 的事件驱动刷新会自愈状态
+        });
+      } else if (win.id !== undefined) {
+        void chrome.windows.remove(win.id).catch(() => {
+          // 动画期间用户可能已手动关闭该窗口，remove 会 reject；
+          // 吞掉即可——useTabs 的事件驱动刷新会自愈状态
+        });
+      }
+    }, EXIT_MS);
+  };
 
   const handleDragEnd = (e: DragEndEvent) => {
     // data.current 的类型是 dnd-kit 定死的 Record<string, any>，属库边界；
@@ -152,6 +180,7 @@ function AppInner() {
                 onCloseTab={closeTab}
                 getMoveTargets={getMoveTargets}
                 onMove={moveTab}
+                onCloseWindow={closeWindow}
               />
             ))
           ) : view === 'domain' ? (

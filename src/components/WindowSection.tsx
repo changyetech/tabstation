@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
@@ -19,6 +20,7 @@ export interface WindowSectionProps {
   onCloseTab: (tab: TabWithId) => void;
   getMoveTargets?: (tab: TabWithId) => MoveTarget[];
   onMove?: (tab: TabWithId, target: MoveTarget) => void;
+  onCloseWindow?: (win: chrome.windows.Window, sectionEl: HTMLElement | null) => void;
 }
 
 export default function WindowSection({
@@ -34,16 +36,38 @@ export default function WindowSection({
   onCloseTab,
   getMoveTargets,
   onMove,
+  onCloseWindow,
 }: WindowSectionProps) {
   const t = useT();
+  const sectionRef = useRef<HTMLElement>(null);
   // 窗口标识：序号 + 活动 tab 标题 + tab 数（spec §4.3）
   const activeTitle = tabs.find((x) => x.active)?.title ?? tabs[0]?.title ?? '';
   const label = `${t('window.label', { n: windowNumber })}${isCurrent ? t('window.current') : ''} · ${activeTitle} (${t('window.tabCount', { n: tabs.length })})`;
 
   return (
-    <section className="window-section" data-window-id={win.id}>
+    <section className="window-section" data-window-id={win.id} ref={sectionRef}>
       <header className="window-header">
         <h2>{label}</h2>
+        {onCloseWindow && (
+          <button
+            className="window-close"
+            onClick={() => {
+              // 轻确认（spec §4.3）：{name} 只用「窗口 N」，不带活动标题/tab 数（R1）
+              if (
+                !window.confirm(
+                  t('window.closeConfirm', {
+                    name: t('window.label', { n: windowNumber }),
+                    n: tabs.length,
+                  }),
+                )
+              )
+                return;
+              onCloseWindow(win, sectionRef.current);
+            }}
+          >
+            ✕ {t('window.close')}
+          </button>
+        )}
       </header>
       {view === 'domain' ? (
         <DomainGroupList
