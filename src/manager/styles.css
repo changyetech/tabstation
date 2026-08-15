@@ -6,3 +6,12 @@ body {
   font-family: system-ui, sans-serif;
   color: #222;
 }
+
+.closing {
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+  pointer-events: none;
+}
