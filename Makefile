@@ -65,6 +65,10 @@ test: ## Run tests
 lint: ## Run linter
 	pnpm lint
 
+.PHONY: typecheck
+typecheck: ## Type-check without emitting
+	pnpm exec tsc --noEmit
+
 .PHONY: fmt
 fmt: ## Format code
 	pnpm format
@@ -74,7 +78,7 @@ fmt-check: ## Verify formatting without writing
 	pnpm format:check
 
 .PHONY: check
-check: fmt-check lint test ## Run all quality checks (fmt-check + lint + test)
+check: fmt-check lint typecheck test ## Run all quality checks (fmt-check + lint + typecheck + test)
 
 # ==============================================================================
 # HOUSEKEEPING
