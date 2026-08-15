@@ -191,6 +191,85 @@ describe('稍后阅读', () => {
   });
 });
 
+describe('保存窗口', () => {
+  it('过滤后为空 → 不创建会话，toast 提示', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({
+        id: 1,
+        windowId: 1,
+        index: 0,
+        url: 'chrome://history/',
+        title: 'History',
+        active: true,
+      }),
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    render(<App />);
+    await waitFor(() => expect(screen.getByText(/保存窗口/)).toBeInTheDocument());
+    await userEvent.click(screen.getByText(/保存窗口/));
+    expect(await screen.findByText('没有可保存的 tab')).toBeInTheDocument();
+    expect(storageData.sessions).toBeUndefined();
+  });
+
+  it('正常路径：窗口内有可保存的 tab → 会话写入 storage，内容与快照一致', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({ id: 1, windowId: 1, index: 0, url: 'https://a.com/', title: 'A1', active: true }),
+      makeTab({ id: 2, windowId: 1, index: 1, url: 'https://b.com/', title: 'B1' }),
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    render(<App />);
+    await waitFor(() => expect(screen.getByText(/保存窗口/)).toBeInTheDocument());
+    await userEvent.click(screen.getByText(/保存窗口/));
+    await waitFor(() => expect(storageData.sessions).toBeDefined());
+    const sessions = storageData.sessions as { tabs: { url: string }[] }[];
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].tabs.map((t) => t.url)).toEqual(['https://a.com/', 'https://b.com/']);
+  });
+
+  it('恢复会话：新窗口带全部 url，只对 pinned 下标调用 tabs.update', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.sessions = [
+      {
+        id: 's1',
+        name: '2026/8/15 09:00',
+        createdAt: 1,
+        tabs: [
+          { url: 'https://a.com/', title: 'A', pinned: true },
+          { url: 'https://b.com/', title: 'B' },
+        ],
+      },
+    ];
+    chromeMock.tabs.query.mockResolvedValue([]);
+    chromeMock.windows.getAll.mockResolvedValue([]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    chromeMock.windows.create.mockResolvedValue({
+      id: 9002,
+      tabs: [
+        makeTab({ id: 10, windowId: 9002, index: 0 }),
+        makeTab({ id: 11, windowId: 9002, index: 1 }),
+      ],
+      // chrome-mock 的 create 实现里 tabs 字面量推断为 never[]，此处按其自身解析类型断言
+    } as Awaited<ReturnType<typeof chromeMock.windows.create>>);
+    chromeMock.tabs.update.mockResolvedValue(undefined);
+    render(<App />);
+    await waitFor(() => expect(screen.getByText(/2026\/8\/15 09:00/)).toBeInTheDocument());
+    await userEvent.click(screen.getByText('打开'));
+    await waitFor(() =>
+      expect(chromeMock.windows.create).toHaveBeenCalledWith({
+        url: ['https://a.com/', 'https://b.com/'],
+        focused: true,
+      }),
+    );
+    await waitFor(() => expect(chromeMock.tabs.update).toHaveBeenCalledWith(10, { pinned: true }));
+    expect(chromeMock.tabs.update).not.toHaveBeenCalledWith(11, { pinned: true });
+    expect(chromeMock.tabs.update).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('测试 harness 冒烟', () => {
   it('chrome mock：storage 读写往返且触发 onChanged', async () => {
     const { chromeMock } = getChromeMock();

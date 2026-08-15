@@ -188,3 +188,33 @@ body {
 .read-later-item:hover .read-later-delete {
   visibility: visible;
 }
+.session-section {
+  margin: 16px 12px;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 8px;
+}
+.session-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.session-name {
+  font-weight: 600;
+}
+.session-count {
+  color: #888;
+  font-size: 12px;
+}
+.window-save,
+.window-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #666;
+}

@@ -6,8 +6,10 @@ import WindowSection from '../components/WindowSection';
 import DomainGroupList from '../components/DomainGroupList';
 import TabRow from '../components/TabRow';
 import ReadLaterSidebar from '../components/ReadLaterSidebar';
+import SessionSection from '../components/SessionSection';
+import Toast from '../components/Toast';
 import type { MoveTarget } from '../components/MoveMenu';
-import { I18nProvider, resolveLanguage, useT } from '../i18n';
+import { I18nProvider, resolveLanguage, useLanguage, useT } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
 import { useTabs } from '../hooks/useTabs';
 import { closeTabsWithEffect } from '../lib/effects/batch';
@@ -21,8 +23,14 @@ import { managerUrl } from '../lib/manager-url';
 import {
   DEFAULT_SETTINGS,
   removeReadLater,
+  removeSessionTab,
+  renameSession,
+  reorderSessionTab,
+  snapshotWindow,
   upsertReadLater,
   type ReadLaterItem,
+  type SavedSession,
+  type SessionTab,
   type Settings,
 } from '../lib/storage';
 
@@ -32,14 +40,15 @@ export default function App() {
 
   return (
     <I18nProvider language={language}>
-      <AppInner />
+      <AppInner settings={settings} />
     </I18nProvider>
   );
 }
 
-function AppInner() {
+function AppInner({ settings }: { settings: Settings }) {
   const { tabs, windows, currentWindowId } = useTabs();
   const t = useT();
+  const language = useLanguage();
   const [mode, setMode] = useState<Mode>('window');
   const [view, setView] = useState<View>('list');
   const rowEls = useRef(new Map<number, HTMLElement>());
@@ -121,6 +130,15 @@ function AppInner() {
     else commit();
   };
 
+  // 轻量 toast：2.5s 后自动清空；重复调用先清掉上一个定时器（spec §4.3 唯二反馈件之一）
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | undefined>(undefined);
+  const showToast = (msg: string) => {
+    window.clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2500);
+  };
+
   // 关闭窗口：区块级一次动效；管理页所在窗口只关其他 tab、保留管理页（spec §4.3）
   const closeWindow = (win: chrome.windows.Window, sectionEl: HTMLElement | null) => {
     const winVisible = visible.filter((x) => x.windowId === win.id);
@@ -145,6 +163,56 @@ function AppInner() {
       }
     }, EXIT_MS);
   };
+
+  const [sessions, setSessions] = useStorageState<SavedSession[]>('sessions', []);
+
+  // 点击即保存无弹窗（spec §5.5）；空快照 → toast 且不创建
+  const saveWindow = (win: chrome.windows.Window) => {
+    const winTabs = tabs.filter((x) => x.windowId === win.id).sort((a, b) => a.index - b.index);
+    const snapshot = snapshotWindow(winTabs, mUrl);
+    if (snapshot.length === 0) {
+      showToast(t('sessions.emptySnapshot'));
+      return;
+    }
+    const now = Date.now();
+    void setSessions([
+      ...sessions,
+      {
+        id: crypto.randomUUID(),
+        // 默认名 = 保存日期时间（spec §5.5）
+        name: new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'short' }).format(
+          now,
+        ),
+        createdAt: now,
+        tabs: snapshot,
+      },
+    ]);
+    // 复用关闭窗口实现：无确认；管理页豁免规则同样生效（评审 Q15 一致性）
+    if (settings.closeWindowAfterSave) closeWindow(win, null);
+  };
+
+  // 恢复：新窗口按当前顺序全量打开并还原 pinned；会话保留（模板式，spec §5.5）
+  const restoreSession = async (s: SavedSession) => {
+    const win = await chrome.windows.create({ url: s.tabs.map((x) => x.url), focused: true });
+    const created = win?.tabs ?? [];
+    await Promise.all(
+      s.tabs.map((st, i) => {
+        const id = created[i]?.id;
+        if (!st.pinned || id === undefined) return Promise.resolve();
+        return chrome.tabs.update(id, { pinned: true });
+      }),
+    );
+  };
+
+  const deleteSession = (s: SavedSession) =>
+    void setSessions(sessions.filter((x) => x.id !== s.id));
+  const handleRename = (s: SavedSession, name: string) =>
+    void setSessions(renameSession(sessions, s.id, name));
+  const handleReorderTab = (s: SavedSession, from: number, to: number) =>
+    void setSessions(reorderSessionTab(sessions, s.id, from, to));
+  const handleDeleteTab = (s: SavedSession, index: number) =>
+    void setSessions(removeSessionTab(sessions, s.id, index)); // 删空自动删会话（storage.ts 保证）
+  const openSessionTab = (tab: SessionTab) => void chrome.tabs.create({ url: tab.url });
 
   const handleDragEnd = (e: DragEndEvent) => {
     // data.current 的类型是 dnd-kit 定死的 Record<string, any>，属库边界；
@@ -246,6 +314,7 @@ function AppInner() {
                   onMove={moveTab}
                   onCloseWindow={closeWindow}
                   onReadLater={saveReadLater}
+                  onSaveWindow={saveWindow}
                 />
               ))
             ) : view === 'domain' ? (
@@ -285,11 +354,21 @@ function AppInner() {
               </SortableContext>
             )}
           </DndContext>
+          <SessionSection
+            sessions={sessions}
+            onRestore={(s) => void restoreSession(s)}
+            onDelete={deleteSession}
+            onRename={handleRename}
+            onReorderTab={handleReorderTab}
+            onDeleteTab={handleDeleteTab}
+            onOpenTab={openSessionTab}
+          />
         </main>
         {readLater.length > 0 && (
           <ReadLaterSidebar items={readLater} onOpen={openReadLater} onDelete={deleteReadLater} />
         )}
       </div>
+      <Toast message={toast} />
     </>
   );
 }

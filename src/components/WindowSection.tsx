@@ -23,6 +23,7 @@ export interface WindowSectionProps {
   onMove?: (tab: TabWithId, target: MoveTarget) => void;
   onCloseWindow?: (win: chrome.windows.Window, sectionEl: HTMLElement | null) => void;
   onReadLater?: (tab: TabWithId) => void;
+  onSaveWindow?: (win: chrome.windows.Window) => void;
 }
 
 export default function WindowSection({
@@ -41,6 +42,7 @@ export default function WindowSection({
   onMove,
   onCloseWindow,
   onReadLater,
+  onSaveWindow,
 }: WindowSectionProps) {
   const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
@@ -52,6 +54,11 @@ export default function WindowSection({
     <section className="window-section" data-window-id={win.id} ref={sectionRef}>
       <header className="window-header">
         <h2>{label}</h2>
+        {onSaveWindow && (
+          <button className="window-save" onClick={() => onSaveWindow(win)}>
+            💾 {t('window.save')}
+          </button>
+        )}
         {onCloseWindow && (
           <button
             className="window-close"
