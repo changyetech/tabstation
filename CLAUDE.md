@@ -28,6 +28,7 @@ This repo documents its own **contracts** and **specs** under `docs/` (contract 
 - Response envelope format, retry/backoff strategies, auth contracts → `docs/`
 - Project-private convention documents → `docs/` (see [Convention Documents](#convention-documents))
   - [docs/naming.md](docs/naming.md) — 产品命名约定（normative）：最终名称 `Tab Station` / 标签工作站、各处写法规范、命名判据、落选候选记录
+  - [docs/local-debugging.md](docs/local-debugging.md) — 本地调试手册：watch 构建、扩展加载与刷新规则、SW/页面双 DevTools、调试提速建议
 - Feature / domain design specs → `docs/specs/`
 - Implementation plans → `docs/plans/`
 
@@ -131,6 +132,7 @@ tabstation/
 ├── ROADMAP.md         # Deferred-but-wanted items (perf/features postponed from V1)
 └── docs/
     ├── naming.md      # 产品命名约定 (normative) — 名称 `Tab Station`、写法规范、判据、查重记录
+    ├── local-debugging.md  # 本地调试手册 — watch 构建、扩展加载/刷新、DevTools 使用
     ├── specs/         # Feature / design specifications (the "what")
     ├── plans/         # Implementation plans (the "how")
     └── ...            # API specs, error codes, convention docs (contracts live directly here)
