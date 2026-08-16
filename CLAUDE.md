@@ -1,139 +1,127 @@
-# tabstation
+# CLAUDE.md
 
-## Architecture
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-This is a **single-repository** project. All code, specifications, contracts, and conventions live in this one repo. Contracts (API, error codes) and project-private conventions are documented under `docs/` and govern the code in the same tree.
+## 项目概览
 
-## Role
-Web application
+**Tab Station（标签工作站）** —— Chrome Manifest V3 扩展，集中管理真实浏览器 tab，附带「稍后阅读」与「窗口会话」两类本地持久化数据。无后端、无网络请求；全部状态存于 `chrome.storage.local`。
 
-## Mandatory Specs
-<!-- Link only to project-private conventions committed under docs/. Universal conventions come from the `code-conventions` skill at runtime (http-constitution, observability, testing, error-codes) — do not relink them here. -->
+领域词汇表（ubiquitous language）在 [CONTEXT.md](CONTEXT.md)——写 spec 或代码前先读，术语（管理页/设置页、模式/视图、稍后阅读/会话、URL 归一化、重复组等）必须与其一致。产品命名写法遵循 [docs/naming.md](docs/naming.md)（normative）。
 
-## Key Responsibilities
-<!-- Define module-specific responsibilities here -->
+## 常用命令
 
-## Tech Stack
-<!-- Define technology choices here: language, framework, database, etc. -->
+```bash
+make check        # fmt-check + lint + typecheck + test，提交前必过
+pnpm test         # vitest run（全部测试）
+pnpm vitest run src/lib/url.test.ts   # 跑单个测试文件
+pnpm test:watch   # vitest watch，逻辑开发主循环
+pnpm build        # tsc --noEmit && vite build → dist/
+pnpm dev          # vite build --watch（产物型 watch，不是 dev server）
+```
 
-## Build & Test
-<!-- Define build, test, lint commands here -->
+**没有 dev server / HMR**：扩展从 `dist/` 目录以「加载已解压」方式装入 Chrome。改 UI 刷新 manager 标签页即可；改 `background.ts` 或 manifest 必须在 `chrome://extensions` 点扩展的 ↻。完整刷新规则与 SW 调试方法见 [docs/local-debugging.md](docs/local-debugging.md)。
 
-## Specifications & Contracts
+## 架构
 
-This repo documents its own **contracts** and **specs** under `docs/` (contract documents live directly under `docs/`, not in sub-directories):
+技术栈：React 18 + TypeScript（strict）+ Vite + Vitest/jsdom/Testing Library + @dnd-kit，包管理 pnpm。
 
-- API interface specifications (endpoints, request/response schemas) → `docs/`
-- Error format and error code registry → `docs/`
-- Response envelope format, retry/backoff strategies, auth contracts → `docs/`
-- Project-private convention documents → `docs/` (see [Convention Documents](#convention-documents))
-  - [docs/naming.md](docs/naming.md) — 产品命名约定（normative）：最终名称 `Tab Station` / 标签工作站、各处写法规范、命名判据、落选候选记录
-  - [docs/local-debugging.md](docs/local-debugging.md) — 本地调试手册：watch 构建、扩展加载与刷新规则、SW/页面双 DevTools、调试提速建议
-- Feature / domain design specs → `docs/specs/`
-- Implementation plans → `docs/plans/`
+**三个构建入口**（`vite.config.ts` rollup 多入口）：
 
-**Rule**: Every spec that governs behavior (API, error codes, conventions, domain contracts) MUST be discoverable from this file (see [Spec Document Index](#spec-document-index-mandatory-maintenance)). Transient feature specs under `docs/specs/` are the exception.
+- `src/manager/` — 管理页（React SPA），扩展的主界面；本身是一个 tab，通过单例逻辑（`src/lib/singleton.ts`）保证按作用域只开一个。
+- `src/settings/` — 设置页（独立 React 入口），经扩展「选项」打开，改动即时保存生效。
+- `src/background.ts` — MV3 service worker，唯一职责是图标点击/快捷键 → 聚焦或创建管理页单例。**SW 随时休眠，不得持有内存状态**——每次唤醒都从 storage 重读。产物固定名 `background.js`（manifest 引用，不可加 hash）。
 
-## Development Paradigm: SDD + TDD
+管理页路径唯一定义在 `src/lib/manager-url.ts` 的 `MANAGER_PATH`，`vite.config.ts` 直接 import 它——改页面路径只改这一处。
 
-Before writing or changing any code, follow the agent coding behavior rules (think-before-coding, simplicity-first, surgical-changes, goal-driven execution, root-cause reasoning) — see the `engineering-guidelines` skill.
+**分层约定**：
+
+- `src/lib/` — 纯函数领域逻辑（storage 数据模型与操作、URL 归一化、去重、分组、折叠、DnD 计算、关闭动效），不碰 React；数据模型（`ReadLaterItem` / `SavedSession` / `Settings`）定义在 `src/lib/storage.ts`。
+- `src/hooks/` — 把 `chrome.storage` / `chrome.tabs` 事件桥接为 React state（`useStorageState`、`useTabs`、`useTheme`）。
+- `src/components/` — 管理页 UI 组件，逐组件配套 `.test.tsx`。
+- `src/i18n/` — 自研轻量 i18n（zh_CN / en JSON + resolve），manifest 层文案在 `public/_locales/`。
+
+**测试基建**（`src/test/`）：`chrome-mock.ts` 提供完整 `chrome.*` mock（storage、events），`setup.ts` 在模块级安装并于每个用例前重置；`navigator.language` 钉死为 `zh-CN`（App 级测试断言中文文案）；`factories.ts` 造测试数据。逻辑调试优先走 Vitest，浏览器只用于验收真实 `chrome.*` 行为。
+
+## 开发范式：SDD + TDD
+
+写或改任何代码前，遵循 agent 编码行为规则（think-before-coding、simplicity-first、surgical-changes、goal-driven execution、root-cause reasoning）——见 `engineering-guidelines` skill。
 
 ### Specification-Driven Development (SDD)
 
-1. Write or update the relevant spec **first** (contracts and conventions under `docs/`; feature/design specs in `docs/specs/`).
-2. Get the spec reviewed and approved.
-3. Implement against the spec.
+1. 先写或更新相关 spec（约定文档在 `docs/`；功能/设计 spec 在 `docs/specs/`）。
+2. spec 评审通过后，
+3. 对照 spec 实现。
 
 ### Test-Driven Development (TDD)
 
-1. From the spec, write failing tests.
-2. Write the minimum implementation to pass.
-3. Refactor while keeping tests green.
+1. 从 spec 推出失败测试。
+2. 写最小实现使其通过。
+3. 保持绿灯下重构。
 
-For implementation-phase TDD details (AAA structure, naming, mocks, coverage, integration tests), see the `code-conventions` skill.
+实现期 TDD 细节（AAA 结构、命名、mock、覆盖率）见 `code-conventions` skill。
 
-**All code changes must trace back to a spec document.**
+**所有代码变更必须能追溯到某个 spec 文档。**
 
-## Authoritative Source: Contracts vs Design Specs
+## 文档权威性：Contracts vs Design Specs
 
-Not every document carries the same authority — distinguish two kinds:
+两类文档权威性不同：
 
-- **Contracts (normative, live)** — API specs, error codes, response envelope, retry policy, auth contracts, and convention documents under `docs/`. The agreed interface and rules, kept in sync with reality. When code deviates, **the code is the defect** — fix the code (or deliberately amend the contract first).
-- **Design specs (descriptive, point-in-time)** — feature/domain docs under `docs/specs/` and plans under `docs/plans/`. Written to drive a feature at design time; as logic iterates they drift and go stale.
+- **Contracts（normative，长期有效）** — `docs/` 直下的约定文档（当前为 `naming.md`、`local-debugging.md`）。与现实保持同步；代码与之偏离时**代码是缺陷**——修代码，或先审慎修订约定。
+- **Design specs（descriptive，时点快照）** — `docs/specs/` 的功能设计与 `docs/plans/` 的实施计划。为驱动某次开发而写，随迭代会漂移过时。
 
-**Reading vs writing:**
+**读 vs 写：**
 
-- **Writing** new/changed logic → start from a spec (SDD): update the design spec, then implement.
-- **Reading / verifying / "what does the system do today"** → **current code is the source of truth**. A design spec states intent when written, not necessarily current behavior.
-- **Spec and code disagree** → never silently trust the spec. For a *design spec*, treat it as drift: verify against code and flag the spec for update. For a *contract*, the opposite default — the contract wins and the code is suspect.
+- **写**新逻辑 → 从 spec 出发（SDD）：先更新设计 spec，再实现。
+- **读/核实「系统今天的行为」** → **以当前代码为准**。设计 spec 只代表写作时的意图。
+- **spec 与代码冲突** → 不可盲信 spec。设计 spec 按漂移处理：以代码核实并标记 spec 待更新；contract 则相反——contract 为准，代码可疑。
 
 ## Implementation Plans
 
-Feature plans live under `docs/plans/`. Each plan declares its goal, scope, dependencies, steps, and acceptance criteria, and links the spec(s) it implements.
+功能计划放 `docs/plans/`，声明目标、范围、依赖、步骤、验收标准，并链接其实现的 spec。
 
-**Plan structure:**
+1. **Spec first** — 先在 `docs/specs/` 写好并通过设计 spec，再做实施计划。
+2. **一功能一计划** — 文件名 `YYYY-MM-DD-feature.md`。
+3. **声明依赖** — 计划必须链接 spec；有顺序要求时写 `Depends on: <other-plan>`。
 
-1. **Spec first** — Write and approve the design spec in `docs/specs/` (and update the contract docs under `docs/` when the interface changes) before planning implementation.
-2. **One plan per feature** — Use a `YYYY-MM-DD-feature.md` filename for discoverability.
-3. **Declare dependencies** — A plan MUST link to the spec it implements and state `Depends on: <other-plan>` when sequencing matters.
-
-**Splitting large plans into sub-plans:** When a single plan is too large to review or execute in one pass (multiple phases or independent work streams), split it so each piece is reviewable and mergeable on its own:
-
-1. **Parent plan** — `docs/plans/YYYY-MM-DD-feature.md` with an overview, scope, and links to all sub-plans.
-2. **Sub-plans** — `docs/plans/YYYY-MM-DD-feature--<slug>.md` where `<slug>` names the sub-scope (e.g. `--schema`, `--api`, `--ui-list`). Each states its own goal, scope, dependencies, steps, and acceptance criteria.
-3. **Order** — The parent plan records the recommended execution order; sub-plans declare `Depends on: <sub-plan-slug>` when sequencing matters.
-4. **Don't over-split** — Keep each sub-plan a meaningful, self-contained unit of work; if a split only produces trivial fragments, keep it as one plan.
-
-**Example:**
-
-```
-docs/specs/2026-06-01-user-management.md              ← design spec
-docs/plans/2026-06-01-user-management.md              ← parent overview
-docs/plans/2026-06-01-user-management--schema.md      ← data layer
-docs/plans/2026-06-01-user-management--api.md         ← API + handlers; Depends on schema
-docs/plans/2026-06-01-user-management--ui-list.md     ← list UI; Depends on api
-```
-
-## Domain-Driven Design (DDD)
-
-This project follows DDD principles:
-
-- **Aggregate Roots** must be clearly identified in both specs and code. Each bounded context has explicit aggregate roots.
-- **Bounded Contexts** are delineated within this repo. Cross-context communication happens only through well-defined interfaces (as specified under `docs/`), not by reaching into another context's internals.
-- **Ubiquitous Language** is defined here and used consistently across specs and code.
-
-### Core Domain Concepts
-
-<!-- Define project core domain concepts here (aggregate roots, value objects, etc.) -->
+**大计划拆子计划**：单个计划一遍评审/执行不完时，拆为父计划 `YYYY-MM-DD-feature.md`（总览 + 子计划链接与推荐执行顺序）+ 子计划 `YYYY-MM-DD-feature--<slug>.md`（各自独立的目标/范围/依赖/步骤/验收）。不要过度拆分——只拆出琐碎碎片就保持单计划。仓库内已有实例：`docs/plans/2026-08-15-tabstation.md` 及其 `--lib` / `--ui-list` 等子计划。
 
 ## Conventions
 
 ### Convention Documents
 
-Universal cross-cutting conventions (HTTP/API design, observability, testing, commit messages, error codes, language-specific rules) are **not** duplicated here — reference the `code-conventions` skill at runtime. Project-private conventions are documented under `docs/`; add an index entry here when one is added.
+通用横切约定（测试、commit message、语言规则等）**不**复制进本仓库——运行时引用 `code-conventions` skill。项目私有约定放 `docs/` 直下；新增时必须在本文件加索引条目。
 
 ### Spec Document Index (Mandatory Maintenance)
 
-**Rule**: Every governing spec (API contracts, error codes, conventions, domain contracts) MUST be referenced in this file. CLAUDE.md is the context-loading entry point — an unreferenced spec is invisible to agents and risks being ignored or contradicted.
+**Rule**：每个 governing 文档（约定、领域契约）必须能从本文件发现。CLAUDE.md 是上下文加载入口——未被引用的 spec 对 agent 不可见，会被忽略或违背。
 
-**Exception**: Feature/requirement specs under `docs/specs/` are transient and numerous — they do **not** need an index entry.
+**Exception**：`docs/specs/` 下的功能 spec 数量多且短命，不需要索引条目。
 
-**How**: Every governing contract or convention document under `docs/` must appear either in the [Specifications & Contracts](#specifications--contracts) bullet list or the Repository Structure tree below, with its actual filename and relative link.
+**How**：`docs/` 直下的每个约定文档必须出现在下方 Repository Structure 树或正文引用中，带实际文件名与相对链接。
 
 ## Repository Structure
 
-A static map of the repo. Contract and convention documents live directly under `docs/`; `docs/specs/` and `docs/plans/` accumulate dated documents over time.
-
 ```
 tabstation/
-├── CLAUDE.md          # This file - project rules, conventions, and module guide
-├── AGENTS.md          # → @CLAUDE.md
-├── CONTEXT.md         # Domain glossary (ubiquitous language) — read before writing specs/code
-├── ROADMAP.md         # Deferred-but-wanted items (perf/features postponed from V1)
+├── CLAUDE.md            # 本文件——项目规则、约定与模块指引
+├── AGENTS.md            # → @CLAUDE.md
+├── CONTEXT.md           # 领域词汇表（ubiquitous language）——写 spec/代码前先读
+├── ROADMAP.md           # 延后待办（V1 推迟的性能/功能项）
+├── Makefile             # build / dev / test / lint / check 等任务入口
+├── public/              # manifest.json、_locales/、icons/（原样拷入 dist/）
+├── src/
+│   ├── background.ts    # MV3 service worker（管理页单例入口）
+│   ├── manager/         # 管理页 React 入口
+│   ├── settings/        # 设置页 React 入口
+│   ├── components/      # 管理页 UI 组件
+│   ├── hooks/           # chrome.* ↔ React state 桥接
+│   ├── lib/             # 纯函数领域逻辑与数据模型
+│   ├── i18n/            # 页面层 i18n（zh_CN / en）
+│   ├── styles/          # 设计 token
+│   └── test/            # chrome mock、setup、测试工厂
 └── docs/
-    ├── naming.md      # 产品命名约定 (normative) — 名称 `Tab Station`、写法规范、判据、查重记录
-    ├── local-debugging.md  # 本地调试手册 — watch 构建、扩展加载/刷新、DevTools 使用
-    ├── specs/         # Feature / design specifications (the "what")
-    ├── plans/         # Implementation plans (the "how")
-    └── ...            # API specs, error codes, convention docs (contracts live directly here)
+    ├── naming.md        # 产品命名约定（normative）——名称 `Tab Station`、写法规范、判据
+    ├── local-debugging.md  # 本地调试手册——watch 构建、扩展加载/刷新、双 DevTools
+    ├── specs/           # 功能/设计 spec（the "what"）
+    └── plans/           # 实施计划（the "how"）
 ```
