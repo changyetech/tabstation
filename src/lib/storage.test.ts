@@ -4,6 +4,7 @@ import { getChromeMock } from '../test/chrome-mock';
 import {
   DEFAULT_SETTINGS,
   mergeSettings,
+  moveSessionTab,
   readKey,
   removeReadLater,
   removeSessionTab,
@@ -109,6 +110,39 @@ describe('会话条目操作', () => {
   it('操作只影响目标会话', () => {
     const other = session({ id: 's2' });
     expect(removeSessionTab([session({}), other], 's1', 0)[1]).toEqual(other);
+  });
+  it('moveSessionTab 同会话：重排条目', () => {
+    const next = moveSessionTab([session({})], 's1', 0, 's1', 1);
+    expect(next[0].tabs.map((t) => t.url)).toEqual(['https://b.com/', 'https://a.com/']);
+  });
+  it('moveSessionTab 跨会话：源删除、目标落点插入', () => {
+    const a = session({});
+    const b = session({ id: 's2', tabs: [{ url: 'https://c.com/', title: 'C' }] });
+    const next = moveSessionTab([a, b], 's1', 0, 's2', 0);
+    expect(next[0].tabs.map((t) => t.url)).toEqual(['https://b.com/']);
+    expect(next[1].tabs.map((t) => t.url)).toEqual(['https://a.com/', 'https://c.com/']);
+  });
+  it('moveSessionTab 跨会话拖空 → 源会话消亡', () => {
+    const a = session({ tabs: [{ url: 'https://x.com/', title: 'X' }] });
+    const b = session({ id: 's2' });
+    const next = moveSessionTab([a, b], 's1', 0, 's2', 2);
+    expect(next.map((s) => s.id)).toEqual(['s2']);
+    expect(next[0].tabs.map((t) => t.url)).toEqual([
+      'https://a.com/',
+      'https://b.com/',
+      'https://x.com/',
+    ]);
+  });
+  it('moveSessionTab 同会话 from === to → 原样返回', () => {
+    const list = [session({})];
+    expect(moveSessionTab(list, 's1', 1, 's1', 1)).toBe(list);
+  });
+  it('moveSessionTab 下标越界或 id 不存在 → 原样返回', () => {
+    const list = [session({})];
+    expect(moveSessionTab(list, 's1', 5, 's1', 0)).toBe(list);
+    expect(moveSessionTab(list, 's1', 0, 's1', 5)).toBe(list);
+    expect(moveSessionTab(list, 'nope', 0, 's1', 0)).toBe(list);
+    expect(moveSessionTab(list, 's1', 0, 'nope', 0)).toBe(list);
   });
 });
 

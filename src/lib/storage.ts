@@ -117,6 +117,41 @@ export function reorderSessionTab(
   });
 }
 
+// 同/跨会话移动条目（spec 2026-08-16-session-card-dnd §3.3）：
+// 跨会话为「源删除 + 目标落点插入」；源拖空则会话消亡（与删空规则一致）；
+// id 不存在或下标越界（陈旧拖拽状态）原样返回
+export function moveSessionTab(
+  sessions: SavedSession[],
+  fromSessionId: string,
+  fromIndex: number,
+  toSessionId: string,
+  toIndex: number,
+): SavedSession[] {
+  const from = sessions.find((s) => s.id === fromSessionId);
+  const to = sessions.find((s) => s.id === toSessionId);
+  if (!from || !to) return sessions;
+  if (fromIndex < 0 || fromIndex >= from.tabs.length) return sessions;
+  // 同会话落点上限 len-1（移动），跨会话允许 len（尾部追加）
+  const maxTo = fromSessionId === toSessionId ? to.tabs.length - 1 : to.tabs.length;
+  if (toIndex < 0 || toIndex > maxTo) return sessions;
+  if (fromSessionId === toSessionId) {
+    if (fromIndex === toIndex) return sessions;
+    const tabs = [...from.tabs];
+    const [moved] = tabs.splice(fromIndex, 1);
+    tabs.splice(toIndex, 0, moved);
+    return sessions.map((s) => (s.id === fromSessionId ? { ...s, tabs } : s));
+  }
+  const moved = from.tabs[fromIndex];
+  const fromTabs = from.tabs.filter((_, i) => i !== fromIndex);
+  const toTabs = [...to.tabs];
+  toTabs.splice(toIndex, 0, moved);
+  return sessions.flatMap((s) => {
+    if (s.id === fromSessionId) return fromTabs.length === 0 ? [] : [{ ...s, tabs: fromTabs }];
+    if (s.id === toSessionId) return [{ ...s, tabs: toTabs }];
+    return [s];
+  });
+}
+
 export function renameSession(
   sessions: SavedSession[],
   sessionId: string,
