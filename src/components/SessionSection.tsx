@@ -1,12 +1,26 @@
 import { useState } from 'react';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useT } from '../i18n';
-import { sessionDragEndToMove, type SessionDragData } from '../lib/dnd';
+import {
+  cardDropCollision,
+  isCrossCardOver,
+  sessionDragEndToMove,
+  type SessionDragData,
+} from '../lib/dnd';
 import { foldTabs } from '../lib/fold';
 import { hostnameOf } from '../lib/grouping';
 import type { SavedSession, SessionTab, Settings } from '../lib/storage';
+import DragGhost from './DragGhost';
 import Favicon from './Favicon';
 import { GripIcon, Icon } from './icons';
 
@@ -18,7 +32,12 @@ export interface SessionSectionProps {
   onRestore: (s: SavedSession) => void;
   onDelete: (s: SavedSession) => void;
   onRename: (s: SavedSession, name: string) => void;
-  onMoveTab: (fromSessionId: string, fromIndex: number, toSessionId: string, toIndex: number) => void;
+  onMoveTab: (
+    fromSessionId: string,
+    fromIndex: number,
+    toSessionId: string,
+    toIndex: number,
+  ) => void;
   onDeleteTab: (s: SavedSession, index: number) => void;
   onOpenTab: (tab: SessionTab) => void;
   onOpenTabNewWindow: (tab: SessionTab) => void;
@@ -42,16 +61,24 @@ function SessionTabRow({
   onOpenNewWindow: () => void;
 }) {
   const t = useT();
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: `${sessionId}:${index}`,
-    disabled: Boolean(tab.pinned),
-    data: { sessionId, index },
-  });
+  // pinned 仅禁拖不禁落（spec §3.4）：保持 droppable，悬停 pinned 行时落点指示不漂移
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, active } =
+    useSortable({
+      id: `${sessionId}:${index}`,
+      disabled: { draggable: Boolean(tab.pinned), droppable: false },
+      data: { sessionId, index },
+    });
+  // 跨会话悬停 → 插入指示线（spec §3.4）
+  const dropTarget = isCrossCardOver(
+    isOver,
+    (active?.data.current as SessionDragData | undefined)?.sessionId,
+    sessionId,
+  );
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="tab-row"
+      className={`tab-row${isDragging ? ' dragging' : ''}${dropTarget ? ' drop-target' : ''}`}
       {...attributes}
       {...listeners}
     >
@@ -236,8 +263,17 @@ export default function SessionSection({ sessions, onMoveTab, ...rest }: Session
   const t = useT();
   // 整行是拖拽把手，需位移阈值，否则行内按钮的 pointerdown 会被判成起拖（同 App.tsx）
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  // 拖影内容（spec §3.4）：卡片 overflow:hidden 会裁剪原行，改用 DragOverlay portal 渲染
+  const [ghost, setGhost] = useState<SessionTab | null>(null);
+
+  const handleDragStart = (e: DragStartEvent) => {
+    const data = e.active.data.current as SessionDragData | undefined;
+    if (!data) return;
+    setGhost(sessions.find((s) => s.id === data.sessionId)?.tabs[data.index] ?? null);
+  };
 
   const handleDragEnd = (e: DragEndEvent) => {
+    setGhost(null);
     // data.current 的类型是 dnd-kit 定死的 Record<string, any>，属库边界；
     // 这里的具体形状由 SessionTabRow 的 useSortable({ data }) 保证
     const move = sessionDragEndToMove(
@@ -259,12 +295,21 @@ export default function SessionSection({ sessions, onMoveTab, ...rest }: Session
     );
   }
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={cardDropCollision}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setGhost(null)}
+    >
       <div className="win-flow">
         {sessions.map((s) => (
           <SessionBlock key={s.id} session={s} {...rest} />
         ))}
       </div>
+      <DragOverlay>
+        {ghost && <DragGhost title={ghost.title} url={ghost.url} favIconUrl={ghost.favIconUrl} />}
+      </DragOverlay>
     </DndContext>
   );
 }

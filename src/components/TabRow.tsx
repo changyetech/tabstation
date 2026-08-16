@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TabWithId } from '../lib/dedupe';
+import { isCrossCardOver, type DragTabData } from '../lib/dnd';
 import { hostnameOf } from '../lib/grouping';
 import { useLanguage, useT } from '../i18n';
 import Favicon from './Favicon';
@@ -47,12 +48,20 @@ export default function TabRow({
   const t = useT();
   const lang = useLanguage();
 
-  // pinned 不可拖（spec 沿用旧 §5.2）
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: tab.id,
-    disabled: !draggable || tab.pinned,
-    data: { tabId: tab.id, windowId: tab.windowId, index: tab.index },
-  });
+  // pinned 不可拖（spec 沿用旧 §5.2）；但保持 droppable（spec §3.4）：
+  // 否则碰撞检测会跳过 pinned 行，悬停其上时指示与落点漂到别的行
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, active } =
+    useSortable({
+      id: tab.id,
+      disabled: { draggable: !draggable || Boolean(tab.pinned), droppable: false },
+      data: { tabId: tab.id, windowId: tab.windowId, index: tab.index },
+    });
+  // 跨窗口悬停 → 插入指示线（spec 2026-08-16-session-card-dnd §3.4）
+  const dropTarget = isCrossCardOver(
+    isOver,
+    (active?.data.current as DragTabData | undefined)?.windowId,
+    tab.windowId,
+  );
 
   const display = lastAccessedDisplay(tab.lastAccessed, now);
   const timeText =
@@ -79,7 +88,7 @@ export default function TabRow({
         registerRow(tab.id, el);
       }}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`tab-row${previewClass}`}
+      className={`tab-row${previewClass}${isDragging ? ' dragging' : ''}${dropTarget ? ' drop-target' : ''}`}
       onMouseEnter={dupCount !== undefined ? () => onHoverDup?.(tab.id) : undefined}
       onMouseLeave={dupCount !== undefined ? () => onHoverDup?.(null) : undefined}
       {...attributes}

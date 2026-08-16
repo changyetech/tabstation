@@ -447,6 +447,34 @@ aside {
 .drag-grip.ghost {
   visibility: hidden;
 }
+/* 拖拽反馈（spec 2026-08-16-session-card-dnd §3.4） */
+.tab-row.dragging {
+  opacity: 0.35;
+}
+/* 三重复合选择器压过 dup-keep/dup-doomed 的同名 box-shadow（拖拽中插入线优先） */
+.tab-row.drop-target,
+.tab-row.dup-keep.drop-target,
+.tab-row.dup-doomed.drop-target {
+  box-shadow: inset 0 2px 0 0 var(--accent);
+}
+/* 目标卡描边刻意强于 is-current（2px 全 accent），当前窗口卡作为落点时也看得出变化 */
+.win-block:has(.tab-row.drop-target) {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    var(--block-shadow);
+}
+.drag-ghost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  max-width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--block-shadow);
+  cursor: grabbing;
+}
 .favicon {
   width: 17px;
   height: 17px;

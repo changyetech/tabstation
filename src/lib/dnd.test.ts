@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dragEndToMove, sessionDragEndToMove } from './dnd';
+import { dragEndToMove, isCrossCardOver, sessionDragEndToMove } from './dnd';
 
 describe('dragEndToMove', () => {
   it('同窗口拖动 → 目标行的真实 index', () => {
@@ -36,5 +36,20 @@ describe('sessionDragEndToMove', () => {
     expect(
       sessionDragEndToMove({ sessionId: 's1', index: 1 }, { sessionId: 's1', index: 1 }),
     ).toBeNull();
+  });
+});
+
+describe('isCrossCardOver', () => {
+  it('跨容器悬停 → true（窗口 id 与会话 id 两种容器）', () => {
+    expect(isCrossCardOver(true, 10, 20)).toBe(true);
+    expect(isCrossCardOver(true, 's1', 's2')).toBe(true);
+  });
+  it('同容器悬停 → false（让位动画已由 dnd-kit 提供）', () => {
+    expect(isCrossCardOver(true, 10, 10)).toBe(false);
+    expect(isCrossCardOver(true, 's1', 's1')).toBe(false);
+  });
+  it('非悬停或 active 容器缺失 → false', () => {
+    expect(isCrossCardOver(false, 10, 20)).toBe(false);
+    expect(isCrossCardOver(true, undefined, 20)).toBe(false);
   });
 });

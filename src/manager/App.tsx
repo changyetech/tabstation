@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import Toolbar, { type Mode } from '../components/Toolbar';
 import Hero from '../components/Hero';
 import WindowSection from '../components/WindowSection';
@@ -7,6 +15,7 @@ import DomainGroupList from '../components/DomainGroupList';
 import ReadLaterSidebar from '../components/ReadLaterSidebar';
 import SessionSection from '../components/SessionSection';
 import Toast from '../components/Toast';
+import DragGhost from '../components/DragGhost';
 import { Icon } from '../components/icons';
 import type { MoveTarget } from '../components/MoveMenu';
 import { I18nProvider, resolveLanguage, useLanguage, useT } from '../i18n';
@@ -18,7 +27,7 @@ import { animateElementOut, undoAnimateElementOut, EXIT_MS } from '../lib/effect
 import { playCloseSound } from '../lib/effects/sound';
 import { shootConfetti } from '../lib/effects/confetti';
 import { findDuplicateGroups, planDedupe, type TabWithId } from '../lib/dedupe';
-import { dragEndToMove, type DragTabData } from '../lib/dnd';
+import { cardDropCollision, dragEndToMove, type DragTabData } from '../lib/dnd';
 import { domainGroupKey, hostnameOf, sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
 import { managerUrl } from '../lib/manager-url';
 import { createWindowBySetting } from '../lib/open-window';
@@ -305,7 +314,18 @@ function AppInner({ settings }: { settings: Settings }) {
     showToast(t('toast.split'));
   };
 
+  // 拖影内容（spec 2026-08-16-session-card-dnd §3.4）：
+  // win-block overflow:hidden 会裁剪跟随指针的原行，改用 DragOverlay portal 渲染
+  const [dragGhost, setDragGhost] = useState<TabWithId | null>(null);
+
+  const handleDragStart = (e: DragStartEvent) => {
+    const data = e.active.data.current as DragTabData | undefined;
+    if (!data) return;
+    setDragGhost(mergedTabs.find((x) => x.id === data.tabId) ?? null);
+  };
+
   const handleDragEnd = (e: DragEndEvent) => {
+    setDragGhost(null);
     // data.current 的类型是 dnd-kit 定死的 Record<string, any>，属库边界；
     // 这里的具体形状由 TabRow 的 useSortable({ data }) 保证
     const move = dragEndToMove(
@@ -499,7 +519,13 @@ function AppInner({ settings }: { settings: Settings }) {
               </div>
             </>
           ) : (
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={cardDropCollision}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={() => setDragGhost(null)}
+            >
               {mode === 'window' ? (
                 <>
                   <div className={entered ? 'win-flow' : 'win-flow enter'}>
@@ -536,6 +562,15 @@ function AppInner({ settings }: { settings: Settings }) {
                   {...shared}
                 />
               )}
+              <DragOverlay>
+                {dragGhost && (
+                  <DragGhost
+                    title={dragGhost.title}
+                    url={dragGhost.url}
+                    favIconUrl={dragGhost.favIconUrl}
+                  />
+                )}
+              </DragOverlay>
             </DndContext>
           )}
         </main>
