@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 128">
+  <!-- 横版锁定:mark + 品牌字标(SF Pro Display Semibold,Latin 负字距) -->
+  <path fill="#1778E1" style="fill:oklch(58% 0.18 255)" fill-rule="evenodd"
+    d="M57 32h14a10 10 0 0 1 10 10v42h15a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12h15V42a10 10 0 0 1 10-10Zm7 13a7 7 0 1 0 0 14 7 7 0 1 0 0-14Z"/>
+  <text x="128" y="83" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif"
+    font-size="52" font-weight="600" letter-spacing="-1" fill="#171B22" style="fill:oklch(18% 0.012 250)">Tab Station</text>
+</svg>

@@ -26,9 +26,11 @@ export default function Toolbar({
       <div className="control-bar">
         <div className="seg-group" role="group">
           <button className="seg" aria-pressed={mode === 'window'} onClick={() => onMode('window')}>
+            <Icon name="win" size={13} />
             {t('toolbar.modeWindow')}
           </button>
           <button className="seg" aria-pressed={mode === 'all'} onClick={() => onMode('all')}>
+            <Icon name="globe" size={13} />
             {t('toolbar.modeAll')}
           </button>
           <button
@@ -36,6 +38,7 @@ export default function Toolbar({
             aria-pressed={mode === 'sessions'}
             onClick={() => onMode('sessions')}
           >
+            <Icon name="session" size={13} />
             {t('toolbar.modeSessions')}
           </button>
         </div>

@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tab Station · 标签工作站</title>
+<style>
+/* ========== 设计令牌:modern-minimal(源 refs/theme1)· light ========== */
+:root {
+  --bg:      oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --fg:      oklch(18% 0.012 250);
+  --muted:   oklch(54% 0.012 250);
+  --border:  oklch(92% 0.005 250);
+  --accent:  oklch(58% 0.18 255);
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+
+  --accent-strong: oklch(46% 0.17 255);
+  --accent-hover:  oklch(40% 0.16 255);
+  --on-accent:     oklch(99% 0 0);
+  --accent-tint:   oklch(96% 0.02 255);
+  --hover:         oklch(96.5% 0.004 250);
+  --seg-bg:        oklch(95.5% 0.004 250);
+  --success:       oklch(46% 0.12 155);
+  --success-tint:  oklch(96.5% 0.025 155);
+  --danger:        oklch(48% 0.16 25);
+  --danger-tint:   oklch(96.5% 0.02 25);
+  --warn:          oklch(46% 0.11 75);
+  --block-shadow:  0 1px 2px oklch(20% 0.01 250 / .05);
+  --pop-shadow:    0 8px 28px oklch(20% 0.01 250 / .14);
+  --frost: color-mix(in oklch, var(--surface) 82%, transparent);
+  --head-grad: linear-gradient(180deg,
+    color-mix(in oklch, var(--fg) 3.5%, var(--surface)),
+    color-mix(in oklch, var(--fg) 1%, var(--surface)));
+}
+/* ========== dark:非纯黑基底 + 半透明白边框,成对重定义 ========== */
+html[data-theme="dark"] {
+  --bg:      oklch(17% 0.008 250);
+  --surface: oklch(21% 0.01 250);
+  --fg:      oklch(93% 0.005 250);
+  --muted:   oklch(66% 0.01 250);
+  --border:  oklch(100% 0 0 / 0.09);
+  --accent:  oklch(70% 0.15 255);
+
+  --accent-strong: oklch(70% 0.14 255);
+  --accent-hover:  oklch(77% 0.12 255);
+  --on-accent:     oklch(16% 0.02 255);
+  --accent-tint:   oklch(28% 0.05 255);
+  --hover:         oklch(26% 0.012 250);
+  --seg-bg:        oklch(25% 0.01 250);
+  --success:       oklch(76% 0.12 155);
+  --success-tint:  oklch(27% 0.04 155);
+  --danger:        oklch(72% 0.14 25);
+  --danger-tint:   oklch(27% 0.035 25);
+  --warn:          oklch(78% 0.11 85);
+  --block-shadow:  0 1px 2px oklch(0% 0 0 / .25);
+  --pop-shadow:    0 8px 28px oklch(0% 0 0 / .5);
+  --frost: color-mix(in oklch, var(--bg) 80%, transparent);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7; /* CJK 正文行高下限 */
+  -webkit-font-smoothing: antialiased;
+  transition: background .25s ease, color .25s ease;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ========== Hero:品牌 + 大字问候 + 全局统计 ========== */
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 26px 20px 18px;
+}
+.hero-main {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 40px;
+  flex-wrap: wrap;
+}
+.hero-greet {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0; /* CJK 不加字距 */
+  line-height: 1.35;
+}
+.hero-date { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.seg-group { display: flex; padding: 2px; background: var(--seg-bg); border-radius: 8px; flex: none; }
+.seg {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color .15s, background .15s, box-shadow .15s;
+}
+.seg:hover { color: var(--fg); }
+.seg[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: 0 1px 2px oklch(20% 0.01 250 / .08), 0 0 0 1px var(--border);
+}
+/* ========== 控制条:hero 下方吸顶,模式居左,去重 + 视图居右 ========== */
+.control-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: var(--frost);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.control-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 20px;
+}
+.control-spacer { flex: 1; }
+.btn-dedupe[hidden] { display: none; }
+.btn-dedupe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--accent-strong);
+  color: var(--on-accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  flex: none;
+  transition: background .15s;
+}
+.btn-dedupe:hover { background: var(--accent-hover); }
+.btn-dedupe:disabled { background: var(--seg-bg); color: var(--muted); cursor: default; }
+.btn-dedupe .count {
+  background: color-mix(in oklch, var(--on-accent) 22%, transparent);
+  border-radius: 99px;
+  padding: 0 7px;
+  font-size: 11.5px;
+  line-height: 18px;
+}
+.icon-btn {
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--muted);
+  flex: none;
+  transition: background .15s, color .15s;
+}
+.icon-btn:hover { background: var(--hover); color: var(--fg); }
+
+/* ========== 全局统计:大数字 + 小标签,与问候同排 ========== */
+.stats { display: flex; gap: 30px; flex-wrap: wrap; }
+.stat { white-space: nowrap; }
+.stat b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.stat span { font-size: 11px; color: var(--muted); letter-spacing: .01em; }
+
+/* ========== 布局:主列 + 右侧面板列 ========== */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 20px 56px;
+  align-items: start;
+}
+aside { position: sticky; top: 60px; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  aside { position: static; }
+}
+@media (max-width: 720px) {
+  .tab-host { display: none; }
+  .hero-greet { font-size: 26px; }
+  .stats { gap: 22px; }
+  .win-head { flex-wrap: wrap; row-gap: 4px; height: auto; }
+  .fav-stack { display: none; }
+}
+/* ========== 微动效:仅 transform/opacity,高频动效 ≤120ms ========== */
+/* 视图/模式切换:新内容轻微上浮淡入,确认状态已变 */
+@keyframes viewIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+#main.view-switch { animation: viewIn .18s cubic-bezier(.2, 0, 0, 1); }
+/* 悬停操作组:原位浮现时从右侧 4px 滑入 */
+@keyframes actsIn { from { opacity: 0; transform: translateX(4px); } }
+.tab-row:hover .row-acts, .row-acts:focus-within,
+.rl-row:hover .rl-acts, .rl-acts:focus-within,
+.session-tab-row:hover .st-acts, .st-acts:focus-within,
+.dom-sub:hover .dom-acts, .win-head:hover .dom-acts { animation: actsIn .12s ease-out; }
+/* 会话展开:面板下落淡入(每次重渲染即重放) */
+@keyframes panelIn { from { opacity: 0; transform: translateY(-3px); } }
+.session-item.open .session-tabs { animation: panelIn .16s ease-out; }
+/* 按压反馈:所有按钮按下位移 1px,松手即回 */
+.btn-dedupe:active, .icon-btn:active, .ghost-btn:active, .seg:active,
+.panel-act:active, .more-btn:active, .new-win:active { transform: translateY(1px); }
+
+/* 无障碍:跟随系统「减弱动态效果」偏好,保留状态但去掉位移动画 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========== 窗口 / 域名区块:全宽堆叠 ========== */
+.win-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--block-shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: box-shadow .2s ease;
+}
+.win-block.is-current { box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--accent) 55%, transparent), var(--block-shadow); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.enter .win-block { animation: fadeUp .35s ease both; }
+.enter .win-block:nth-child(2) { animation-delay: .05s; }
+.enter .win-block:nth-child(3) { animation-delay: .1s; }
+.enter .win-block:nth-child(n+4) { animation-delay: .15s; }
+
+.win-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--head-grad);
+  min-height: 44px;
+}
+.win-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.cur-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent-strong);
+  background: var(--accent-tint);
+  border-radius: 99px;
+  padding: 1px 8px;
+  line-height: 1.6;
+}
+.cur-chip::before { content: ''; width: 5px; height: 5px; border-radius: 99px; background: var(--accent-strong); }
+.fav-stack { display: flex; align-items: center; }
+.fav-stack .favicon {
+  width: 15px; height: 15px;
+  font-size: 8px;
+  border-radius: 4px;
+  margin-left: -5px;
+  box-shadow: 0 0 0 1.5px var(--surface);
+}
+.fav-stack .favicon:first-child { margin-left: 0; }
+.win-meta { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.win-acts { margin-left: auto; display: flex; gap: 6px; }
+.ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  white-space: nowrap;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.ghost-btn:hover { color: var(--fg); background: var(--hover); }
+.ghost-btn.danger:hover {
+  color: var(--danger);
+  background: var(--danger-tint);
+  border-color: color-mix(in oklch, var(--danger) 35%, transparent);
+}
+/* 域名区块头(全部模式 · 域名视图) */
+.dom-strip { height: 3px; }
+/* 新建窗口:虚线幽灵区块 */
+.new-win {
+  width: 100%;
+  border: 1.5px dashed color-mix(in oklch, var(--muted) 45%, transparent);
+  border-radius: 12px;
+  background: none;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.new-win:hover {
+  color: var(--fg);
+  border-color: color-mix(in oklch, var(--fg) 40%, transparent);
+  background: var(--hover);
+}
+
+/* 全部模式 · 域名视图:大屏双列瀑布 */
+.dom-flow { column-gap: 14px; }
+@media (min-width: 1160px) { .dom-flow { columns: 2; } }
+.dom-flow .win-block { break-inside: avoid; }
+
+/* ========== 标签行:单行密排,悬停浮现行内操作 ========== */
+.tab-list { list-style: none; margin: 0; padding: 4px 0; }
+.tab-row { transition: background .15s; }
+.tab-row:hover { background: var(--hover); }
+.tab-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 14px;
+  min-height: 34px;
+  cursor: pointer;
+}
+.drag-grip {
+  width: 13px;
+  margin: 0 -4px 0 -6px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  opacity: 0;
+  cursor: grab;
+  transition: opacity .15s, color .15s;
+}
+.tab-row:hover .drag-grip { opacity: .65; }
+.drag-grip:hover { opacity: 1; color: var(--fg); }
+.drag-grip:active { cursor: grabbing; }
+.drag-grip.ghost { visibility: hidden; }
+.favicon {
+  width: 17px; height: 17px;
+  border-radius: 5px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: oklch(99% 0 0);
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+.tab-pin { color: var(--muted); flex: none; display: grid; place-items: center; }
+.tab-title {
+  flex: 0 1 auto;
+  min-width: 60px;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab-host {
+  flex: 0 1 auto;
+  max-width: 180px;
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 两行样式(全部模式 · 域名视图):标题 + URL 子标题 */
+.tab-text { flex: 1; min-width: 0; }
+.tab-text .tab-title { display: block; min-width: 0; }
+.tab-url {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row-spacer { flex: 1; }
+.dup-badge {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--warn);
+  border: 1px solid color-mix(in oklch, var(--warn) 40%, transparent);
+  border-radius: 99px;
+  padding: 0 6px;
+  line-height: 16px;
+}
+.tab-time { color: var(--muted); font-size: 11px; white-space: nowrap; flex: none; }
+/* 操作组:悬停时在原位替换阅读时间展示,无覆盖层、无底色差 */
+.row-acts { display: none; align-items: center; gap: 2px; flex: none; }
+.tab-row:hover .row-acts, .row-acts:focus-within { display: flex; }
+.tab-row:hover .tab-time { display: none; }
+.tab-row:has(.row-acts:focus-within) .tab-time { display: none; }
+.row-acts .icon-btn { width: 26px; height: 26px; border-radius: 7px; }
+.row-acts .icon-btn:hover { background: color-mix(in oklch, var(--fg) 8%, var(--hover)); color: var(--fg); }
+.row-acts .icon-btn.danger:hover { color: var(--danger); background: var(--danger-tint); }
+/* 域名小节头(窗口模式 · 域名视图) */
+.dom-sub {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.dom-sub .favicon { width: 15px; height: 15px; font-size: 8px; border-radius: 4px; }
+/* 域名行操作组:与 tab 行同款图标按钮,悬停浮现,批量作用于该域名 */
+.dom-acts { margin-left: auto; display: none; align-items: center; gap: 2px; }
+.dom-sub:hover .dom-acts, .win-head:hover .dom-acts, .dom-acts:focus-within { display: flex; }
+.dom-acts .icon-btn { width: 24px; height: 24px; border-radius: 7px; }
+.dom-acts .icon-btn:hover { background: color-mix(in oklch, var(--fg) 8%, var(--hover)); color: var(--fg); }
+.dom-acts .icon-btn.danger:hover { color: var(--danger); background: var(--danger-tint); }
+/* 拖拽指示 */
+.tab-row.dragging { opacity: .45; }
+.tab-row.drop-before { box-shadow: inset 0 2px 0 var(--accent-strong); }
+.tab-row.drop-after  { box-shadow: inset 0 -2px 0 var(--accent-strong); }
+/* more / 收起 */
+.more-row { list-style: none; }
+.more-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 5px 12px;
+  transition: color .15s, background .15s;
+}
+.more-btn:hover { color: var(--fg); background: var(--hover); }
+/* 去重预览:保留 / 待关 */
+.tab-row.dup-keep { background: var(--success-tint); box-shadow: inset 2px 0 0 var(--success); }
+.tab-row.dup-doomed { background: var(--danger-tint); box-shadow: inset 2px 0 0 var(--danger); }
+.tab-row.dup-doomed .tab-title { text-decoration: line-through; color: var(--muted); }
+.doom-mark { color: var(--danger); flex: none; display: grid; place-items: center; }
+/* 关闭退场 */
+.closing {
+  opacity: 0 !important;
+  transform: translateX(24px) scale(.97);
+  transition: opacity .28s ease, transform .28s ease;
+  pointer-events: none;
+}
+.collapsing {
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  border-width: 0 !important;
+  overflow: hidden;
+  transition: all .22s ease .18s;
+}
+.empty-all { text-align: center; color: var(--muted); font-size: 12.5px; padding: 48px 0 20px; }
+.empty-all .icon { display: inline-grid; place-items: center; margin-bottom: 8px; }
+
+/* ========== 右侧面板 ========== */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--block-shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--head-grad);
+}
+.panel-head .icon { color: var(--muted); display: grid; place-items: center; }
+.panel-title { font-family: var(--font-display); font-size: 13px; font-weight: 600; }
+.panel-count { margin-left: auto; color: var(--muted); font-size: 12px; }
+.panel-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  transition: color .15s, background .15s;
+}
+.panel-act:hover { color: var(--fg); background: var(--hover); }
+.panel-act[hidden] { display: none; }
+.panel-empty { padding: 20px 14px 22px; text-align: center; color: var(--muted); font-size: 12px; }
+.panel-empty .empty-ic { display: inline-grid; place-items: center; margin-bottom: 5px; opacity: .8; }
+.rl-list, .session-list, .session-tabs { list-style: none; margin: 0; padding: 4px 0; }
+.rl-row { display: flex; align-items: center; gap: 9px; padding: 6px 14px; transition: background .15s; cursor: pointer; }
+.rl-row:hover { background: var(--hover); }
+.rl-text { flex: 1; min-width: 0; }
+.rl-title {
+  display: block;
+  max-width: 100%;
+  text-align: left;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 0;
+}
+.rl-title:hover { color: var(--accent-strong); }
+.rl-url {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rl-time { color: var(--muted); font-size: 11px; flex: none; }
+/* 面板行操作组:悬停时原位替换时间(稍后阅读)/ 直接浮现(会话条目) */
+.rl-acts, .st-acts { display: none; align-items: center; gap: 2px; flex: none; }
+.rl-row:hover .rl-acts, .rl-acts:focus-within,
+.session-tab-row:hover .st-acts, .st-acts:focus-within { display: flex; }
+.rl-row:hover .rl-time { display: none; }
+.rl-row:has(.rl-acts:focus-within) .rl-time { display: none; }
+.rl-acts .icon-btn, .st-acts .icon-btn { width: 24px; height: 24px; border-radius: 7px; }
+.rl-acts .icon-btn:hover, .st-acts .icon-btn:hover { background: color-mix(in oklch, var(--fg) 8%, var(--hover)); color: var(--fg); }
+.rl-acts .icon-btn.danger:hover, .st-acts .icon-btn.danger:hover { color: var(--danger); background: var(--danger-tint); }
+
+.session-item { border-bottom: 1px solid var(--border); }
+.session-item:last-child { border-bottom: none; }
+.session-row { display: flex; align-items: center; gap: 8px; padding: 8px 14px; transition: background .15s; }
+.session-row:hover { background: var(--hover); }
+.session-chevron {
+  width: 22px; height: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  border-radius: 6px;
+  flex: none;
+  transition: transform .18s;
+}
+.session-item.open .session-chevron { transform: rotate(90deg); }
+.session-name-wrap { flex: 1; min-width: 0; }
+.session-name { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-meta { color: var(--muted); font-size: 11px; }
+.session-name-input {
+  font: inherit;
+  font-size: 12.5px;
+  width: 100%;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: var(--surface);
+  color: var(--fg);
+}
+.session-acts { display: flex; gap: 1px; flex: none; opacity: 0; transition: opacity .12s; }
+.session-row:hover .session-acts, .session-acts:focus-within { opacity: 1; }
+.session-acts .icon-btn { width: 25px; height: 25px; }
+.session-acts .icon-btn.danger:hover { color: var(--danger); background: var(--danger-tint); }
+.session-tabs { padding: 0 0 6px; display: none; }
+.session-item.open .session-tabs { display: block; }
+.session-tab-row { display: flex; align-items: center; gap: 8px; padding: 4px 14px 4px 34px; transition: background .15s; }
+.session-tab-row:hover { background: var(--hover); }
+.session-tab-title {
+  display: block;
+  max-width: 100%;
+  text-align: left;
+  font-size: 12px;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 0;
+}
+.session-tab-title:hover { color: var(--accent-strong); }
+
+/* ========== 移动菜单 ========== */
+.popover {
+  position: fixed;
+  z-index: 500;
+  min-width: 236px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: var(--pop-shadow);
+}
+.popover-label { padding: 5px 10px 3px; font-size: 11px; color: var(--muted); }
+.popover-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+.popover button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  transition: background .12s;
+}
+.popover button:hover { background: var(--hover); }
+.popover button .sub { color: var(--muted); font-size: 11.5px; margin-left: auto; }
+
+/* ========== Toast 与纸屑 ========== */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translate(-50%, 8px);
+  background: var(--fg);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.confetti-bit { position: fixed; width: 6px; height: 6px; border-radius: 1.5px; z-index: 1500; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<header class="hero" data-od-id="hero">
+  <div class="hero-main">
+    <div class="hero-left">
+      <div class="hero-greet" id="greetText"></div>
+      <div class="hero-date num" id="greetDate"></div>
+    </div>
+    <div class="stats num" id="stats" data-od-id="global-stats"></div>
+  </div>
+</header>
+
+<div class="control-wrap" data-od-id="control-bar">
+  <div class="control-bar">
+    <div class="seg-group" role="group" aria-label="模式" data-od-id="mode-switch">
+      <button class="seg" data-mode="window" aria-pressed="true">窗口模式</button>
+      <button class="seg" data-mode="all" aria-pressed="false">全部模式</button>
+    </div>
+    <span class="control-spacer"></span>
+    <button class="btn-dedupe" id="dedupeBtn" data-od-id="dedupe-cta" hidden></button>
+    <div class="seg-group" role="group" aria-label="视图" data-od-id="view-switch">
+      <button class="seg" data-view="list" aria-pressed="true">列表视图</button>
+      <button class="seg" data-view="domain" aria-pressed="false">域名视图</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <main data-od-id="tab-main">
+    <div id="main"></div>
+  </main>
+  <aside data-od-id="sidebar">
+    <section class="panel" data-od-id="read-later-panel">
+      <div class="panel-head">
+        <span class="icon" id="rlIcon"></span>
+        <span class="panel-title">稍后阅读</span>
+        <span class="panel-count num" id="rlCount"></span>
+        <button class="panel-act" id="rlOpenAll" title="在新窗口打开全部,并清空清单" data-od-id="rl-open-all"></button>
+      </div>
+      <div id="rlBody"></div>
+    </section>
+    <section class="panel" data-od-id="sessions-panel">
+      <div class="panel-head">
+        <span class="icon" id="ssIcon"></span>
+        <span class="panel-title">已保存会话</span>
+        <span class="panel-count num" id="ssCount"></span>
+      </div>
+      <div id="ssBody"></div>
+    </section>
+  </aside>
+</div>
+
+<div class="toast num" id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ========== 图标:1.7px 描边 monoline,currentColor ========== */
+const I = (paths, size = 16) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+const ICONS = {
+  bookClock: I('<path d="M13 3.5H8a2 2 0 0 0-2 2V21l4.5-3 2 1.33"/><circle cx="16.5" cy="9" r="4.5"/><path d="M16.5 7v2.2l1.6 1"/>', 15),
+  bookAdd: I('<path d="M17 21l-5-3.5L7 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2Z"/><path d="M12 8v5M9.5 10.5h5"/>', 13),
+  /* 移动到:箭头指向右侧边界线(目标窗口),纯描边无透明度技巧 */
+  move: I('<path d="M3 12h13"/><path d="m11 6 6 6-6 6"/><path d="M21 5v14"/>', 13),
+  close: I('<path d="M6 6l12 12M18 6 6 18"/>', 13),
+  save: I('<path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>', 13),
+  savePanel: I('<path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>', 15),
+  trash: I('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', 13),
+  pin: I('<path d="M12 17v5M5 9l7-6 7 6-2 8H7L5 9Z"/>', 12),
+  grip: `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="9" cy="5.5" r="2"/><circle cx="15" cy="5.5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18.5" r="2"/><circle cx="15" cy="18.5" r="2"/></svg>`,
+  chevron: I('<path d="M9 6l6 6-6 6"/>', 13),
+  restore: I('<path d="M9.5 4H5.5A2.5 2.5 0 0 0 3 6.5v12A2.5 2.5 0 0 0 5.5 21h12a2.5 2.5 0 0 0 2.5-2.5V14.5"/><path d="M14 3h7v7M21 3l-8.5 8.5"/>', 13),
+  edit: I('<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"/>', 13),
+  win: I('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/>', 13),
+  winNew: I('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M12 12.5v4M10 14.5h4"/>', 13),
+  sparkle: I('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/>', 13),
+};
+document.getElementById('rlIcon').innerHTML = ICONS.bookClock;
+document.getElementById('ssIcon').innerHTML = ICONS.savePanel;
+document.getElementById('rlOpenAll').innerHTML = ICONS.restore + '全部打开';
+
+/* ========== 主题:读取设置页写入的 ts-theme,auto 跟随系统 ========== */
+const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(pref) {
+  const resolved = pref === 'auto' ? (themeMedia.matches ? 'dark' : 'light') : pref;
+  document.documentElement.setAttribute('data-theme', resolved);
+}
+const themePref = localStorage.getItem('ts-theme') || 'auto';
+applyTheme(themePref);
+themeMedia.addEventListener('change', () => { if (themePref === 'auto') applyTheme('auto'); });
+
+/* ========== 示例数据(favicon 为内联字母徽标,不外链) ========== */
+const FAV = {
+  github:  { t: 'G',  c: 'oklch(35% 0.02 260)' },
+  mdn:     { t: 'M',  c: 'oklch(40% 0.06 250)' },
+  figma:   { t: 'F',  c: 'oklch(55% 0.19 300)' },
+  zhihu:   { t: '知', c: 'oklch(52% 0.16 255)' },
+  youtube: { t: 'Y',  c: 'oklch(52% 0.19 25)' },
+  so:      { t: 'S',  c: 'oklch(62% 0.15 55)' },
+  juejin:  { t: '掘', c: 'oklch(50% 0.14 240)' },
+  vercel:  { t: 'V',  c: 'oklch(30% 0.01 250)' },
+  linear:  { t: 'L',  c: 'oklch(48% 0.15 280)' },
+  bili:    { t: 'b',  c: 'oklch(62% 0.15 210)' },
+  arxiv:   { t: 'a',  c: 'oklch(48% 0.15 20)' },
+  docs:    { t: 'D',  c: 'oklch(50% 0.13 250)' },
+  mail:    { t: '邮', c: 'oklch(50% 0.15 30)' },
+  notion:  { t: 'N',  c: 'oklch(35% 0.01 250)' },
+  dribbble:{ t: 'D',  c: 'oklch(60% 0.17 350)' },
+  sspai:   { t: '少', c: 'oklch(55% 0.16 30)' },
+  wiki:    { t: 'W',  c: 'oklch(45% 0.01 250)' },
+  x:       { t: 'X',  c: 'oklch(25% 0.01 250)' },
+  taobao:  { t: '淘', c: 'oklch(58% 0.17 45)' },
+  cf:      { t: 'C',  c: 'oklch(62% 0.15 55)' },
+  v2ex:    { t: 'V2', c: 'oklch(40% 0.05 250)' },
+  weread:  { t: '读', c: 'oklch(52% 0.13 240)' },
+  ntp:     { t: '+',  c: 'oklch(55% 0.01 250)' },
+};
+let uid = 100;
+const T = (fav, title, host, url, time, pinned = false) =>
+  ({ id: ++uid, fav, title, host, url, time, pinned });
+
+const state = {
+  mode: 'window',   // window 按窗口分区 / all 合并为一份列表
+  view: 'list',     // list 按真实顺序 / domain 按域名聚合(与模式正交)
+  dedupePreview: false,
+  entered: false,
+  expanded: new Set(),
+  windows: [
+    { id: 1, current: true, tabs: [
+      T('mail',   '收件箱 (3) - 工作邮箱', 'mail.google.com', 'https://mail.google.com/mail/u/0', '刚刚', true),
+      T('notion', '本周计划 · Workspace', 'notion.so', 'https://notion.so/weekly-plan', '10 分钟前', true),
+      T('github', 'fix: manager page 单例竞态 · Pull Request #142', 'github.com', 'https://github.com/changyetech/tabstation/pull/142', '刚刚'),
+      T('mdn',    'oklch() - CSS: Cascading Style Sheets | MDN', 'developer.mozilla.org', 'https://developer.mozilla.org/docs/Web/CSS/color_value/oklch', '6 分钟前'),
+      T('figma',  'Tab Station 管理页重设计 – Figma', 'figma.com', 'https://figma.com/file/tab-station-redesign', '32 分钟前'),
+      T('youtube','The Art of Code - Dylan Beattie - YouTube', 'youtube.com', 'https://youtube.com/watch?v=6avJHaC3C2U', '1 小时前'),
+      T('zhihu',  '浏览器标签页开太多是一种什么体验? - 知乎', 'zhihu.com', 'https://zhihu.com/question/28382832', '2 小时前'),
+      T('so',     'How to batch close tabs with chrome.tabs API - Stack Overflow', 'stackoverflow.com', 'https://stackoverflow.com/questions/69876543', '3 小时前'),
+      T('wiki',   'Oklab color space - Wikipedia', 'en.wikipedia.org', 'https://en.wikipedia.org/wiki/Oklab_color_space', '4 小时前'),
+      T('bili',   'CSS 动画性能优化实录:从 15fps 到 60fps_哔哩哔哩', 'bilibili.com', 'https://bilibili.com/video/BV1yy411d8nE', '5 小时前'),
+      T('x',      'Vercel (@vercel) · v0 更新公告 / X', 'x.com', 'https://x.com/vercel/status/1791111111', '昨天'),
+      T('weread', '《为什么精英都是时间控》- 微信读书', 'weread.qq.com', 'https://weread.qq.com/web/reader/time-control', '昨天'),
+    ]},
+    { id: 2, current: false, tabs: [
+      T('juejin', 'Chrome MV3 Service Worker 生命周期完全指南', 'juejin.cn', 'https://juejin.cn/post/7301234567890', '25 分钟前'),
+      T('youtube','The Art of Code - Dylan Beattie - YouTube', 'youtube.com', 'https://youtube.com/watch?v=6avJHaC3C2U', '3 小时前'),
+      T('vercel', 'Vite Deployment – Vercel Docs', 'vercel.com', 'https://vercel.com/docs/frameworks/vite', '1 小时前'),
+      T('linear', 'TAB-87 去重预览态视觉打磨 – Linear', 'linear.app', 'https://linear.app/changyetech/issue/TAB-87', '44 分钟前'),
+      T('github', 'fix: manager page 单例竞态 · Pull Request #142', 'github.com', 'https://github.com/changyetech/tabstation/pull/142', '2 小时前'),
+    ]},
+    { id: 3, current: false, tabs: [
+      T('figma',  '设计系统 Tokens 盘点 – Figma', 'figma.com', 'https://figma.com/file/design-tokens-audit', '15 分钟前', true),
+      T('dribbble','Tab Manager Dashboard Exploration - Dribbble', 'dribbble.com', 'https://dribbble.com/shots/23456789-tab-manager', '20 分钟前'),
+      T('dribbble','Tab Manager Dashboard Exploration - Dribbble', 'dribbble.com', 'https://dribbble.com/shots/23456789-tab-manager', '1 小时前'),
+      T('sspai',  '我如何用 15 个标签页管理一整天的工作 - 少数派', 'sspai.com', 'https://sspai.com/post/87654', '38 分钟前'),
+      T('wiki',   'Mission Control (macOS) - Wikipedia', 'en.wikipedia.org', 'https://en.wikipedia.org/wiki/Mission_Control_(macOS)', '2 小时前'),
+      T('x',      'Linear (@linear) · 设计更新预告 / X', 'x.com', 'https://x.com/linear/status/1790000000', '4 小时前'),
+    ]},
+    { id: 4, current: false, tabs: [
+      T('cf',     'Workers KV · Cloudflare Docs', 'developers.cloudflare.com', 'https://developers.cloudflare.com/kv', '昨天'),
+      T('github', 'dnd-kit/dnd-kit: Issues', 'github.com', 'https://github.com/clauderic/dnd-kit/issues', '昨天'),
+      T('v2ex',   '大家浏览器常驻多少个标签页? - V2EX', 'v2ex.com', 'https://v2ex.com/t/987654', '昨天'),
+      T('so',     'chrome.tabs.move not preserving pinned state - Stack Overflow', 'stackoverflow.com', 'https://stackoverflow.com/questions/71234567', '2 天前'),
+      T('taobao', '机械键盘键帽 - 淘宝', 'taobao.com', 'https://item.taobao.com/item.htm?id=6789', '3 天前'),
+      T('juejin', 'IndexedDB 与 chrome.storage 选型实测', 'juejin.cn', 'https://juejin.cn/post/7309876543210', '2 天前'),
+    ]},
+  ],
+  readLater: [
+    { id: 'r1', fav: 'so',  title: 'How to detect duplicate tabs across windows?', time: '2 天前', url: 'https://stackoverflow.com/questions/64512339' },
+    { id: 'r2', fav: 'mdn', title: 'Web Audio API 入门 | MDN', time: '5 天前', url: 'https://developer.mozilla.org/docs/Web/API/Web_Audio_API' },
+    { id: 'r3', fav: 'sspai', title: '告别 100+ 标签页焦虑:我的浏览器整理流 - 少数派', time: '刚刚', url: 'https://sspai.com/post/89012' },
+    { id: 'r4', fav: 'juejin', title: 'Manifest V3 迁移踩坑记录(2026 版)', time: '昨天', url: 'https://juejin.cn/post/7311111111' },
+    { id: 'r5', fav: 'wiki',  title: 'Getting Things Done - Wikipedia', time: '4 天前', url: 'https://en.wikipedia.org/wiki/Getting_Things_Done' },
+    { id: 'r6', fav: 'arxiv', title: '[2401.05678] Human Attention in Multi-Tab Browsing', time: '1 周前', url: 'https://arxiv.org/abs/2401.05678' },
+  ],
+  sessions: [
+    { id: 's1', name: '周报资料收集', meta: '8/12 09:30 保存', open: true, tabs: [
+      { fav: 'docs',  title: '季度 OKR 复盘 - Google 文档', url: 'https://docs.google.com/document/d/1AbCdEf' },
+      { fav: 'notion', title: '数据看板 · Workspace', url: 'https://notion.so/data-dashboard' },
+      { fav: 'github', title: 'changyetech/tabstation: Releases', url: 'https://github.com/changyetech/tabstation/releases' },
+    ]},
+    { id: 's2', name: '竞品调研:标签管理器', meta: '8/8 21:14 保存', open: false, tabs: [
+      { fav: 'github', title: 'OneTab 替代品对比清单', url: 'https://github.com/topics/onetab-alternative' },
+      { fav: 'x',      title: 'Arc Browser 归档机制讨论 / X', url: 'https://x.com/browsercompany/status/1789012345' },
+      { fav: 'sspai',  title: 'Workona 深度体验 - 少数派', url: 'https://sspai.com/post/76543' },
+      { fav: 'zhihu',  title: '有哪些好用的标签管理扩展? - 知乎', url: 'https://zhihu.com/question/56789012' },
+    ]},
+    { id: 's3', name: '十月京都行程', meta: '7/29 22:40 保存', open: false, tabs: [
+      { fav: 'wiki',  title: '京都市 - Wikipedia', url: 'https://en.wikipedia.org/wiki/Kyoto' },
+      { fav: 'bili',  title: '京都 4 天 3 夜路线实测_哔哩哔哩', url: 'https://bilibili.com/video/BV1ky411m7Ex' },
+      { fav: 'taobao', title: 'JR Pass 周游券 - 淘宝', url: 'https://item.taobao.com/item.htm?id=1234' },
+      { fav: 'docs',  title: '行程共享表 - Google 文档', url: 'https://docs.google.com/document/d/2XyZabc' },
+    ]},
+  ],
+  settings: { scope: 'global', closeAfterSave: false, lang: 'auto', visibleTabs: 8, newWindowMode: 'max' },
+};
+/* 新窗口默认行为(设置页可改):max = 全屏,same = 随当前窗口 */
+const nwMax = () => state.settings.newWindowMode !== 'same';
+const nwLabel = () => (nwMax() ? '(全屏)' : '(随当前窗口)');
+const visLimit = () => (state.settings.visibleTabs === 'all' ? Infinity : +state.settings.visibleTabs || 8);
+
+/* ========== 去重:URL 归一化(去 hash)· 全浏览器范围 · 固定标签优先保留 ========== */
+const normUrl = (u) => u.split('#')[0];
+function dupGroupsAll() {
+  const map = new Map();
+  for (const w of state.windows) for (const t of w.tabs) {
+    const k = normUrl(t.url);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(t);
+  }
+  return [...map.values()].filter((g) => g.length >= 2 && g.some((t) => !t.pinned));
+}
+function dedupePlan() {
+  const keep = new Set(), close = new Set();
+  for (const g of dupGroupsAll()) {
+    const keeper = g.find((t) => t.pinned) ?? g[0];
+    keep.add(keeper.id);
+    for (const t of g) if (t !== keeper && !t.pinned) close.add(t.id);
+  }
+  return { keep, close };
+}
+
+/* ========== 关闭动效:swoosh + 纸屑 + 退场 ========== */
+let audioCtx = null;
+function playSwoosh() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = audioCtx, dur = 0.28;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 2;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.6;
+    const g = ctx.createGain(); g.gain.value = 0.18;
+    src.connect(f).connect(g).connect(ctx.destination); src.start();
+  } catch { /* 无音频环境时静默 */ }
+}
+const CONFETTI_COLORS = ['oklch(58% 0.18 255)', 'oklch(62% 0.15 155)', 'oklch(65% 0.16 55)', 'oklch(60% 0.17 25)', 'oklch(58% 0.16 300)'];
+function confetti(x, y) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let i = 0; i < 14; i++) {
+    const b = document.createElement('span');
+    b.className = 'confetti-bit';
+    b.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+    document.body.appendChild(b);
+    const ang = Math.random() * Math.PI * 2, v = 40 + Math.random() * 70;
+    b.animate([
+      { transform: 'translate(0,0) rotate(0)', opacity: 1 },
+      { transform: `translate(${Math.cos(ang) * v}px, ${Math.sin(ang) * v + 60}px) rotate(${Math.random() * 500 - 250}deg)`, opacity: 0 },
+    ], { duration: 550 + Math.random() * 250, easing: 'cubic-bezier(.2,.6,.3,1)' }).onfinish = () => b.remove();
+  }
+}
+/* 批量关闭:音效只播一次,粒子逐行错开 */
+function closeRows(entries, commit) {
+  if (!entries.length) { commit(); return; }
+  playSwoosh();
+  entries.forEach(({ el }, i) => {
+    if (!el) return;
+    setTimeout(() => {
+      const r = el.getBoundingClientRect();
+      confetti(r.left + 40, r.top + r.height / 2);
+      el.style.maxHeight = r.height + 'px';
+      el.classList.add('closing');
+      requestAnimationFrame(() => el.classList.add('collapsing'));
+    }, i * 60);
+  });
+  setTimeout(commit, entries.length * 60 + 340);
+}
+
+/* ========== 工具函数 ========== */
+const $ = (s, p = document) => p.querySelector(s);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clip = (s, n) => (s.length > n ? s.slice(0, n) + '…' : s);
+const favHtml = (k) => { const f = FAV[k]; return `<span class="favicon" style="background:${f.c}">${f.t}</span>`; };
+let toastTimer;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+const allTabs = () => state.windows.flatMap((w) => w.tabs);
+const findTab = (id) => { for (const w of state.windows) { const t = w.tabs.find((x) => x.id === id); if (t) return { w, t }; } return null; };
+function removeTabs(ids) {
+  const set = new Set(ids);
+  for (const w of state.windows) w.tabs = w.tabs.filter((t) => !set.has(t.id));
+  state.windows = state.windows.filter((w) => w.tabs.length > 0);
+}
+
+/* ========== 渲染 ========== */
+function dupCountByTab() {
+  const m = new Map();
+  for (const g of dupGroupsAll()) for (const t of g) m.set(t.id, g.length);
+  return m;
+}
+/* 单行标签:整行可点即跳转,操作按钮悬停浮现于行尾 */
+function tabRowHtml(t, dupMap, plan, dragCtx, noFav, subUrl) {
+  const preview = state.dedupePreview
+    ? (plan.close.has(t.id) ? 'dup-doomed' : plan.keep.has(t.id) ? 'dup-keep' : '') : '';
+  const dup = dupMap.get(t.id);
+  const dragOK = dragCtx && !t.pinned && !state.dedupePreview;
+  return `<li class="tab-row ${preview}" data-tab="${t.id}" draggable="${dragOK}" data-od-id="tab-row-${t.id}">
+    <div class="tab-line" role="button" tabindex="0" title="${esc(t.title)} · 点击跳转">
+      ${dragCtx ? `<span class="drag-grip${t.pinned ? ' ghost' : ''}" title="拖拽调整顺序">${ICONS.grip}</span>` : ''}
+      ${noFav ? '' : favHtml(t.fav)}
+      ${t.pinned ? `<span class="tab-pin" title="固定标签">${ICONS.pin}</span>` : ''}
+      ${subUrl
+        ? `<span class="tab-text"><span class="tab-title">${esc(t.title)}</span><span class="tab-url">${esc(t.url.replace(/^https?:\/\//, ''))}</span></span>`
+        : `<span class="tab-title">${esc(t.title)}</span>
+      <span class="tab-host">${esc(t.host)}</span>
+      <span class="row-spacer"></span>`}
+      ${dup ? `<span class="dup-badge num">×${dup}</span>` : ''}
+      ${preview === 'dup-doomed' ? `<span class="doom-mark">${ICONS.close}</span>` : ''}
+      <span class="tab-time num">${t.time}</span>
+      <span class="row-acts">
+        ${!t.pinned ? `<button class="icon-btn" data-act="readlater" title="收进稍后阅读(保存并关闭)">${ICONS.bookAdd}</button>
+        <button class="icon-btn" data-act="splitwin" title="拆到新窗口">${ICONS.winNew}</button>` : ''}
+        ${state.windows.length > 1 ? `<button class="icon-btn" data-act="move" title="移动到其他窗口">${ICONS.move}</button>` : ''}
+        <button class="icon-btn danger" data-act="close" title="关闭标签页">${ICONS.close}</button>
+      </span>
+    </div>
+  </li>`;
+}
+const moreRowHtml = (rest, expanded) =>
+  `<li class="more-row"><button class="more-btn num" data-act="togglemore">${expanded ? '收起' : `还有 ${rest} 个标签页 · 展开`}</button></li>`;
+/* 按 more 状态截断;去重预览时只保留重复组成员且不截断 */
+function limitTabs(tabs, key, plan) {
+  if (state.dedupePreview) {
+    return { shown: tabs.filter((t) => plan.keep.has(t.id) || plan.close.has(t.id)), more: '' };
+  }
+  const limit = visLimit();
+  const expanded = state.expanded.has(key);
+  if (tabs.length <= limit) return { shown: tabs, more: '' };
+  return {
+    shown: expanded ? tabs : tabs.slice(0, limit),
+    more: moreRowHtml(tabs.length - limit, expanded),
+  };
+}
+function groupByDomain(tabs) {
+  const m = new Map();
+  for (const t of tabs) {
+    if (!m.has(t.host)) m.set(t.host, []);
+    m.get(t.host).push(t);
+  }
+  return [...m.entries()].sort((a, b) => b[1].length - a[1].length);
+}
+/* 域名行操作组:与 tab 行同款图标按钮,批量作用于该域名 */
+const domActsHtml = (host) => `<span class="dom-acts">
+  <button class="icon-btn" data-act="rl-dom" data-host="${esc(host)}" title="全部收进稍后阅读(保存并关闭,固定标签除外)">${ICONS.bookAdd}</button>
+  <button class="icon-btn" data-act="newwin-dom" data-host="${esc(host)}" title="拆到新窗口">${ICONS.winNew}</button>
+  <button class="icon-btn danger" data-act="closedom" data-host="${esc(host)}" title="关闭该域名全部标签页(固定标签除外)">${ICONS.close}</button>
+</span>`;
+/* 窗口区块体:列表视图 = 真实顺序,超出「展示条数」折叠;域名视图 = 域名小节(不跨窗口) */
+function winBodyHtml(w, dupMap, plan) {
+  if (state.view === 'list') {
+    const { shown, more } = limitTabs(w.tabs, 'w' + w.id, plan);
+    if (state.dedupePreview && !shown.length) return '';
+    return `<ul class="tab-list">${shown.map((t) => tabRowHtml(t, dupMap, plan, !state.dedupePreview)).join('')}${more}</ul>`;
+  }
+  let groups = groupByDomain(w.tabs);
+  if (state.dedupePreview) {
+    groups = groups
+      .map(([host, ts]) => [host, ts.filter((t) => plan.keep.has(t.id) || plan.close.has(t.id))])
+      .filter(([, ts]) => ts.length);
+    if (!groups.length) return '';
+  }
+  return groups.map(([host, ts]) => `
+    <div class="dom-sub">${favHtml(ts[0].fav)}${esc(host)}<span class="num" style="font-weight:400">· ${ts.length}</span>
+      ${domActsHtml(host)}
+    </div>
+    <ul class="tab-list" style="padding-top:0">${ts.map((t) => tabRowHtml(t, dupMap, plan, false, true)).join('')}</ul>`).join('');
+}
+function windowBlockHtml(w, idx, dupMap, plan) {
+  const body = winBodyHtml(w, dupMap, plan);
+  if (state.dedupePreview && !body) return '';
+  const stackFavs = [...new Set(w.tabs.map((t) => t.fav))].slice(0, 4);
+  const pinned = w.tabs.filter((t) => t.pinned).length;
+  return `<section class="win-block ${w.current ? 'is-current' : ''}" data-win="${w.id}" data-morekey="w${w.id}" data-od-id="window-block-${w.id}">
+    <div class="win-head">
+      <span class="win-title">窗口 ${idx + 1}${w.current ? '<span class="cur-chip">当前</span>' : ''}</span>
+      <span class="fav-stack">${stackFavs.map(favHtml).join('')}</span>
+      <span class="win-meta num">${w.tabs.length} 个标签页${pinned ? ` · ${pinned} 固定` : ''}</span>
+      <span class="win-acts">
+        <button class="ghost-btn" data-act="savewin" title="将本窗口保存为会话">${ICONS.save}保存会话</button>
+        <button class="ghost-btn danger" data-act="closewin" title="关闭整个窗口">${ICONS.close}关闭窗口</button>
+      </span>
+    </div>
+    ${body}
+  </section>`;
+}
+function render() {
+  clearDupHover();
+  hoverDupId = null;
+  const dupMap = dupCountByTab();
+  const plan = dedupePlan();
+  const main = $('#main');
+  const enter = state.entered ? '' : ' enter';
+  const dragCtx = state.mode === 'window' && state.view === 'list';
+
+  if (!state.windows.length) {
+    main.innerHTML = `<div class="empty-all"><span class="icon">${ICONS.sparkle}</span><br/>所有窗口都已清空——干得漂亮。</div>
+      <div style="max-width:300px;margin:0 auto"><button class="new-win" data-act="newwin" data-od-id="new-window">${ICONS.winNew}新建窗口</button></div>`;
+  } else if (state.mode === 'window') {
+    const newBtn = state.dedupePreview ? '' :
+      `<button class="new-win" data-act="newwin" data-od-id="new-window">${ICONS.winNew}新建窗口</button>`;
+    main.innerHTML = `<div class="${enter.trim()}">${state.windows.map((w, i) => windowBlockHtml(w, i, dupMap, plan)).join('')}</div>${newBtn}`;
+  } else if (state.view === 'domain') {
+    /* 全部模式 · 域名视图:跨窗口按域名聚合,每域名一个区块 */
+    let groups = groupByDomain(allTabs());
+    if (state.dedupePreview) {
+      groups = groups
+        .map(([host, ts]) => [host, ts.filter((t) => plan.keep.has(t.id) || plan.close.has(t.id))])
+        .filter(([, ts]) => ts.length);
+    }
+    main.innerHTML = `<div class="dom-flow${enter}">${groups.map(([host, ts]) => {
+      const { shown, more } = limitTabs(ts, 'd' + host, plan);
+      return `<section class="win-block" data-host="${esc(host)}" data-morekey="d${host}" data-od-id="domain-block-${host.replace(/\W/g, '-')}">
+        <div class="dom-strip" style="background:${FAV[ts[0].fav].c}"></div>
+        <div class="win-head" style="min-height:40px">
+          <span class="win-title">${favHtml(ts[0].fav)}${esc(host)}</span>
+          <span class="win-meta num">${ts.length} 个标签页</span>
+          ${domActsHtml(host)}
+        </div>
+        <ul class="tab-list">${shown.map((t) => tabRowHtml(t, dupMap, plan, false, true, true)).join('')}${more}</ul>
+      </section>`;
+    }).join('')}</div>`;
+  } else {
+    /* 全部模式 · 列表视图:按窗口顺序合并为一份列表,全量展示不折叠 */
+    let merged = allTabs();
+    if (state.dedupePreview) merged = merged.filter((t) => plan.keep.has(t.id) || plan.close.has(t.id));
+    main.innerHTML = `<div class="${enter.trim()}"><section class="win-block" data-od-id="all-tabs-block">
+      <div class="win-head">
+        <span class="win-title">全部标签页</span>
+        <span class="win-meta num">${merged.length} 个 · 跨 ${state.windows.length} 个窗口</span>
+      </div>
+      <ul class="tab-list">${merged.map((t) => tabRowHtml(t, dupMap, plan, false)).join('')}</ul>
+    </section></div>`;
+  }
+  state.entered = true;
+
+  /* 状态行统计 */
+  const groups = dupGroupsAll();
+  $('#stats').innerHTML = [
+    [state.windows.length, '窗口'],
+    [allTabs().length, '标签页'],
+    [new Set(allTabs().map((t) => t.host)).size, '域名'],
+    [groups.length, '组重复'],
+    [state.readLater.length, '待读'],
+  ].map(([n, label]) => `<div class="stat"><b>${n}</b><span>${label}</span></div>`).join('');
+
+  /* 去重按钮:仅在存在重复标签时出现 */
+  const btn = $('#dedupeBtn');
+  btn.hidden = groups.length === 0;
+  if (groups.length) btn.innerHTML = `${ICONS.sparkle}一键去重<span class="count num">−${plan.close.size}</span>`;
+
+  /* 稍后阅读 */
+  $('#rlOpenAll').hidden = !state.readLater.length;
+  $('#rlCount').textContent = state.readLater.length ? `${state.readLater.length} 条` : '';
+  $('#rlBody').innerHTML = state.readLater.length
+    ? `<ul class="rl-list">${state.readLater.map((r) => `
+        <li class="rl-row" data-rl="${r.id}">
+          ${favHtml(r.fav)}
+          <span class="rl-text">
+            <button class="rl-title" data-act="openrl" title="打开并从清单移除">${esc(r.title)}</button>
+            <span class="rl-url">${esc((r.url || '').replace(/^https?:\/\//, ''))}</span>
+          </span>
+          <span class="rl-time num">${r.time}</span>
+          <span class="rl-acts">
+            <button class="icon-btn" data-act="rlnewwin" title="新窗口打开(并从清单移除)">${ICONS.winNew}</button>
+            <button class="icon-btn danger" data-act="delrl" title="从清单删除">${ICONS.close}</button>
+          </span>
+        </li>`).join('')}</ul>`
+    : `<div class="panel-empty"><span class="empty-ic">${ICONS.bookClock}</span><br/>清单是空的。<br/>把想读的标签页收进来,读时再打开。</div>`;
+
+  /* 会话 */
+  $('#ssCount').textContent = state.sessions.length ? `${state.sessions.length} 个` : '';
+  $('#ssBody').innerHTML = state.sessions.length
+    ? `<ul class="session-list">${state.sessions.map((s) => `
+        <li class="session-item ${s.open ? 'open' : ''}" data-session="${s.id}">
+          <div class="session-row">
+            <button class="session-chevron" data-act="togglesession" title="${s.open ? '收起' : '展开'}" aria-expanded="${s.open}">${ICONS.chevron}</button>
+            <div class="session-name-wrap">
+              <div class="session-name" data-name>${esc(s.name)}</div>
+              <div class="session-meta num">${s.tabs.length} 个标签页 · ${s.meta}</div>
+            </div>
+            <span class="session-acts">
+              <button class="icon-btn" data-act="restore" title="恢复到新窗口(会话保留)">${ICONS.restore}</button>
+              <button class="icon-btn" data-act="rename" title="重命名">${ICONS.edit}</button>
+              <button class="icon-btn danger" data-act="delsession" title="删除会话">${ICONS.trash}</button>
+            </span>
+          </div>
+          <ul class="session-tabs">${s.tabs.map((t, i) => `
+            <li class="session-tab-row" data-idx="${i}">
+              ${favHtml(t.fav)}
+              <span class="rl-text">
+                <button class="session-tab-title" data-act="opensessiontab" title="单独打开">${esc(t.title)}</button>
+                <span class="rl-url">${esc((t.url || '').replace(/^https?:\/\//, ''))}</span>
+              </span>
+              <span class="st-acts">
+                <button class="icon-btn" data-act="stnewwin" title="新窗口打开">${ICONS.winNew}</button>
+                <button class="icon-btn danger" data-act="delsessiontab" title="移除此条">${ICONS.close}</button>
+              </span>
+            </li>`).join('')}</ul>
+        </li>`).join('')}</ul>`
+    : `<div class="panel-empty"><span class="empty-ic">${ICONS.savePanel}</span><br/>还没有会话。<br/>点窗口右上的「保存会话」,随时整窗恢复。</div>`;
+}
+
+/* ========== 移动菜单:其他窗口 + 新窗口(全屏 / 同尺寸) ========== */
+let popoverEl = null;
+function closePopover() { popoverEl?.remove(); popoverEl = null; }
+function openMoveMenu(anchor, tabId) {
+  closePopover();
+  const found = findTab(tabId);
+  if (!found) return;
+  const others = state.windows
+    .map((w, i) => ({ w, i }))
+    .filter(({ w }) => w.id !== found.w.id);
+  if (!others.length) return;
+  popoverEl = document.createElement('div');
+  popoverEl.className = 'popover';
+  popoverEl.setAttribute('data-od-id', 'move-menu');
+  popoverEl.innerHTML = `
+    <div class="popover-label">移动到窗口</div>
+    ${others.map(({ w, i }) => `<button data-movewin="${w.id}">${ICONS.win}窗口 ${i + 1} · ${esc(clip(w.tabs[0].title, 12))}<span class="sub num">${w.tabs.length} 个</span></button>`).join('')}`;
+  document.body.appendChild(popoverEl);
+  const r = anchor.getBoundingClientRect();
+  const pw = popoverEl.offsetWidth, ph = popoverEl.offsetHeight;
+  popoverEl.style.left = Math.min(r.right - pw + 8, innerWidth - pw - 8) + 'px';
+  popoverEl.style.top = (r.bottom + ph + 8 > innerHeight ? r.top - ph - 6 : r.bottom + 6) + 'px';
+  popoverEl.addEventListener('click', (e) => {
+    const winBtn = e.target.closest('[data-movewin]');
+    if (!winBtn) return;
+    const target = state.windows.find((w) => w.id === +winBtn.dataset.movewin);
+    found.w.tabs = found.w.tabs.filter((t) => t.id !== tabId);
+    target.tabs.push(found.t);
+    state.windows = state.windows.filter((w) => w.tabs.length > 0);
+    toast(`已移动到窗口 ${state.windows.indexOf(target) + 1}`);
+    closePopover();
+    render();
+  });
+}
+document.addEventListener('pointerdown', (e) => {
+  if (popoverEl && !popoverEl.contains(e.target)) closePopover();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopover(); });
+
+/* ========== 顶栏交互 ========== */
+/* 切换过场:重放一次 viewIn(移除类 → 强制回流 → 加回) */
+function replayViewIn() {
+  const main = $('#main');
+  main.classList.remove('view-switch');
+  void main.offsetWidth;
+  main.classList.add('view-switch');
+}
+document.querySelectorAll('[data-mode]').forEach((b) =>
+  b.addEventListener('click', () => {
+    state.mode = b.dataset.mode;
+    document.querySelectorAll('[data-mode]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    render();
+    replayViewIn();
+  }));
+document.querySelectorAll('[data-view]').forEach((b) =>
+  b.addEventListener('click', () => {
+    state.view = b.dataset.view;
+    document.querySelectorAll('[data-view]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    render();
+    replayViewIn();
+  }));
+const dedupeBtn = $('#dedupeBtn');
+dedupeBtn.addEventListener('mouseenter', () => { if (!dedupeBtn.hidden) { state.dedupePreview = true; render(); } });
+dedupeBtn.addEventListener('mouseleave', () => { if (state.dedupePreview) { state.dedupePreview = false; render(); } });
+dedupeBtn.addEventListener('click', () => {
+  const plan = dedupePlan();
+  if (!plan.close.size) return;
+  state.dedupePreview = false;
+  const n = plan.close.size;
+  const entries = [...plan.close].map((id) => ({ id, el: $(`[data-tab="${id}"]`) }));
+  closeRows(entries, () => {
+    removeTabs([...plan.close]);
+    render();
+    toast(`已关闭 ${n} 个重复标签页`);
+  });
+});
+
+/* ========== 主区事件委托 ========== */
+$('#main').addEventListener('click', (e) => {
+  const actBtn = e.target.closest('[data-act]');
+  if (!actBtn) {
+    const row = e.target.closest('[data-tab]');
+    if (row && e.target.closest('.tab-line')) {
+      const found = findTab(+row.dataset.tab);
+      if (found) toast(`已跳转到「${clip(found.t.title, 18)}」`);
+    }
+    return;
+  }
+  const act = actBtn.dataset.act;
+  const row = actBtn.closest('[data-tab]');
+  const block = actBtn.closest('[data-win]');
+
+  if (act === 'togglemore') {
+    const key = actBtn.closest('[data-morekey]').dataset.morekey;
+    state.expanded.has(key) ? state.expanded.delete(key) : state.expanded.add(key);
+    render();
+    return;
+  }
+  if (act === 'newwin') {
+    const t = T('ntp', '新标签页', 'newtab', '', '刚刚');
+    t.url = 'chrome://newtab/' + t.id; // URL 唯一,避免误入重复组
+    state.windows.push({ id: Date.now(), current: false, tabs: [t] });
+    render();
+    toast(`已新建窗口 ${state.windows.length}`);
+    return;
+  }
+  if (act === 'rl-dom' || act === 'newwin-dom' || act === 'closedom') {
+    /* 域名行批量操作:窗口模式作用于本窗口内该域名,全部模式作用于全浏览器 */
+    const host = actBtn.dataset.host;
+    const winEl = actBtn.closest('[data-win]');
+    const w = winEl ? state.windows.find((x) => x.id === +winEl.dataset.win) : null;
+    const pool = w ? w.tabs : allTabs();
+    if (act === 'newwin-dom') {
+      const targets = pool.filter((t) => t.host === host);
+      if (!targets.length) return;
+      const idSet = new Set(targets.map((t) => t.id));
+      for (const win of state.windows) win.tabs = win.tabs.filter((t) => !idSet.has(t.id));
+      state.windows.push({ id: Date.now(), current: false, tabs: targets });
+      state.windows = state.windows.filter((x) => x.tabs.length > 0);
+      render();
+      toast(`已将 ${host} 的 ${targets.length} 个标签页拆到新窗口${nwLabel()}`);
+      return;
+    }
+    const targets = pool.filter((t) => t.host === host && !t.pinned);
+    if (!targets.length) { toast('该域名只有固定标签,未处理'); return; }
+    const ids = targets.map((t) => t.id);
+    const entries = ids.map((id) => ({ id, el: $(`[data-tab="${id}"]`) }));
+    if (act === 'rl-dom') {
+      for (const t of targets) state.readLater.unshift({ id: 'r' + t.id, fav: t.fav, title: t.title, time: '刚刚', url: t.url });
+      closeRows(entries, () => { removeTabs(ids); render(); toast(`已把 ${host} 的 ${ids.length} 个标签页收进稍后阅读`); });
+    } else {
+      closeRows(entries, () => { removeTabs(ids); render(); toast(`已关闭 ${host} 的 ${ids.length} 个标签页`); });
+    }
+    return;
+  }
+  if (row) {
+    const tabId = +row.dataset.tab;
+    const found = findTab(tabId);
+    if (!found) return;
+    if (act === 'close') {
+      closeRows([{ el: row }], () => { removeTabs([tabId]); render(); });
+    } else if (act === 'readlater') {
+      state.readLater.unshift({ id: 'r' + tabId, fav: found.t.fav, title: found.t.title, time: '刚刚', url: found.t.url });
+      closeRows([{ el: row }], () => { removeTabs([tabId]); render(); toast('已收进稍后阅读,源标签已关闭'); });
+    } else if (act === 'splitwin') {
+      found.w.tabs = found.w.tabs.filter((t) => t.id !== tabId);
+      state.windows.push({ id: Date.now(), current: false, tabs: [found.t] });
+      state.windows = state.windows.filter((w) => w.tabs.length > 0);
+      render();
+      toast(`已在新窗口打开${nwLabel()}`);
+    } else if (act === 'move') {
+      openMoveMenu(actBtn, tabId);
+    }
+    return;
+  }
+  if (block) {
+    const w = state.windows.find((x) => x.id === +block.dataset.win);
+    if (!w) return;
+    const idx = state.windows.indexOf(w) + 1;
+    if (act === 'savewin') {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      state.sessions.unshift({
+        id: 's' + Date.now(),
+        name: `${now.getMonth() + 1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+        meta: '刚刚保存',
+        open: false,
+        tabs: w.tabs.map((t) => ({ fav: t.fav, title: t.title, url: t.url })),
+      });
+      if (state.settings.closeAfterSave) {
+        closeRows([{ el: block }], () => { state.windows = state.windows.filter((x) => x !== w); render(); toast(`已保存会话并关闭窗口 ${idx}`); });
+      } else {
+        render();
+        toast(`窗口 ${idx} 已保存为会话`);
+      }
+    } else if (act === 'closewin') {
+      closeRows([{ el: block }], () => { state.windows = state.windows.filter((x) => x !== w); render(); });
+    }
+  }
+});
+
+/* 键盘可达:Enter / 空格 在聚焦的标签行上等同点击跳转 */
+$('#main').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  if (e.target.tagName === 'BUTTON') return; // 行内按钮由原生 Enter/click 处理
+  const line = e.target.closest?.('.tab-line');
+  if (!line) return;
+  e.preventDefault();
+  const row = line.closest('[data-tab]');
+  const found = row && findTab(+row.dataset.tab);
+  if (found) toast(`已跳转到「${clip(found.t.title, 18)}」`);
+});
+
+/* ========== 悬停重复行:高亮整个重复组(样式与去重预览一致) ========== */
+let hoverDupId = null;
+let hoverMarked = [];
+function clearDupHover() {
+  hoverMarked.forEach((el) => el.classList.remove('dup-keep', 'dup-doomed'));
+  hoverMarked = [];
+}
+$('#main').addEventListener('mouseover', (e) => {
+  if (state.dedupePreview) return;
+  const row = e.target.closest('[data-tab]');
+  const id = row ? +row.dataset.tab : null;
+  if (id === hoverDupId) return;
+  clearDupHover();
+  hoverDupId = id;
+  if (id === null) return;
+  const group = dupGroupsAll().find((g) => g.some((t) => t.id === id));
+  if (!group) return;
+  const plan = dedupePlan();
+  for (const t of group) {
+    const el = document.querySelector(`[data-tab="${t.id}"]`);
+    if (!el) continue; // 组员可能折叠在「更多」里
+    el.classList.add(plan.close.has(t.id) ? 'dup-doomed' : 'dup-keep');
+    hoverMarked.push(el);
+  }
+});
+$('#main').addEventListener('mouseleave', () => { clearDupHover(); hoverDupId = null; });
+
+/* ========== 拖拽排序(窗口模式 · 列表视图,可跨窗口) ========== */
+let dragTabId = null;
+function clearDropMarks() {
+  document.querySelectorAll('.drop-before, .drop-after').forEach((el) =>
+    el.classList.remove('drop-before', 'drop-after'));
+}
+$('#main').addEventListener('dragstart', (e) => {
+  const row = e.target.closest('[data-tab]');
+  if (!row || row.getAttribute('draggable') !== 'true') return;
+  dragTabId = +row.dataset.tab;
+  row.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', String(dragTabId)); // Firefox 需要 data 才启动拖拽
+});
+$('#main').addEventListener('dragover', (e) => {
+  if (dragTabId === null) return;
+  const row = e.target.closest('[data-tab]');
+  if (!row || +row.dataset.tab === dragTabId) { clearDropMarks(); return; }
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  clearDropMarks();
+  const r = row.getBoundingClientRect();
+  row.classList.add(e.clientY < r.top + r.height / 2 ? 'drop-before' : 'drop-after');
+});
+$('#main').addEventListener('drop', (e) => {
+  if (dragTabId === null) return;
+  const row = e.target.closest('[data-tab]');
+  if (!row || +row.dataset.tab === dragTabId) return;
+  e.preventDefault();
+  const after = row.classList.contains('drop-after');
+  const src = findTab(dragTabId), dst = findTab(+row.dataset.tab);
+  clearDropMarks();
+  if (!src || !dst) return;
+  src.w.tabs = src.w.tabs.filter((t) => t.id !== dragTabId);
+  const di = dst.w.tabs.indexOf(dst.t) + (after ? 1 : 0);
+  dst.w.tabs.splice(di, 0, src.t);
+  state.windows = state.windows.filter((w) => w.tabs.length > 0);
+  render();
+});
+$('#main').addEventListener('dragend', () => {
+  dragTabId = null;
+  clearDropMarks();
+  document.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
+});
+
+/* ========== 状态行:日期 + 问候(每分钟刷新) ========== */
+function tickGreet() {
+  const now = new Date();
+  const h = now.getHours();
+  $('#greetText').textContent = h < 6 ? '夜深了' : h < 12 ? '上午好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好';
+  $('#greetDate').textContent = new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(now);
+}
+tickGreet();
+setInterval(tickGreet, 60000);
+
+/* ========== 侧栏事件委托 ========== */
+$('#rlOpenAll').addEventListener('click', () => {
+  const n = state.readLater.length;
+  if (!n) return;
+  state.readLater = []; // 打开即从清单移除,与单条语义一致
+  render();
+  toast(`已在新窗口打开 ${n} 个链接,清单已清空`);
+});
+$('#rlBody').addEventListener('click', (e) => {
+  let btn = e.target.closest('[data-act]');
+  const hitRow = e.target.closest('[data-rl]');
+  if (!btn && hitRow) btn = { dataset: { act: 'openrl' }, closest: () => hitRow }; // 整行可点 = 打开
+  if (!btn) return;
+  const rowEl = btn.closest('[data-rl]') || hitRow;
+  const item = state.readLater.find((r) => r.id === rowEl.dataset.rl);
+  if (btn.dataset.act === 'openrl') {
+    state.readLater = state.readLater.filter((r) => r !== item);
+    render();
+    toast('已打开,并从清单移除');
+  } else if (btn.dataset.act === 'rlnewwin') {
+    /* 新窗口打开:语义同「打开」,即从清单移除 */
+    const host = (item.url || '').replace(/^https?:\/\//, '').split('/')[0] || 'newtab';
+    state.windows.push({ id: Date.now(), current: false, tabs: [T(item.fav, item.title, host, item.url || '', '刚刚')] });
+    state.readLater = state.readLater.filter((r) => r !== item);
+    render();
+    toast(`已在新窗口打开${nwLabel()},并从清单移除`);
+  } else if (btn.dataset.act === 'delrl') {
+    rowEl.style.maxHeight = rowEl.offsetHeight + 'px';
+    rowEl.classList.add('closing');
+    requestAnimationFrame(() => rowEl.classList.add('collapsing'));
+    setTimeout(() => { state.readLater = state.readLater.filter((r) => r !== item); render(); }, 420);
+  }
+});
+$('#ssBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const itemEl = btn.closest('[data-session]');
+  const s = state.sessions.find((x) => x.id === itemEl.dataset.session);
+  const act = btn.dataset.act;
+  if (act === 'togglesession') { s.open = !s.open; render(); }
+  else if (act === 'restore') { toast(`已在新窗口恢复「${s.name}」· ${s.tabs.length} 个标签页`); }
+  else if (act === 'delsession') { state.sessions = state.sessions.filter((x) => x !== s); render(); }
+  else if (act === 'rename') {
+    const nameEl = itemEl.querySelector('[data-name]');
+    const input = document.createElement('input');
+    input.className = 'session-name-input';
+    input.value = s.name;
+    nameEl.replaceWith(input);
+    input.focus(); input.select();
+    const commit = () => { s.name = input.value.trim() || s.name; render(); };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { input.value = s.name; input.blur(); } });
+  }
+  else if (act === 'opensessiontab') {
+    const t = s.tabs[+btn.closest('[data-idx]').dataset.idx];
+    toast(`已打开「${clip(t.title, 18)}」`);
+  }
+  else if (act === 'stnewwin') {
+    /* 会话为模板式:新窗口打开单条,条目保留 */
+    const t = s.tabs[+btn.closest('[data-idx]').dataset.idx];
+    const host = (t.url || '').replace(/^https?:\/\//, '').split('/')[0] || 'newtab';
+    state.windows.push({ id: Date.now(), current: false, tabs: [T(t.fav, t.title, host, t.url || '', '刚刚')] });
+    render();
+    toast(`已在新窗口打开${nwLabel()}`);
+  }
+  else if (act === 'delsessiontab') {
+    s.tabs.splice(+btn.closest('[data-idx]').dataset.idx, 1);
+    if (!s.tabs.length) state.sessions = state.sessions.filter((x) => x !== s); // 删空即会话消亡
+    render();
+  }
+});
+
+/* ========== 设置:偏好经 ts-settings 与设置页共享 ========== */
+try { Object.assign(state.settings, JSON.parse(localStorage.getItem('ts-settings') || '{}')); } catch { /* 损坏时保持默认 */ }
+
+render();
+</script>
+</body>
+</html>

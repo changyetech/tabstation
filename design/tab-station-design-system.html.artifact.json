@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "tab-station-design-system.html",
+  "entry": "tab-station-design-system.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-16T12:57:52.922Z",
+  "updatedAt": "2026-08-16T12:57:52.922Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

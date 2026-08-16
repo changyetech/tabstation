@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab Station · 设计系统</title>
+<style>
+  /* ===== 令牌:逐字继承 src/styles/tokens.css,不得改值 ===== */
+  :root {
+    --bg: oklch(99% 0.002 240);
+    --surface: oklch(100% 0 0);
+    --fg: oklch(18% 0.012 250);
+    --muted: oklch(54% 0.012 250);
+    --border: oklch(92% 0.005 250);
+    --accent: oklch(58% 0.18 255);
+    --accent-strong: oklch(46% 0.17 255);
+    --accent-hover: oklch(40% 0.16 255);
+    --on-accent: oklch(99% 0 0);
+    --accent-tint: oklch(96% 0.02 255);
+    --hover: oklch(96.5% 0.004 250);
+    --seg-bg: oklch(95.5% 0.004 250);
+    --success: oklch(46% 0.12 155);
+    --success-tint: oklch(96.5% 0.025 155);
+    --danger: oklch(48% 0.16 25);
+    --danger-tint: oklch(96.5% 0.02 25);
+    --warn: oklch(46% 0.11 75);
+    --block-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.05);
+    --pop-shadow: 0 8px 28px oklch(20% 0.01 250 / 0.14);
+    --frost: color-mix(in oklch, var(--surface) 82%, transparent);
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  }
+  html[data-theme='dark'] {
+    --bg: oklch(17% 0.008 250);
+    --surface: oklch(21% 0.01 250);
+    --fg: oklch(93% 0.005 250);
+    --muted: oklch(66% 0.01 250);
+    --border: oklch(100% 0 0 / 0.09);
+    --accent: oklch(70% 0.15 255);
+    --accent-strong: oklch(70% 0.14 255);
+    --accent-hover: oklch(77% 0.12 255);
+    --on-accent: oklch(16% 0.02 255);
+    --accent-tint: oklch(28% 0.05 255);
+    --hover: oklch(26% 0.012 250);
+    --seg-bg: oklch(25% 0.01 250);
+    --success: oklch(76% 0.12 155);
+    --success-tint: oklch(27% 0.04 155);
+    --danger: oklch(72% 0.14 25);
+    --danger-tint: oklch(27% 0.035 25);
+    --warn: oklch(78% 0.11 85);
+    --block-shadow: 0 1px 2px oklch(0% 0 0 / 0.25);
+    --pop-shadow: 0 8px 28px oklch(0% 0 0 / 0.5);
+    --frost: color-mix(in oklch, var(--bg) 80%, transparent);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--font-body); font-size: 14px; line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    transition: background .25s ease, color .25s ease;
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 32px 96px; }
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 32px; margin: 0 -32px 48px;
+    background: color-mix(in oklch, var(--bg) 86%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; }
+  .topbar .brand svg { width: 22px; height: 22px; color: var(--accent); }
+  .topbar nav { margin-left: auto; display: flex; gap: 4px; }
+  .topbar nav a { color: var(--muted); text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 7px; letter-spacing: 0.02em; }
+  .topbar nav a:hover { background: var(--hover); color: var(--fg); }
+  .topbar nav a[aria-current] { color: var(--fg); font-weight: 600; }
+  .theme-btn { font: inherit; font-size: 13px; color: var(--fg); cursor: pointer; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; }
+  .theme-btn:hover { background: var(--hover); }
+
+  .eyebrow { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 10px; }
+  h1 { font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1.3; margin: 0 0 14px; }
+  h2 { font-family: var(--font-display); font-size: 22px; font-weight: 650; line-height: 1.4; margin: 0 0 6px; }
+  h3 { font-size: 14px; font-weight: 650; margin: 0 0 10px; line-height: 1.5; }
+  section { margin-bottom: 72px; }
+  .lede { color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--block-shadow); }
+  .pad { padding: 24px 28px; }
+  code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; background: var(--hover); padding: 1px 6px; border-radius: 5px; }
+
+  /* 品牌主视觉(可玩的 logo + 品牌名) */
+  .hero-brand { display: flex; align-items: center; gap: 22px; margin: 0 0 18px; }
+  .hero-mark {
+    background: none; border: none; padding: 0; cursor: pointer;
+    color: var(--accent); width: 88px; height: 88px; flex: none; border-radius: 12px;
+  }
+  .hero-mark svg { width: 100%; height: 100%; display: block; }
+  .mark-tab.hop { animation: tab-hop .55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes tab-hop {
+    0% { transform: translateY(0); }
+    38% { transform: translateY(-9px); }
+    72% { transform: translateY(1.5px); }
+    100% { transform: translateY(0); }
+  }
+  .hero-word { font-family: var(--font-display); font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
+  .hero-sub { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+  .hero-hint { font-size: 12px; color: var(--muted); margin: 0 0 26px; }
+
+  /* 原则 */
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: pr; }
+  .principles .card { padding: 20px 22px; }
+  .principles .card::before {
+    counter-increment: pr; content: counter(pr, decimal-leading-zero);
+    font-family: var(--font-display); font-size: 13px; font-weight: 600;
+    color: var(--muted); letter-spacing: 0.06em; display: block; margin-bottom: 8px;
+  }
+  .principles p { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+
+  /* 色彩表 */
+  table.tok { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tok th, table.tok td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.tok th { color: var(--muted); font-weight: 550; font-size: 12px; letter-spacing: 0.02em; }
+  table.tok tr:last-child td { border-bottom: none; }
+  .chip { display: inline-block; width: 34px; height: 22px; border-radius: 6px; border: 1px solid var(--border); vertical-align: middle; margin-right: 10px; }
+  .val { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; color: var(--muted); }
+
+  /* 排印表 */
+  .type-row { display: flex; align-items: baseline; gap: 24px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .demo { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .type-row .spec { flex: none; width: 260px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* 间距圆角 */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .metric-grid ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .metric-grid li { margin-bottom: 6px; }
+  .metric-grid li b { color: var(--fg); font-weight: 550; }
+
+  /* ===== 组件样式(即产品规范本体)===== */
+  .demo-stage { padding: 26px 28px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .demo-note { padding: 0 28px 22px; font-size: 12.5px; color: var(--muted); max-width: 70ch; }
+
+  .btn {
+    font: inherit; font-size: 13px; font-weight: 550; cursor: pointer;
+    border-radius: 8px; padding: 7px 16px; min-height: 32px;
+    border: 1px solid transparent; letter-spacing: 0.02em;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary { background: var(--accent-strong); color: var(--on-accent); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: var(--surface); color: var(--fg); border-color: var(--border); }
+  .btn-secondary:hover { background: var(--hover); border-color: color-mix(in oklch, var(--border) 40%, var(--muted)); }
+  .btn-ghost { background: none; color: var(--muted); }
+  .btn-ghost:hover { background: var(--hover); color: var(--fg); }
+  .btn-danger { background: var(--surface); color: var(--danger); border-color: var(--border); }
+  .btn-danger:hover { background: var(--danger-tint); border-color: var(--danger); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary:disabled:hover { background: var(--accent-strong); }
+
+  .seg { display: inline-flex; background: var(--seg-bg); border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg button {
+    font: inherit; font-size: 13px; color: var(--muted); cursor: pointer;
+    background: none; border: none; border-radius: 7px; padding: 5px 14px; min-height: 28px;
+  }
+  .seg button:hover { color: var(--fg); }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); font-weight: 550; box-shadow: var(--block-shadow); }
+
+  .tab-list { padding: 8px; }
+  .tab-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 8px; font-size: 13px;
+    transition: background .15s ease, opacity .25s ease, transform .25s ease;
+  }
+  .tab-row:hover { background: var(--hover); }
+  .tab-row .fav { width: 16px; height: 16px; border-radius: 4px; background: var(--accent-tint); border: 1px solid var(--border); flex: none; display: grid; place-items: center; }
+  .tab-row .fav svg { width: 10px; height: 10px; color: var(--accent-strong); }
+  .tab-row .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tab-row .domain { color: var(--muted); font-size: 12px; flex: none; }
+  .tab-row .close {
+    width: 24px; height: 24px; border-radius: 6px; flex: none;
+    display: grid; place-items: center; color: var(--muted);
+    background: none; border: none; cursor: pointer; opacity: 0;
+  }
+  .tab-row:hover .close { opacity: 1; }
+  .tab-row .close:hover { background: var(--danger-tint); color: var(--danger); }
+  .tab-row .close svg { width: 12px; height: 12px; }
+  .badge { font-size: 11px; font-weight: 550; letter-spacing: 0.02em; padding: 1px 8px; border-radius: 99px; flex: none; }
+  .badge-pin { background: var(--hover); color: var(--muted); border: 1px solid var(--border); }
+  .badge-dup { background: var(--danger-tint); color: var(--danger); }
+  .badge-current { background: var(--accent-tint); color: var(--accent-strong); }
+
+  .session-card { width: 300px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: var(--block-shadow); overflow: hidden; }
+  .session-card header { padding: 12px 16px 8px; display: flex; align-items: baseline; gap: 8px; }
+  .session-card header b { font-size: 13px; font-weight: 600; }
+  .session-card header span { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .session-card .rows { padding: 0 8px; }
+  .session-card .rows .tab-row { padding: 5px 8px; }
+  .session-card footer { display: flex; gap: 8px; padding: 10px 16px 14px; }
+
+  .toast {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: oklch(22% 0.01 250); color: oklch(96% 0 0);
+    font-size: 13px; padding: 9px 16px; border-radius: 9px; box-shadow: var(--pop-shadow);
+  }
+  .toast svg { width: 14px; height: 14px; color: oklch(76% 0.12 155); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .field label { font-weight: 550; }
+  .field input {
+    font: inherit; font-size: 13px; color: var(--fg);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 12px; min-height: 32px; width: 260px;
+  }
+  .field input::placeholder { color: var(--muted); }
+  .field input:hover { border-color: color-mix(in oklch, var(--border) 40%, var(--muted)); }
+  .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+
+  /* 图标 */
+  .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; padding: 24px 28px; }
+  .icon-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px; border-radius: 8px; }
+  .icon-cell:hover { background: var(--hover); }
+  .icon-cell svg { width: 20px; height: 20px; color: var(--fg); }
+  .icon-cell span { font-size: 11px; color: var(--muted); letter-spacing: 0.01em; }
+
+  /* 动效 demo */
+  .fx-stage { position: relative; }
+  .tab-row.leaving { opacity: 0; transform: translateX(28px); }
+  .confetti { position: fixed; width: 6px; height: 6px; border-radius: 1.5px; pointer-events: none; z-index: 99; }
+  table.motion { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.motion th, table.motion td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+  table.motion th { color: var(--muted); font-weight: 550; font-size: 12px; }
+  table.motion tr:last-child td { border-bottom: none; }
+
+  .a11y-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .a11y-grid ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .a11y-grid li { margin-bottom: 6px; }
+  .a11y-grid li b { color: var(--fg); font-weight: 550; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+  @media (max-width: 860px) {
+    .principles, .metric-grid, .a11y-grid { grid-template-columns: 1fr; }
+    .icon-grid { grid-template-columns: repeat(3, 1fr); }
+    .type-row { flex-direction: column; gap: 4px; }
+    .type-row .spec { width: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar" data-od-id="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 128 128" aria-hidden="true"><use href="#mark"/></svg>
+      <span>Tab Station</span>
+    </div>
+    <nav>
+      <a href="tab-station-logo.html">Logo</a>
+      <a href="tab-station-design-system.html" aria-current="page">设计系统</a>
+    </nav>
+    <button class="theme-btn" id="themeToggle" type="button">深色</button>
+  </header>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <path id="mark" fill="currentColor" fill-rule="evenodd"
+        d="M57 32h14a10 10 0 0 1 10 10v42h15a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12h15V42a10 10 0 0 1 10-10Zm7 13a7 7 0 1 0 0 14 7 7 0 1 0 0-14Z"/>
+      <g id="i-close" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></g>
+    </defs>
+  </svg>
+
+  <section data-od-id="intro">
+    <p class="eyebrow">Design System · v1</p>
+    <div class="hero-brand" data-od-id="hero-brand">
+      <button class="hero-mark" id="heroMark" type="button" aria-label="Tab Station 标识——点击撒迎宾彩带">
+        <svg viewBox="0 0 128 128" aria-hidden="true">
+          <g class="mark-tab"><path fill="currentColor" fill-rule="evenodd" d="M57 32h14a10 10 0 0 1 10 10v42H47V42a10 10 0 0 1 10-10Zm7 13a7 7 0 1 0 0 14 7 7 0 1 0 0-14Z"/></g>
+          <path fill="currentColor" d="M32 84h64a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12Z"/>
+        </svg>
+      </button>
+      <div>
+        <h1 class="hero-word">Tab Station</h1>
+        <p class="hero-sub">标签工作站 · 设计系统</p>
+      </div>
+    </div>
+    <p class="hero-hint">俏皮是这个产品的性格:摸一下左边的标识,标签会在站台上弹跳;点一下,站台撒迎宾彩带。</p>
+    <p class="lede">管理页与设置页共用的单一视觉契约。令牌逐字取自 <code>src/styles/tokens.css</code>,组件层不得引入新色;本页既是文档,也是各组件状态的实况验收样张。</p>
+    <div class="principles" data-od-id="principles">
+      <div class="card"><h3>中性为底,accent 惜用</h3><p>单色中性占 70–90% 像素;accent 只给主 CTA 与「当前窗口」标记,每屏 ≤2 处。</p></div>
+      <div class="card"><h3>对比度只升不降</h3><p>hover 走背景位移或边框阴影,前景颜色永不变灰;文本级 accent 一律用 --accent-strong。</p></div>
+      <div class="card"><h3>专业底子,俏皮签名</h3><p>界面克制如工作台,唯一的放纵留给关闭动效:swoosh + 纸屑,这是产品的性格所在。</p></div>
+    </div>
+  </section>
+
+  <section data-od-id="color">
+    <p class="eyebrow">色彩</p>
+    <h2>核心六令牌 + 派生层</h2>
+    <p class="lede">全部 OKLch,浅深成对定义。切换右上角主题可实况核对两套值。</p>
+    <div class="card">
+      <table class="tok">
+        <tr><th>Token</th><th>Light</th><th>Dark</th><th>用途</th></tr>
+        <tr><td><code>--bg</code></td><td><span class="chip" style="background:oklch(99% 0.002 240)"></span><span class="val">99% 0.002 240</span></td><td><span class="chip" style="background:oklch(17% 0.008 250)"></span><span class="val">17% 0.008 250</span></td><td>页面基底,非纯白 / 非纯黑</td></tr>
+        <tr><td><code>--surface</code></td><td><span class="chip" style="background:oklch(100% 0 0)"></span><span class="val">100% 0 0</span></td><td><span class="chip" style="background:oklch(21% 0.01 250)"></span><span class="val">21% 0.01 250</span></td><td>卡片 / 弹层 / 分段活跃块</td></tr>
+        <tr><td><code>--fg</code></td><td><span class="chip" style="background:oklch(18% 0.012 250)"></span><span class="val">18% 0.012 250</span></td><td><span class="chip" style="background:oklch(93% 0.005 250)"></span><span class="val">93% 0.005 250</span></td><td>正文与标题</td></tr>
+        <tr><td><code>--muted</code></td><td><span class="chip" style="background:oklch(54% 0.012 250)"></span><span class="val">54% 0.012 250</span></td><td><span class="chip" style="background:oklch(66% 0.01 250)"></span><span class="val">66% 0.01 250</span></td><td>次要文本、域名、计数</td></tr>
+        <tr><td><code>--border</code></td><td><span class="chip" style="background:oklch(92% 0.005 250)"></span><span class="val">92% 0.005 250</span></td><td><span class="chip" style="background:oklch(100% 0 0 / 0.09)"></span><span class="val">100% 0 0 / .09</span></td><td>深色用半透明白,读作结构不加噪</td></tr>
+        <tr><td><code>--accent</code></td><td><span class="chip" style="background:oklch(58% 0.18 255)"></span><span class="val">58% 0.18 255</span></td><td><span class="chip" style="background:oklch(70% 0.15 255)"></span><span class="val">70% 0.15 255</span></td><td>标记 / 焦点环 / 品牌;<b>文本与按钮底用 --accent-strong</b></td></tr>
+      </table>
+    </div>
+    <div class="card pad" style="margin-top:16px">
+      <h3>派生与语义层</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0;max-width:none">
+        <code>--accent-strong</code> 文本级(≥4.5:1)· <code>--accent-hover</code> L 通道位移 · <code>--accent-tint</code> 标记底 ·
+        <code>--hover</code> 行悬停底 · <code>--seg-bg</code> 分段槽底 ·
+        <code>--success / --danger / --warn</code> 各带 tint(成功、危险操作、警示)·
+        <code>--frost</code> 毛玻璃 · <code>--block-shadow / --pop-shadow</code> 两档投影。
+        组件一律引用令牌,<b>禁止出现裸 hex</b>。
+      </p>
+    </div>
+  </section>
+
+  <section data-od-id="typography">
+    <p class="eyebrow">排印</p>
+    <h2>13px 基准的工具型阶梯</h2>
+    <p class="lede">SF Pro Display 负责标题、SF Pro Text 负责正文;数据密集型产品,单一家族双光学尺寸即是正解。CJK 行高 ≥1.7、标题 1.3–1.4、零字距;Latin display 负字距。</p>
+    <div class="card pad">
+      <div class="type-row"><div class="demo" style="font-family:var(--font-display);font-size:24px;font-weight:700;line-height:1.3">窗口会话与稍后阅读</div><div class="spec num">页面标题 · 24 / 700 / lh 1.3</div></div>
+      <div class="type-row"><div class="demo" style="font-family:var(--font-display);font-size:18px;font-weight:650;line-height:1.4">窗口 1 · 12 个标签页</div><div class="spec num">区块标题 · 18 / 650 / lh 1.4</div></div>
+      <div class="type-row"><div class="demo" style="font-size:15px;font-weight:550">按域名聚合 · github.com</div><div class="spec num">强调正文 · 15 / 550</div></div>
+      <div class="type-row"><div class="demo" style="font-size:13px">正文基准:标签标题、设置项说明、会话条目,行高 1.7。</div><div class="spec num">正文 · 13 / 400 / lh 1.7</div></div>
+      <div class="type-row"><div class="demo" style="font-size:12px;color:var(--muted)">次要信息 · 域名 · 时间戳</div><div class="spec num">辅助 · 12 / 400 / muted</div></div>
+      <div class="type-row"><div class="demo" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Section Label</div><div class="spec num">全大写标签 · 11 / 600 / +0.08em(必须)</div></div>
+      <div class="type-row"><div class="demo num" style="font-size:13px">计数一律表格数字:8 / 12 / 128</div><div class="spec num">tabular-nums · 全部数字场景</div></div>
+    </div>
+  </section>
+
+  <section data-od-id="metrics">
+    <p class="eyebrow">尺度</p>
+    <h2>间距、圆角与投影</h2>
+    <div class="metric-grid">
+      <div class="card pad">
+        <h3>间距(4px 网格)</h3>
+        <ul>
+          <li><b>4 / 8</b> — 行内元素间隙(favicon–标题–徽标)</li>
+          <li><b>12 / 16</b> — 组件内边距(行 7×10、卡片 12–16)</li>
+          <li><b>24 / 32</b> — 区块间距、页面留白</li>
+          <li><b>触达最小 24×24</b> — 行内按钮;独立按钮高 ≥32</li>
+        </ul>
+      </div>
+      <div class="card pad">
+        <h3>圆角与投影</h3>
+        <ul>
+          <li><b>r6–8</b> — 按钮、输入框、行悬停底、favicon 位</li>
+          <li><b>r10–12</b> — 卡片、弹层;<b>r99</b> — 徽标胶囊</li>
+          <li><b>--block-shadow</b> — 卡片静置;<b>--pop-shadow</b> — 弹层 / toast</li>
+          <li>禁止:彩色左竖条 + 圆角卡的组合、装饰性渐变</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="components">
+    <p class="eyebrow">组件</p>
+    <h2>按钮</h2>
+    <div class="card">
+      <div class="demo-stage" data-od-id="buttons-demo">
+        <button class="btn btn-primary">一键去重</button>
+        <button class="btn btn-secondary">保存会话</button>
+        <button class="btn btn-ghost">展开全部</button>
+        <button class="btn btn-danger">删除会话</button>
+        <button class="btn btn-primary" disabled>一键去重</button>
+      </div>
+      <p class="demo-note">主按钮底色用 <code>--accent-strong</code>(白字 ≥4.5:1),hover 走 <code>--accent-hover</code> 加深;每屏至多一个主按钮,即「一键去重」。次按钮 hover 背景位移 + 边框加深;危险按钮静置中性、hover 才亮 <code>--danger</code> + tint。disabled 是唯一允许降对比的状态。全部按钮键盘可达,焦点环 2px accent。</p>
+    </div>
+
+    <h2 style="margin-top:40px">模式切换(分段控件)</h2>
+    <div class="card">
+      <div class="demo-stage" data-od-id="segmented-demo">
+        <div class="seg" role="group" aria-label="模式">
+          <button aria-pressed="true">窗口</button>
+          <button aria-pressed="false">全部</button>
+          <button aria-pressed="false">已保存会话</button>
+        </div>
+      </div>
+      <p class="demo-note">活跃项 = <code>--surface</code> 浮起 + <code>--block-shadow</code> + 字重 550,<b>不用 accent</b>——把 accent 留给真正稀缺的动作。非活跃项 hover 时前景由 muted 升到 fg,对比只升不降。</p>
+    </div>
+
+    <h2 style="margin-top:40px">标签行</h2>
+    <div class="card">
+      <div class="tab-list" data-od-id="tab-rows-demo">
+        <div class="tab-row">
+          <span class="fav" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <span class="title">Pull requests · changyetech/tabstation</span>
+          <span class="badge badge-current">当前窗口</span>
+          <span class="domain num">github.com</span>
+          <button class="close" aria-label="关闭标签"><svg viewBox="0 0 20 20"><use href="#i-close"/></svg></button>
+        </div>
+        <div class="tab-row">
+          <span class="fav" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <span class="title">chrome.tabs API 参考文档</span>
+          <span class="badge badge-pin">固定</span>
+          <span class="domain num">developer.chrome.com</span>
+          <button class="close" aria-label="关闭标签"><svg viewBox="0 0 20 20"><use href="#i-close"/></svg></button>
+        </div>
+        <div class="tab-row">
+          <span class="fav" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12M10 4v12" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg></span>
+          <span class="title">OKLch 色彩空间速查(重复 ×3)</span>
+          <span class="badge badge-dup">重复</span>
+          <span class="domain num">oklch.com</span>
+          <button class="close" aria-label="关闭标签"><svg viewBox="0 0 20 20"><use href="#i-close"/></svg></button>
+        </div>
+      </div>
+      <p class="demo-note">行高 38px,hover 亮 <code>--hover</code> 底并显出关闭钮;关闭钮 hover 才染 danger。三种徽标:「当前窗口」accent-tint(每屏 accent 两处配额之一)、「固定」中性胶囊(不可拖拽、不可收进稍后阅读)、「重复」danger-tint。标题超长省略号截断,域名右对齐 tabular-nums。</p>
+    </div>
+
+    <h2 style="margin-top:40px">会话卡片 · Toast · 输入框</h2>
+    <div class="card">
+      <div class="demo-stage" data-od-id="misc-demo" style="align-items:flex-start">
+        <div class="session-card" data-od-id="session-card-demo">
+          <header><b>周报资料</b><span class="num">5 个标签 · 昨天</span></header>
+          <div class="rows">
+            <div class="tab-row"><span class="fav"></span><span class="title">Q3 数据看板</span></div>
+            <div class="tab-row"><span class="fav"></span><span class="title">团队周报模板</span></div>
+          </div>
+          <footer>
+            <button class="btn btn-secondary" style="flex:1">恢复会话</button>
+            <button class="btn btn-ghost">重命名</button>
+          </footer>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="toast" data-od-id="toast-demo"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>已关闭 3 个重复标签</div>
+          <div class="field">
+            <label for="demo-input">会话名称</label>
+            <input id="demo-input" type="text" placeholder="例如:周报资料">
+          </div>
+        </div>
+      </div>
+      <p class="demo-note">会话是模板式快照:恢复不消耗,故主操作是次级按钮「恢复会话」而非 accent 主钮。Toast 固定深底(两主题同色),出现 2.4s 自动退场,用于「改动即时保存」类反馈。输入框 focus 用 2px accent 环替换边框,不做发光。</p>
+    </div>
+  </section>
+
+  <section data-od-id="icons">
+    <p class="eyebrow">图标</p>
+    <h2>1.7px monoline,一律 currentColor</h2>
+    <div class="card">
+      <div class="icon-grid" data-od-id="icon-grid">
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7.5h15M6 3.5v4"/></svg><span>窗口模式</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7"/><path d="M3.4 8h13.2M3.4 12h13.2M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg><span>全部模式</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6.5" width="13" height="10" rx="2"/><path d="M6.5 6.5v-2a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v7"/></svg><span>会话</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3.5h9v13l-4.5-3.5-4.5 3.5z"/></svg><span>稍后阅读</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M6.5 17.5h9a2 2 0 0 0 2-2v-9" opacity=".5"/><path d="M5.5 8l2 2 3.5-4"/></svg><span>一键去重</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="8" height="11" rx="1.5"/><path d="M13.5 4.5h4v11h-4M12 10h5.5M15 7.5l2.5 2.5-2.5 2.5"/></svg><span>拆到新窗口</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l5 5-4.5 1L9 12.5 8 17l-4-4 4.5-1L12 8z" transform="rotate(45 10 10)"/></svg><span>固定标签</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20"><use href="#i-close"/></svg><span>关闭</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg><span>展开</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 12l5-5 5 5"/></svg><span>收起</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="15" r="1" fill="currentColor" stroke="none"/></svg><span>更多</span></div>
+        <div class="icon-cell"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M7 4.5h-2a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 5 15.5h2M13 4.5h2a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-2M10 2.5v15"/></svg><span>移动到</span></div>
+      </div>
+      <p class="demo-note">统一 20×20 视窗、1.7px 描边、圆头圆角连接;继承 <code>currentColor</code>,禁止独立填色。新增图标先对照本组的光学重量,不引入第二种描边宽度。</p>
+    </div>
+  </section>
+
+  <section data-od-id="motion">
+    <p class="eyebrow">动效</p>
+    <h2>关闭动效:产品的签名</h2>
+    <p class="lede">克制界面里唯一的放纵。点下面这行的 × 试试——swoosh 音效(此处省略)+ 纸屑粒子 + 行退场,三件套一次到位。</p>
+    <div class="card fx-stage">
+      <div class="tab-list" data-od-id="close-effect-demo" id="fxList">
+        <div class="tab-row">
+          <span class="fav" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <span class="title">随手点开忘了关的标签 · 一篇没读完的长文</span>
+          <span class="domain num">example.com</span>
+          <button class="close fx-close" aria-label="关闭标签(演示)"><svg viewBox="0 0 20 20"><use href="#i-close"/></svg></button>
+        </div>
+        <div class="tab-row">
+          <span class="fav" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <span class="title">上周的会议纪要 · 早该关了</span>
+          <span class="domain num">docs.example.com</span>
+          <button class="close fx-close" aria-label="关闭标签(演示)"><svg viewBox="0 0 20 20"><use href="#i-close"/></svg></button>
+        </div>
+      </div>
+      <p class="demo-note" id="fxNote">粒子颜色取 accent / success / warn 三色微量混合;批量关闭时音效只播一次,粒子逐行错开 40ms。演示行关完后自动补回。</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <table class="motion">
+        <tr><th>场景</th><th>时长</th><th>缓动</th><th>说明</th></tr>
+        <tr><td>行退场(关闭)</td><td class="num">250ms</td><td>cubic-bezier(0.4, 0, 1, 1)</td><td>右移 28px + 淡出,加速离场</td></tr>
+        <tr><td>纸屑粒子</td><td class="num">600–800ms</td><td>重力模拟</td><td>每行 10–14 粒,批量时逐行 +40ms</td></tr>
+        <tr><td>hover / 主题切换</td><td class="num">150 / 250ms</td><td>ease</td><td>背景与边框过渡,前景不做动画</td></tr>
+        <tr><td>Toast</td><td class="num">2400ms 驻留</td><td>ease-out 进 / ease-in 出</td><td>底部居中,同类合并不叠加</td></tr>
+        <tr><td>prefers-reduced-motion</td><td class="num">≈0</td><td>—</td><td>保留状态变化,去掉位移与粒子</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section data-od-id="a11y">
+    <p class="eyebrow">无障碍</p>
+    <h2>硬性门槛</h2>
+    <div class="a11y-grid">
+      <div class="card pad">
+        <h3>对比度</h3>
+        <ul>
+          <li><b>正文 ≥4.5:1</b>,大字与图标 ≥3:1;accent 作文本一律用 <code>--accent-strong</code>。</li>
+          <li>hover / active 前景对比只升不降;disabled 是唯一例外。</li>
+          <li>深浅两主题独立核对,不共用一套判断。</li>
+        </ul>
+      </div>
+      <div class="card pad">
+        <h3>操作与焦点</h3>
+        <ul>
+          <li>所有可聚焦元素有 2px accent <code>:focus-visible</code> 环,offset 2px。</li>
+          <li>行内图标钮 ≥24×24 且带 <code>aria-label</code>;拖拽操作必有键盘 / 菜单等价路径。</li>
+          <li>动效尊重系统「减弱动态效果」;音效不作为唯一反馈通道。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script>
+  (function () {
+    var KEY = 'ts-brand-theme';
+    var btn = document.getElementById('themeToggle');
+    function apply(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      btn.textContent = t === 'dark' ? '浅色' : '深色';
+    }
+    apply(localStorage.getItem(KEY) || 'light');
+    btn.addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(KEY, next);
+      apply(next);
+    });
+
+    /* 关闭动效演示:纸屑 + 行退场,行关完后自动补回 */
+    var COLORS = ['oklch(58% 0.18 255)', 'oklch(46% 0.12 155)', 'oklch(70% 0.16 75)'];
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function confetti(x, y) {
+      for (var i = 0; i < 12; i++) {
+        var p = document.createElement('div');
+        p.className = 'confetti';
+        p.style.background = COLORS[i % 3];
+        p.style.left = x + 'px'; p.style.top = y + 'px';
+        document.body.appendChild(p);
+        var ang = Math.random() * Math.PI - Math.PI, v = 3 + Math.random() * 4;
+        var vx = Math.cos(ang) * v, vy = Math.sin(ang) * v - 2, rot = Math.random() * 360;
+        (function (p, vx, vy, rot) {
+          var life = 0;
+          function tick() {
+            life += 1; vy += 0.25;
+            p.style.transform = 'translate(' + vx * life + 'px,' + (vy * life + 0.12 * life * life) + 'px) rotate(' + (rot + life * 14) + 'deg)';
+            p.style.opacity = String(Math.max(0, 1 - life / 40));
+            if (life < 40) requestAnimationFrame(tick); else p.remove();
+          }
+          requestAnimationFrame(tick);
+        })(p, vx, vy, rot);
+      }
+    }
+    var list = document.getElementById('fxList');
+    list.addEventListener('click', function (e) {
+      var btn = e.target.closest('.fx-close');
+      if (!btn) return;
+      var row = btn.closest('.tab-row');
+      var r = btn.getBoundingClientRect();
+      if (!reduced) confetti(r.left + r.width / 2, r.top + r.height / 2);
+      var clone = row.cloneNode(true);
+      row.classList.add('leaving');
+      setTimeout(function () {
+        row.remove();
+        setTimeout(function () { list.appendChild(clone); }, 900);
+      }, reduced ? 0 : 250);
+    });
+
+    /* 主视觉互动:hover 标签在站台上弹跳,click 撒迎宾彩带 */
+    var hero = document.getElementById('heroMark');
+    var heroTab = hero.querySelector('.mark-tab');
+    function hop() {
+      heroTab.classList.remove('hop');
+      void hero.offsetWidth;
+      heroTab.classList.add('hop');
+    }
+    hero.addEventListener('mouseenter', hop);
+    hero.addEventListener('click', function () {
+      hop();
+      var r = hero.getBoundingClientRect();
+      if (!reduced) confetti(r.left + r.width / 2, r.top + r.height * 0.6);
+    });
+  })();
+</script>
+</body>
+</html>

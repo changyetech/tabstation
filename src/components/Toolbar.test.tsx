@@ -30,6 +30,14 @@ describe('Toolbar', () => {
     expect(screen.queryByText('域名视图')).not.toBeInTheDocument();
   });
 
+  it('三段按钮各含一枚图标（toolbar-seg-icons spec）', () => {
+    renderToolbar();
+    for (const label of ['窗口模式', '全部模式', '已保存会话']) {
+      const btn = screen.getByText(label).closest('button');
+      expect(btn?.querySelector('svg')).toBeInTheDocument();
+    }
+  });
+
   it('第三段「已保存会话」→ onMode(sessions)（spec §3.1 2026-08-16 修订）', async () => {
     const props = renderToolbar();
     await userEvent.click(screen.getByText('已保存会话'));

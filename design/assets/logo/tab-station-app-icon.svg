@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- App 图标:accent 蓝圆角砖 + 白色 mark,favicon 孔透出底色 -->
+  <rect width="128" height="128" rx="28" fill="#1778E1" style="fill:oklch(58% 0.18 255)"/>
+  <path fill="#FFFFFF" fill-rule="evenodd"
+    d="M57 32h14a10 10 0 0 1 10 10v42h15a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12h15V42a10 10 0 0 1 10-10Zm7 13a7 7 0 1 0 0 14 7 7 0 1 0 0-14Z"/>
+</svg>

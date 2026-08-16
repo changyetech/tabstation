@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab Station · Logo 提案</title>
+<style>
+  /* ===== 令牌:逐字继承 src/styles/tokens.css ===== */
+  :root {
+    --bg: oklch(99% 0.002 240);
+    --surface: oklch(100% 0 0);
+    --fg: oklch(18% 0.012 250);
+    --muted: oklch(54% 0.012 250);
+    --border: oklch(92% 0.005 250);
+    --accent: oklch(58% 0.18 255);
+    --accent-strong: oklch(46% 0.17 255);
+    --accent-hover: oklch(40% 0.16 255);
+    --on-accent: oklch(99% 0 0);
+    --accent-tint: oklch(96% 0.02 255);
+    --hover: oklch(96.5% 0.004 250);
+    --danger: oklch(48% 0.16 25);
+    --block-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.05);
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  }
+  html[data-theme='dark'] {
+    --bg: oklch(17% 0.008 250);
+    --surface: oklch(21% 0.01 250);
+    --fg: oklch(93% 0.005 250);
+    --muted: oklch(66% 0.01 250);
+    --border: oklch(100% 0 0 / 0.09);
+    --accent: oklch(70% 0.15 255);
+    --accent-strong: oklch(70% 0.14 255);
+    --accent-hover: oklch(77% 0.12 255);
+    --on-accent: oklch(16% 0.02 255);
+    --accent-tint: oklch(28% 0.05 255);
+    --hover: oklch(26% 0.012 250);
+    --danger: oklch(72% 0.14 25);
+    --block-shadow: 0 1px 2px oklch(0% 0 0 / 0.25);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--font-body); font-size: 14px; line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    transition: background .25s ease, color .25s ease;
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 32px 96px; }
+
+  /* 顶栏 */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 32px; margin: 0 -32px 48px;
+    background: color-mix(in oklch, var(--bg) 86%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; }
+  .topbar .brand svg { width: 22px; height: 22px; color: var(--accent); }
+  .topbar nav { margin-left: auto; display: flex; gap: 4px; }
+  .topbar nav a {
+    color: var(--muted); text-decoration: none; font-size: 13px;
+    padding: 6px 12px; border-radius: 7px; letter-spacing: 0.02em;
+  }
+  .topbar nav a:hover { background: var(--hover); color: var(--fg); }
+  .topbar nav a[aria-current] { color: var(--fg); font-weight: 600; }
+  .theme-btn {
+    font: inherit; font-size: 13px; color: var(--fg); cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: 5px 12px;
+  }
+  .theme-btn:hover { background: var(--hover); }
+
+  /* 排印 */
+  .eyebrow {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 10px;
+  }
+  h1 { font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1.3; margin: 0 0 14px; }
+  h1 .en { letter-spacing: -0.02em; }
+  h2 { font-family: var(--font-display); font-size: 22px; font-weight: 650; line-height: 1.4; margin: 0 0 6px; }
+  section { margin-bottom: 72px; }
+  .lede { color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
+  p { max-width: 68ch; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: var(--block-shadow);
+  }
+
+  /* 主视觉 */
+  .hero-stage { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  .hero-lockup { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 64px 32px; }
+  .hero-lockup svg { width: 96px; height: 96px; color: var(--accent); flex: none; }
+  .hero-lockup .word { font-family: var(--font-display); font-size: 46px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+  .hero-tile { display: flex; align-items: center; justify-content: center; padding: 40px; }
+  .hero-tile svg { width: 128px; height: 128px; border-radius: 28px; box-shadow: 0 8px 28px oklch(20% 0.05 255 / 0.18); }
+
+  /* 理念三栏 */
+  .idea-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .idea { padding: 22px 22px 18px; }
+  .idea svg.demo { width: 44px; height: 44px; color: var(--fg); margin-bottom: 12px; }
+  .idea h3 { font-size: 15px; font-weight: 650; margin: 0 0 4px; line-height: 1.5; }
+  .idea p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  /* 结构图 */
+  .construction { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+  .construction .stage { display: flex; align-items: center; justify-content: center; padding: 36px; }
+  .spec-list { padding: 26px 28px; font-size: 13px; }
+  .spec-list dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; }
+  .spec-list dt { color: var(--muted); }
+  .spec-list dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+  /* 变体 */
+  .variant-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .variant { overflow: hidden; }
+  .variant .stage { height: 150px; display: flex; align-items: center; justify-content: center; }
+  .variant .stage.on-dark { background: oklch(17% 0.008 250); }
+  .variant .stage.on-accent { background: oklch(58% 0.18 255); }
+  .variant .stage svg { width: 76px; height: 76px; }
+  .variant .stage svg.tile { border-radius: 17px; }
+  .variant .meta { padding: 12px 16px 14px; border-top: 1px solid var(--border); }
+  .variant .meta b { display: block; font-size: 13px; font-weight: 600; }
+  .variant .meta span { font-size: 12px; color: var(--muted); }
+
+  /* 尺寸阶梯 */
+  .size-row { display: flex; align-items: flex-end; gap: 40px; padding: 36px 36px 16px; flex-wrap: wrap; }
+  .size-item { text-align: center; }
+  .size-item .cap { font-size: 12px; color: var(--muted); margin-top: 12px; font-variant-numeric: tabular-nums; }
+  .size-item svg { border-radius: 22%; display: block; }
+  .toolbar-sim { display: flex; align-items: center; gap: 10px; margin: 0 36px 28px; padding: 8px 14px; border-radius: 10px; background: var(--hover); width: fit-content; }
+  .toolbar-sim span { font-size: 12px; color: var(--muted); }
+  .toolbar-sim svg { width: 16px; height: 16px; border-radius: 4px; }
+
+  /* 使用规则 */
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .rules .card { padding: 22px 26px; }
+  .rules h3 { font-size: 14px; font-weight: 650; margin: 0 0 10px; }
+  .rules ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .rules li { margin-bottom: 6px; }
+  .rules li b { color: var(--fg); font-weight: 550; }
+  .no { color: var(--danger); font-weight: 650; margin-right: 4px; }
+  .yes { color: var(--accent-strong); font-weight: 650; margin-right: 4px; }
+
+  table.files { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.files th, table.files td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  table.files th { color: var(--muted); font-weight: 550; font-size: 12px; letter-spacing: 0.02em; }
+  table.files tr:last-child td { border-bottom: none; }
+  code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; background: var(--hover); padding: 1px 6px; border-radius: 5px; }
+
+  @media (max-width: 860px) {
+    .hero-stage, .construction, .rules { grid-template-columns: 1fr; }
+    .idea-grid { grid-template-columns: 1fr; }
+    .variant-grid { grid-template-columns: 1fr 1fr; }
+    .hero-lockup .word { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar" data-od-id="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 128 128" aria-hidden="true"><use href="#mark"/></svg>
+      <span class="en">Tab Station</span>
+    </div>
+    <nav>
+      <a href="tab-station-logo.html" aria-current="page">Logo</a>
+      <a href="tab-station-design-system.html">设计系统</a>
+    </nav>
+    <button class="theme-btn" id="themeToggle" type="button">深色</button>
+  </header>
+
+  <!-- SVG 符号库:mark 全页复用 -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <path id="mark" fill="currentColor" fill-rule="evenodd"
+        d="M57 32h14a10 10 0 0 1 10 10v42h15a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12h15V42a10 10 0 0 1 10-10Zm7 13a7 7 0 1 0 0 14 7 7 0 1 0 0-14Z"/>
+      <path id="mark-16" fill="currentColor"
+        d="M55 28h18a10 10 0 0 1 10 10v40h13a8 8 0 0 1 0 16H32a8 8 0 0 1 0-16h13V38a10 10 0 0 1 10-10Z"/>
+      <g id="app-icon">
+        <rect width="128" height="128" rx="28" fill="#1778E1" style="fill:oklch(58% 0.18 255)"/>
+        <use href="#mark" style="color:#fff"/>
+      </g>
+      <g id="app-icon-16">
+        <rect width="128" height="128" rx="28" fill="#1778E1" style="fill:oklch(58% 0.18 255)"/>
+        <use href="#mark-16" style="color:#fff"/>
+      </g>
+    </defs>
+  </svg>
+
+  <section data-od-id="hero">
+    <p class="eyebrow">Logo 提案 · 2026-08</p>
+    <h1><span class="en">Tab Station</span> 品牌标识:进站的标签</h1>
+    <p class="lede">一个带 favicon 圆孔的浏览器标签,稳稳落在圆头站台杆上——「所有 tab 汇集到同一个站点,伸手就挪,动了就真的动了」。图形同时构成字母 T,是 Tab 的首字母,也是 Station 的骨架。</p>
+    <div class="hero-stage">
+      <div class="card hero-lockup" data-od-id="hero-lockup">
+        <svg viewBox="0 0 128 128" role="img" aria-label="Tab Station 标识"><use href="#mark"/></svg>
+        <div class="word en">Tab Station</div>
+      </div>
+      <div class="card hero-tile" data-od-id="hero-app-icon">
+        <svg viewBox="0 0 128 128" role="img" aria-label="Tab Station App 图标"><use href="#app-icon"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="concept">
+    <p class="eyebrow">设计理念</p>
+    <h2>三层语义,一个几何形</h2>
+    <p class="lede">命名契约(naming.md §3)的核心主张是「可操控的界面,而非存 tab 的箱子」。标识必须表达"操作台",而不是"收纳盒"。</p>
+    <div class="idea-grid">
+      <div class="card idea">
+        <svg class="demo" viewBox="0 0 128 128"><path fill="currentColor" d="M57 32h14a10 10 0 0 1 10 10v42H47V42a10 10 0 0 1 10-10Z" opacity=".9"/><circle cx="64" cy="52" r="7" style="fill:var(--bg)"/></svg>
+        <h3>标签,不是窗口</h3>
+        <p>圆角上沿 + favicon 圆孔,是浏览器 tab 的最小特征集。孔让图形在无文字时也读作「标签」,而非柱子或字母。</p>
+      </div>
+      <div class="card idea">
+        <svg class="demo" viewBox="0 0 128 128"><path fill="currentColor" d="M47 84h34v0H96a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12h15Z"/><path fill="currentColor" opacity=".25" d="M57 32h14a10 10 0 0 1 10 10v42H47V42a10 10 0 0 1 10-10Z"/></svg>
+        <h3>站台,不是箱子</h3>
+        <p>横杆是站台台面:tab 停靠其上、随时再出发。它托住标签而不包裹标签——存放感为零,操作感拉满。</p>
+      </div>
+      <div class="card idea">
+        <svg class="demo" viewBox="0 0 128 128"><use href="#mark"/></svg>
+        <h3>合体即字母 T</h3>
+        <p>标签 + 站台合成 ⊥ 形,旋转视角即 Tab 的 T。中英文用户无需任何文化梗即可建立联想——与命名判据 C2 同构。</p>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="construction">
+    <p class="eyebrow">结构与网格</p>
+    <h2>128 网格,全部几何量取整</h2>
+    <div class="construction">
+      <div class="card stage">
+        <svg viewBox="0 0 128 128" width="220" height="220" role="img" aria-label="结构网格图">
+          <g style="stroke:var(--border)" stroke-width="1">
+            <path d="M0 32h128M0 84h128M0 96h128M47 0v128M81 0v128M26 0v128M102 0v128" fill="none"/>
+          </g>
+          <circle cx="64" cy="52" r="7" fill="none" style="stroke:var(--accent)" stroke-width="1" stroke-dasharray="3 3"/>
+          <use href="#mark" style="color:var(--fg)" opacity="0.9"/>
+        </svg>
+      </div>
+      <div class="card spec-list">
+        <dl>
+          <dt>画布</dt><dd>128 × 128,图形区 76 × 64(水平垂直居中,重心略偏上)</dd>
+          <dt>标签体</dt><dd>34 × 52,顶部圆角 r10</dd>
+          <dt>站台杆</dt><dd>76 × 12,两端全圆头 r6</dd>
+          <dt>favicon 孔</dt><dd>r7,距标签顶 13、左右各留 10</dd>
+          <dt>App 图标砖</dt><dd>圆角 r28(约 22%),单一实色 accent</dd>
+          <dt>禁用</dt><dd>渐变、描边、投影、多色——单形单色是本标识的全部语法</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="variants">
+    <p class="eyebrow">变体</p>
+    <h2>四个官方形态,再无其他</h2>
+    <div class="variant-grid">
+      <div class="card variant">
+        <div class="stage"><svg viewBox="0 0 128 128" class="tile"><use href="#app-icon"/></svg></div>
+        <div class="meta"><b>App 图标</b><span>工具栏 / 商店 / 扩展页</span></div>
+      </div>
+      <div class="card variant">
+        <div class="stage"><svg viewBox="0 0 128 128" style="color:oklch(58% 0.18 255)"><use href="#mark"/></svg></div>
+        <div class="meta"><b>彩色 Mark</b><span>浅色背景,accent 单色</span></div>
+      </div>
+      <div class="card variant">
+        <div class="stage on-dark"><svg viewBox="0 0 128 128" style="color:#fff"><use href="#mark"/></svg></div>
+        <div class="meta"><b>反白 Mark</b><span>深色 / 照片背景</span></div>
+      </div>
+      <div class="card variant">
+        <div class="stage"><svg viewBox="0 0 128 128" style="color:var(--fg)"><use href="#mark"/></svg></div>
+        <div class="meta"><b>单色 Mark</b><span>currentColor,中性场景</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="sizes">
+    <p class="eyebrow">尺寸阶梯</p>
+    <h2>Chrome 要求的四档,16px 用简化版</h2>
+    <p class="lede">≤16px 时 favicon 孔会糊成噪点:去孔、站台加粗至 16、标签放宽到 18×50。这是唯一允许的图形改动。</p>
+    <div class="card">
+      <div class="size-row">
+        <div class="size-item"><svg viewBox="0 0 128 128" width="128" height="128"><use href="#app-icon"/></svg><div class="cap">128 · 商店</div></div>
+        <div class="size-item"><svg viewBox="0 0 128 128" width="48" height="48"><use href="#app-icon"/></svg><div class="cap">48 · 扩展页</div></div>
+        <div class="size-item"><svg viewBox="0 0 128 128" width="32" height="32"><use href="#app-icon"/></svg><div class="cap">32 · 高分屏</div></div>
+        <div class="size-item"><svg viewBox="0 0 128 128" width="16" height="16"><use href="#app-icon-16"/></svg><div class="cap">16 · 简化版</div></div>
+      </div>
+      <div class="toolbar-sim" data-od-id="toolbar-sim">
+        <svg viewBox="0 0 128 128"><use href="#app-icon-16"/></svg>
+        <span>工具栏实感预览(16px)</span>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="usage">
+    <p class="eyebrow">使用规则</p>
+    <h2>清空区与红线</h2>
+    <div class="rules">
+      <div class="card">
+        <h3><span class="yes">✓</span>正确用法</h3>
+        <ul>
+          <li><b>清空区</b>:四周 ≥ 站台杆高度(图形高的 1/5)。</li>
+          <li><b>横版锁定</b>:mark 与字标间距 = 站台杆高;字标用 SF Pro Display Semibold,Latin 字距 −0.02em。</li>
+          <li><b>品牌名写法</b>:一律 <code>Tab Station</code>,中文名「标签工作站」仅用于副标题与描述(naming.md §2)。</li>
+          <li><b>取色</b>:只用 <code>--accent</code>、<code>--fg</code>、白,三选一。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="no">✕</span>禁止</h3>
+        <ul>
+          <li>加渐变、投影、描边或第二种颜色。</li>
+          <li>旋转、拉伸、倾斜,或把站台杆与标签拆开单独使用。</li>
+          <li>在 accent 底上放彩色 mark(只允许反白)。</li>
+          <li>用「TabStation」「Tab-Station」等禁止写法排字标。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section data-od-id="handoff">
+    <p class="eyebrow">落地交付</p>
+    <h2>资产清单与替换点</h2>
+    <div class="card">
+      <table class="files">
+        <tr><th>文件</th><th>用途</th></tr>
+        <tr><td><code>assets/logo/tab-station-app-icon.svg</code></td><td>导出 128/48/32 PNG,替换 <code>public/icons/</code> 同名文件</td></tr>
+        <tr><td><code>assets/logo/tab-station-favicon-16.svg</code></td><td>导出 16px PNG(简化版),替换 <code>public/icons/16.png</code></td></tr>
+        <tr><td><code>assets/logo/tab-station-mark.svg</code> / <code>-mono.svg</code></td><td>管理页 / 设置页页内品牌位,mono 版继承 currentColor</td></tr>
+        <tr><td><code>assets/logo/tab-station-logo-horizontal.svg</code></td><td>Web Store 宣传图、README、对外物料</td></tr>
+      </table>
+    </div>
+  </section>
+
+</div>
+<script>
+  (function () {
+    var KEY = 'ts-brand-theme';
+    var btn = document.getElementById('themeToggle');
+    function apply(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      btn.textContent = t === 'dark' ? '浅色' : '深色';
+    }
+    var saved = localStorage.getItem(KEY) || 'light';
+    apply(saved);
+    btn.addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(KEY, next);
+      apply(next);
+    });
+  })();
+</script>
+</body>
+</html>
