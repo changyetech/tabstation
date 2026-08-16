@@ -1,6 +1,6 @@
 # Tab Station 管理页重设计（完全匹配 refs/design）
 
-- 状态：待评审
+- 状态：已实现（2026-08-16 落地，含 §5.7 触屏适配；§5.5 条目行规则后续被 [2026-08-16-session-card-dnd.md](2026-08-16-session-card-dnd.md) 修订）
 - 日期：2026-08-16
 - 设计稿（视觉契约，normative）：`refs/design/tab-station-home.html`、`refs/design/tab-station-settings.html`、`refs/design/brand-spec.md`
 - 前置 spec：[2026-08-15-tabstation-design.md](2026-08-15-tabstation-design.md)（下称「旧 spec」）。本 spec 只声明**增量与覆盖**；未提及的行为规则（去重判据、稍后阅读语义、会话语义、拖拽、单例、i18n 机制、时间展示、关闭动效、测试策略）沿用旧 spec。

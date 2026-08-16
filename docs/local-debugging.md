@@ -1,6 +1,6 @@
 # 本地调试手册（Local Debugging）
 
-> 面向开发者的 MV3 扩展本地调试指南。构建方式为 `vite build --watch`（产物型 watch，非 dev server），入口为 manager 页面与 background service worker。
+> 面向开发者的 MV3 扩展本地调试指南。构建方式为 `vite build --watch`（产物型 watch，非 dev server），入口为 manager 页面、settings 页面与 background service worker。
 
 ## 日常调试流程
 
@@ -20,7 +20,7 @@ MV3 调试的关键认知——不同入口的刷新方式不同：
 
 | 改了什么 | 需要做什么 |
 |---|---|
-| manager 页面（React/UI） | 直接刷新 manager 标签页（⌘R）即可，watch 已重建产物 |
+| manager / settings 页面（React/UI） | 直接刷新对应标签页（⌘R）即可，watch 已重建产物 |
 | `background.ts` | 必须回 `chrome://extensions` 点扩展卡片上的 ↻ 刷新按钮 |
 | `manifest.json` / `_locales` | 同样点 ↻；改权限时偶尔需要移除重装 |
 
