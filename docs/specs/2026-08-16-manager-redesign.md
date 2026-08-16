@@ -117,6 +117,13 @@ Settings {
 - 完整 `prefers-reduced-motion` 支持；`:focus-visible` 统一 2px 强调色描边；可点行 `role="button" tabindex="0"`。
 - loading/error 态从简：本地 API 极快，不做骨架屏；空态仅照稿实现。
 
+### 5.7 触屏适配（2026-08-16 新增）
+
+- 判定用 CSS `@media (hover: none)`（主输入设备无悬停能力），纯 CSS 实现，无 JS 分叉；触屏笔记本等混合设备主输入为鼠标时不受影响。
+- 该模式下所有 hover 浮现的操作组（标签行 `.row-acts`、稍后阅读行 `.rl-acts`、窗口头/域名头 `.dom-acts`）常驻显示；行尾相对时间（`.tab-time`/`.rl-time`）不再渲染占位（原「hover 原位替换」语义退化为「操作组独占行尾」）。
+- 拖拽手柄 `.drag-grip` 常驻半透明显示（不再依赖行 hover 显形）。
+- 去重 hover 预览、行高亮等纯增强反馈在触屏下自然缺失，不做替代交互（点击执行路径不受影响）。
+
 ## 6. 非目标
 
 - 搜索/过滤（维持旧 spec 裁决）
