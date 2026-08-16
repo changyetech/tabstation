@@ -25,10 +25,10 @@ import { createWindowBySetting } from '../lib/open-window';
 import {
   DEFAULT_SETTINGS,
   mergeSettings,
+  moveSessionTab,
   removeReadLater,
   removeSessionTab,
   renameSession,
-  reorderSessionTab,
   snapshotWindow,
   upsertReadLater,
   type ReadLaterItem,
@@ -290,8 +290,12 @@ function AppInner({ settings }: { settings: Settings }) {
     void setSessions(sessions.filter((x) => x.id !== s.id));
   const handleRename = (s: SavedSession, name: string) =>
     void setSessions(renameSession(sessions, s.id, name));
-  const handleReorderTab = (s: SavedSession, from: number, to: number) =>
-    void setSessions(reorderSessionTab(sessions, s.id, from, to));
+  const handleMoveTab = (
+    fromSessionId: string,
+    fromIndex: number,
+    toSessionId: string,
+    toIndex: number,
+  ) => void setSessions(moveSessionTab(sessions, fromSessionId, fromIndex, toSessionId, toIndex));
   const handleDeleteTab = (s: SavedSession, index: number) =>
     void setSessions(removeSessionTab(sessions, s.id, index)); // 删空自动删会话（storage.ts 保证）
   const openSessionTab = (tab: SessionTab) => void chrome.tabs.create({ url: tab.url });
@@ -473,7 +477,7 @@ function AppInner({ settings }: { settings: Settings }) {
               onRestore={(s) => void restoreSession(s)}
               onDelete={deleteSession}
               onRename={handleRename}
-              onReorderTab={handleReorderTab}
+              onMoveTab={handleMoveTab}
               onDeleteTab={handleDeleteTab}
               onOpenTab={openSessionTab}
               onOpenTabNewWindow={openSessionTabNewWindow}

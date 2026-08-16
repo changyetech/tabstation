@@ -9,7 +9,6 @@ import {
   removeReadLater,
   removeSessionTab,
   renameSession,
-  reorderSessionTab,
   snapshotWindow,
   upsertReadLater,
   writeKey,
@@ -87,22 +86,6 @@ describe('会话条目操作', () => {
   it('removeSessionTab 删到空 → 整个会话消亡', () => {
     const s = session({ tabs: [{ url: 'https://a.com/', title: 'A' }] });
     expect(removeSessionTab([s], 's1', 0)).toEqual([]);
-  });
-  it('reorderSessionTab 移动条目', () => {
-    const next = reorderSessionTab([session({})], 's1', 0, 1);
-    expect(next[0].tabs.map((t) => t.url)).toEqual(['https://b.com/', 'https://a.com/']);
-  });
-  it('reorderSessionTab from 越界 → 会话原样返回', () => {
-    const s = session({});
-    const next = reorderSessionTab([s], 's1', 5, 0);
-    expect(next[0]).toEqual(s);
-    expect(next[0].tabs).toEqual(s.tabs);
-  });
-  it('reorderSessionTab to 越界 → 会话原样返回', () => {
-    const s = session({});
-    const next = reorderSessionTab([s], 's1', 0, 5);
-    expect(next[0]).toEqual(s);
-    expect(next[0].tabs).toEqual(s.tabs);
   });
   it('renameSession 改名', () => {
     expect(renameSession([session({})], 's1', '新名')[0].name).toBe('新名');

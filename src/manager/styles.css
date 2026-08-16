@@ -221,8 +221,6 @@ aside {
 .row-acts:focus-within,
 .rl-row:hover .rl-acts,
 .rl-acts:focus-within,
-.session-tab-row:hover .st-acts,
-.st-acts:focus-within,
 .dom-sub:hover .dom-acts,
 .win-head:hover .dom-acts {
   animation: actsIn 0.12s ease-out;
@@ -733,17 +731,14 @@ img.favicon {
   font-size: 11px;
   flex: none;
 }
-.rl-acts,
-.st-acts {
+.rl-acts {
   display: none;
   align-items: center;
   gap: 2px;
   flex: none;
 }
 .rl-row:hover .rl-acts,
-.rl-acts:focus-within,
-.session-tab-row:hover .st-acts,
-.st-acts:focus-within {
+.rl-acts:focus-within {
   display: flex;
 }
 .rl-row:hover .rl-time {
@@ -752,19 +747,16 @@ img.favicon {
 .rl-row:has(.rl-acts:focus-within) .rl-time {
   display: none;
 }
-.rl-acts .icon-btn,
-.st-acts .icon-btn {
+.rl-acts .icon-btn {
   width: 24px;
   height: 24px;
   border-radius: 7px;
 }
-.rl-acts .icon-btn:hover,
-.st-acts .icon-btn:hover {
+.rl-acts .icon-btn:hover {
   background: color-mix(in oklch, var(--fg) 8%, var(--hover));
   color: var(--fg);
 }
-.rl-acts .icon-btn.danger:hover,
-.st-acts .icon-btn.danger:hover {
+.rl-acts .icon-btn.danger:hover {
   color: var(--danger);
   background: var(--danger-tint);
 }
@@ -788,32 +780,6 @@ img.favicon {
   background: var(--surface);
   color: var(--fg);
 }
-.session-tab-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 14px;
-  min-height: 34px;
-  transition: background 0.15s;
-}
-.session-tab-row:hover {
-  background: var(--hover);
-}
-.session-tab-title {
-  display: block;
-  max-width: 100%;
-  text-align: left;
-  font-size: 12px;
-  color: var(--fg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 1px 0;
-}
-.session-tab-title:hover {
-  color: var(--accent-strong);
-}
-
 /* ========== 移动菜单 popover ========== */
 .move-menu {
   position: relative;

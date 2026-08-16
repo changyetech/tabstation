@@ -100,23 +100,6 @@ export function removeSessionTab(
   });
 }
 
-export function reorderSessionTab(
-  sessions: SavedSession[],
-  sessionId: string,
-  from: number,
-  to: number,
-): SavedSession[] {
-  return sessions.map((s) => {
-    if (s.id !== sessionId) return s;
-    // 下标越界（可能来自陈旧的拖拽状态）时原样返回，避免把 undefined 插进 tabs
-    if (from < 0 || from >= s.tabs.length || to < 0 || to >= s.tabs.length) return s;
-    const tabs = [...s.tabs];
-    const [moved] = tabs.splice(from, 1);
-    tabs.splice(to, 0, moved);
-    return { ...s, tabs };
-  });
-}
-
 // 同/跨会话移动条目（spec 2026-08-16-session-card-dnd §3.3）：
 // 跨会话为「源删除 + 目标落点插入」；源拖空则会话消亡（与删空规则一致）；
 // id 不存在或下标越界（陈旧拖拽状态）原样返回
