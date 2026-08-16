@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useT } from '../i18n';
+import { Icon } from './icons';
 
-export type MoveTarget =
-  | { kind: 'window'; windowId: number; label: string }
-  | { kind: 'new-maximized' }
-  | { kind: 'new-same-size' };
+// 移动目标只列其他窗口（设计稿 move-menu）；新窗口走独立的「拆到新窗口」按钮
+export interface MoveTarget {
+  windowId: number;
+  label: string;
+  tabCount: number;
+}
 
 export default function MoveMenu({
   targets,
@@ -15,28 +18,52 @@ export default function MoveMenu({
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const label = (target: MoveTarget) =>
-    target.kind === 'window'
-      ? target.label
-      : target.kind === 'new-maximized'
-        ? t('move.newWindowMaximized')
-        : t('move.newWindowSameSize');
+  const rootRef = useRef<HTMLSpanElement>(null);
+
+  // 点击外部 / Esc 关闭（设计稿 popover 行为）
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
-    <span className="move-menu">
-      <button title={t('tab.moveTo')} onClick={() => setOpen((v) => !v)}>
-        {t('tab.moveTo')} ▾
+    <span className="move-menu" ref={rootRef}>
+      <button
+        className="icon-btn"
+        title={t('tab.moveTo')}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+      >
+        <Icon name="move" size={13} />
       </button>
       {open && (
-        <ul className="move-menu-list">
-          {targets.map((target, i) => (
-            <li key={i}>
+        <ul className="popover">
+          <li className="popover-label">{t('move.title')}</li>
+          {targets.map((target) => (
+            <li key={target.windowId}>
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setOpen(false);
                   onPick(target);
                 }}
               >
-                {label(target)}
+                <Icon name="win" size={13} />
+                {target.label}
+                <span className="sub num">{t('window.tabCount', { n: target.tabCount })}</span>
               </button>
             </li>
           ))}

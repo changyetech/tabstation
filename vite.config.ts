@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         manager: MANAGER_PATH,
+        settings: 'src/settings/index.html',
         background: 'src/background.ts',
       },
       output: {

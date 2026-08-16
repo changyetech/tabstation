@@ -2,9 +2,12 @@ import { useRef } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
-import type { View } from './Toolbar';
+import { hostnameOf } from '../lib/grouping';
+import { foldTabs } from '../lib/fold';
+import type { Settings } from '../lib/storage';
 import type { MoveTarget } from './MoveMenu';
-import DomainGroupList from './DomainGroupList';
+import { Icon } from './icons';
+import Favicon from './Favicon';
 import TabRow from './TabRow';
 
 export interface WindowSectionProps {
@@ -13,9 +16,12 @@ export interface WindowSectionProps {
   tabs: TabWithId[];
   isCurrent: boolean;
   draggable: boolean;
-  view: View;
   dupCountByTabId: Map<number, number>;
   previewByTabId: Map<number, 'keep' | 'close'>;
+  dedupePreview: boolean;
+  visibleLimit: Settings['visibleTabs'];
+  expandedKeys: ReadonlySet<string>;
+  onToggleExpand: (key: string) => void;
   now: number;
   registerRow: (tabId: number, el: HTMLElement | null) => void;
   onCloseTab: (tab: TabWithId) => void;
@@ -24,95 +30,116 @@ export interface WindowSectionProps {
   onCloseWindow?: (win: chrome.windows.Window, sectionEl: HTMLElement | null) => void;
   onReadLater?: (tab: TabWithId) => void;
   onSaveWindow?: (win: chrome.windows.Window) => void;
+  onSplit?: (tab: TabWithId) => void;
+  onHoverDup?: (tabId: number | null) => void;
 }
 
-export default function WindowSection({
-  window: win,
-  windowNumber,
-  tabs,
-  isCurrent,
-  draggable,
-  view,
-  dupCountByTabId,
-  previewByTabId,
-  now,
-  registerRow,
-  onCloseTab,
-  getMoveTargets,
-  onMove,
-  onCloseWindow,
-  onReadLater,
-  onSaveWindow,
-}: WindowSectionProps) {
+// 窗口区块（设计稿 win-block）：区块头 + 列表；当前窗口强调描边
+export default function WindowSection(props: WindowSectionProps) {
+  const {
+    window: win,
+    windowNumber,
+    tabs,
+    isCurrent,
+    draggable,
+    dedupePreview,
+    previewByTabId,
+    visibleLimit,
+    expandedKeys,
+    onToggleExpand,
+  } = props;
   const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
-  // 窗口标识：序号 + 活动 tab 标题 + tab 数（spec §4.3）
-  const activeTitle = tabs.find((x) => x.active)?.title ?? tabs[0]?.title ?? '';
-  const label = `${t('window.label', { n: windowNumber })}${isCurrent ? t('window.current') : ''} · ${activeTitle} (${t('window.tabCount', { n: tabs.length })})`;
+
+  // favicon 叠层：去重后最多 4 个（设计稿 fav-stack）
+  const stackKeys = new Set<string>();
+  const stack: TabWithId[] = [];
+  for (const tab of tabs) {
+    const key = hostnameOf(tab.url);
+    if (stackKeys.has(key)) continue;
+    stackKeys.add(key);
+    stack.push(tab);
+    if (stack.length >= 4) break;
+  }
+  const pinnedCount = tabs.filter((x) => x.pinned).length;
+
+  const shownTabs = dedupePreview ? tabs.filter((x) => previewByTabId.has(x.id)) : tabs;
+  const foldKey = `w${win.id}`;
+  const fold = dedupePreview
+    ? { shown: shownTabs, hiddenCount: 0, expanded: false }
+    : foldTabs(tabs, visibleLimit, expandedKeys.has(foldKey));
 
   return (
-    <section className="window-section" data-window-id={win.id} ref={sectionRef}>
-      <header className="window-header">
-        <h2>{label}</h2>
-        {onSaveWindow && (
-          <button className="window-save" onClick={() => onSaveWindow(win)}>
-            💾 {t('window.save')}
-          </button>
-        )}
-        {onCloseWindow && (
-          <button
-            className="window-close"
-            onClick={() => {
-              // 轻确认（spec §4.3）：{name} 只用「窗口 N」，不带活动标题/tab 数（R1）
-              if (
-                !window.confirm(
-                  t('window.closeConfirm', {
-                    name: t('window.label', { n: windowNumber }),
-                    n: tabs.length,
-                  }),
-                )
-              )
-                return;
-              onCloseWindow(win, sectionRef.current);
-            }}
-          >
-            ✕ {t('window.close')}
-          </button>
-        )}
-      </header>
-      {view === 'domain' ? (
-        <DomainGroupList
-          tabs={tabs}
-          now={now}
-          dupCountByTabId={dupCountByTabId}
-          previewByTabId={previewByTabId}
-          registerRow={registerRow}
-          onCloseTab={onCloseTab}
-          getMoveTargets={getMoveTargets}
-          onMove={onMove}
-          onReadLater={onReadLater}
-        />
-      ) : (
-        <SortableContext items={tabs.map((x) => x.id)} strategy={verticalListSortingStrategy}>
-          <ul className="tab-list">
-            {tabs.map((tab) => (
-              <TabRow
-                key={tab.id}
-                tab={tab}
-                dupCount={dupCountByTabId.get(tab.id)}
-                dupPreview={previewByTabId.get(tab.id)}
-                draggable={draggable}
-                now={now}
-                registerRow={registerRow}
-                onClose={onCloseTab}
-                getMoveTargets={getMoveTargets}
-                onMove={onMove}
-                onReadLater={onReadLater}
-              />
-            ))}
-          </ul>
-        </SortableContext>
-      )}
+    <section
+      className={`win-block${isCurrent ? ' is-current' : ''}`}
+      data-window-id={win.id}
+      ref={sectionRef}
+    >
+      <div className="win-head">
+        <span className="win-title">
+          {t('window.label', { n: windowNumber })}
+          {isCurrent && <span className="cur-chip">{t('window.current')}</span>}
+        </span>
+        <span className="fav-stack">
+          {stack.map((tab) => (
+            <Favicon key={tab.id} url={tab.url} favIconUrl={tab.favIconUrl} />
+          ))}
+        </span>
+        <span className="win-meta num">
+          {t('window.tabCount', { n: tabs.length })}
+          {pinnedCount > 0 && ` · ${t('window.pinnedCount', { n: pinnedCount })}`}
+        </span>
+        <span className="win-acts">
+          {props.onSaveWindow && (
+            <button
+              className="ghost-btn"
+              title={t('window.save')}
+              onClick={() => props.onSaveWindow?.(win)}
+            >
+              <Icon name="save" size={13} />
+              {t('window.save')}
+            </button>
+          )}
+          {props.onCloseWindow && (
+            <button
+              className="ghost-btn danger"
+              title={t('window.close')}
+              onClick={() => props.onCloseWindow?.(win, sectionRef.current)}
+            >
+              <Icon name="close" size={13} />
+              {t('window.close')}
+            </button>
+          )}
+        </span>
+      </div>
+      <SortableContext items={fold.shown.map((x) => x.id)} strategy={verticalListSortingStrategy}>
+        <ul className="tab-list">
+          {fold.shown.map((tab) => (
+            <TabRow
+              key={tab.id}
+              tab={tab}
+              dupCount={props.dupCountByTabId.get(tab.id)}
+              dupPreview={previewByTabId.get(tab.id)}
+              draggable={draggable}
+              now={props.now}
+              registerRow={props.registerRow}
+              onClose={props.onCloseTab}
+              getMoveTargets={props.getMoveTargets}
+              onMove={props.onMove}
+              onReadLater={props.onReadLater}
+              onSplit={props.onSplit}
+              onHoverDup={props.onHoverDup}
+            />
+          ))}
+          {fold.hiddenCount > 0 && (
+            <li className="more-row">
+              <button className="more-btn num" onClick={() => onToggleExpand(foldKey)}>
+                {fold.expanded ? t('more.collapse') : t('more.expand', { n: fold.hiddenCount })}
+              </button>
+            </li>
+          )}
+        </ul>
+      </SortableContext>
     </section>
   );
 }

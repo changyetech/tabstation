@@ -1,0 +1,110 @@
+/* ========== 设计令牌：modern-minimal（源 refs/design/brand-spec.md）========== */
+/* 管理页与设置页共享；值逐字取自设计稿，不得改动、不得在组件层引入新色 */
+
+:root {
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --fg: oklch(18% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --accent: oklch(58% 0.18 255);
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+
+  --accent-strong: oklch(46% 0.17 255);
+  --accent-hover: oklch(40% 0.16 255);
+  --on-accent: oklch(99% 0 0);
+  --accent-tint: oklch(96% 0.02 255);
+  --hover: oklch(96.5% 0.004 250);
+  --seg-bg: oklch(95.5% 0.004 250);
+  --success: oklch(46% 0.12 155);
+  --success-tint: oklch(96.5% 0.025 155);
+  --danger: oklch(48% 0.16 25);
+  --danger-tint: oklch(96.5% 0.02 25);
+  --warn: oklch(46% 0.11 75);
+  --block-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.05);
+  --pop-shadow: 0 8px 28px oklch(20% 0.01 250 / 0.14);
+  --frost: color-mix(in oklch, var(--surface) 82%, transparent);
+  --head-grad: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--fg) 3.5%, var(--surface)),
+    color-mix(in oklch, var(--fg) 1%, var(--surface))
+  );
+}
+
+/* 深色：非纯黑基底 + 半透明白边框，成对重定义 */
+html[data-theme='dark'] {
+  --bg: oklch(17% 0.008 250);
+  --surface: oklch(21% 0.01 250);
+  --fg: oklch(93% 0.005 250);
+  --muted: oklch(66% 0.01 250);
+  --border: oklch(100% 0 0 / 0.09);
+  --accent: oklch(70% 0.15 255);
+
+  --accent-strong: oklch(70% 0.14 255);
+  --accent-hover: oklch(77% 0.12 255);
+  --on-accent: oklch(16% 0.02 255);
+  --accent-tint: oklch(28% 0.05 255);
+  --hover: oklch(26% 0.012 250);
+  --seg-bg: oklch(25% 0.01 250);
+  --success: oklch(76% 0.12 155);
+  --success-tint: oklch(27% 0.04 155);
+  --danger: oklch(72% 0.14 25);
+  --danger-tint: oklch(27% 0.035 25);
+  --warn: oklch(78% 0.11 85);
+  --block-shadow: 0 1px 2px oklch(0% 0 0 / 0.25);
+  --pop-shadow: 0 8px 28px oklch(0% 0 0 / 0.5);
+  --frost: color-mix(in oklch, var(--bg) 80%, transparent);
+}
+
+/* ========== 两页共用的基础排版与全局规则 ========== */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7; /* CJK 正文行高下限 */
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 无障碍：跟随系统「减弱动态效果」偏好，保留状态但去掉位移动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

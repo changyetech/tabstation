@@ -20,52 +20,83 @@ const sessions: SavedSession[] = [
 function renderSection(over: Partial<React.ComponentProps<typeof SessionSection>> = {}) {
   const props = {
     sessions,
+    visibleLimit: 8 as const,
+    expandedKeys: new Set<string>(),
+    onToggleExpand: vi.fn(),
     onRestore: vi.fn(),
     onDelete: vi.fn(),
     onRename: vi.fn(),
     onReorderTab: vi.fn(),
     onDeleteTab: vi.fn(),
     onOpenTab: vi.fn(),
+    onOpenTabNewWindow: vi.fn(),
     ...over,
   };
-  render(
+  const view = render(
     <I18nProvider language="zh-CN">
       <SessionSection {...props} />
     </I18nProvider>,
   );
-  return props;
+  return { props, view };
 }
 
 describe('SessionSection', () => {
-  it('显示会话名与 tab 数，[打开]/[删除] 回调', async () => {
-    const props = renderSection();
+  it('会话渲染为 win-block 卡片：名称、条目数、恢复 / 删除回调', async () => {
+    const { props, view } = renderSection();
+    expect(view.container.querySelector('.win-flow > .win-block.session-block')).toBeInTheDocument();
     expect(screen.getByText(/2026\/8\/15 10:00/)).toBeInTheDocument();
-    expect(screen.getByText(/2 个 tab/)).toBeInTheDocument();
-    await userEvent.click(screen.getByText('打开'));
+    expect(screen.getByText(/2 个标签页/)).toBeInTheDocument();
+    await userEvent.click(screen.getByTitle('恢复到新窗口（会话保留）'));
     expect(props.onRestore).toHaveBeenCalledWith(sessions[0]);
-    await userEvent.click(screen.getByText('删除'));
+    await userEvent.click(screen.getByTitle('删除会话'));
     expect(props.onDelete).toHaveBeenCalledWith(sessions[0]);
   });
 
-  it('无会话时整个分区不渲染', () => {
+  it('条目直接平铺，无折叠箭头（spec §5.5 2026-08-16 修订）', () => {
+    renderSection();
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('B')).toBeInTheDocument();
+    expect(screen.queryByTitle('展开')).not.toBeInTheDocument();
+  });
+
+  it('无会话时渲染空态文案', () => {
     renderSection({ sessions: [] });
-    expect(screen.queryByText('已保存会话')).not.toBeInTheDocument();
+    expect(screen.getByText(/还没有已保存的会话/)).toBeInTheDocument();
+  });
+
+  it('超出 visibleTabs 折叠，展开走 onToggleExpand（spec §5.2）', async () => {
+    const many: SavedSession[] = [
+      {
+        id: 's2',
+        name: '大会话',
+        createdAt: 200,
+        tabs: Array.from({ length: 7 }, (_, i) => ({
+          url: `https://t${i}.com/`,
+          title: `T${i}`,
+        })),
+      },
+    ];
+    const { props } = renderSection({ sessions: many, visibleLimit: 5 });
+    expect(screen.getByText('T4')).toBeInTheDocument();
+    expect(screen.queryByText('T5')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText(/还有 2 个标签页/));
+    expect(props.onToggleExpand).toHaveBeenCalledWith('ss2');
   });
 });
 
-describe('SessionSection 展开编辑', () => {
-  it('展开显示条目；点击条目标题 → onOpenTab；点击条目 ✕ → onDeleteTab', async () => {
-    const props = renderSection();
-    await userEvent.click(screen.getByText(/2026\/8\/15 10:00/));
-    expect(screen.getByText('A')).toBeInTheDocument();
-    await userEvent.click(screen.getByText('A'));
+describe('SessionSection 条目操作', () => {
+  it('点击条目标题 → onOpenTab；新窗口打开 → onOpenTabNewWindow；移除 → onDeleteTab', async () => {
+    const { props } = renderSection();
+    await userEvent.click(screen.getAllByTitle('单独打开')[0]);
     expect(props.onOpenTab).toHaveBeenCalledWith(sessions[0].tabs[0]);
-    await userEvent.click(screen.getAllByTitle('删除')[0]);
+    await userEvent.click(screen.getAllByTitle('新窗口打开')[0]);
+    expect(props.onOpenTabNewWindow).toHaveBeenCalledWith(sessions[0].tabs[0]);
+    await userEvent.click(screen.getAllByTitle('移除此条')[0]);
     expect(props.onDeleteTab).toHaveBeenCalledWith(sessions[0], 0);
   });
 
   it('重命名：切输入框，Enter 提交', async () => {
-    const props = renderSection();
+    const { props } = renderSection();
     await userEvent.click(screen.getByTitle('重命名'));
     const input = screen.getByRole('textbox');
     await userEvent.clear(input);

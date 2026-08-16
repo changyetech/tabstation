@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { makeTab } from '../test/factories';
 import { getChromeMock } from '../test/chrome-mock';
 import {
+  DEFAULT_SETTINGS,
+  mergeSettings,
   readKey,
   removeReadLater,
   removeSessionTab,
@@ -133,5 +135,26 @@ describe('storage IO', () => {
     await writeKey('sessions', sessions);
     expect(storageData.sessions).toEqual(sessions);
     expect(await readKey('sessions', [])).toEqual(sessions);
+  });
+});
+
+describe('mergeSettings', () => {
+  it('undefined 返回全默认', () => {
+    expect(mergeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
+  });
+  it('旧版本落盘数据缺新字段时补默认值，已有字段保留', () => {
+    const merged = mergeSettings({
+      managerPageScope: 'per-window',
+      closeWindowAfterSave: true,
+      language: 'en',
+    });
+    expect(merged).toEqual({
+      managerPageScope: 'per-window',
+      closeWindowAfterSave: true,
+      language: 'en',
+      theme: 'auto',
+      newWindowMode: 'same',
+      visibleTabs: 8,
+    });
   });
 });

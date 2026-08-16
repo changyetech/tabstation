@@ -28,13 +28,24 @@ export interface Settings {
   managerPageScope: 'global' | 'per-window';
   closeWindowAfterSave: boolean;
   language: 'auto' | 'en' | 'zh-CN';
+  theme: 'light' | 'dark' | 'auto';
+  newWindowMode: 'max' | 'same';
+  visibleTabs: 5 | 8 | 12 | 'all';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   managerPageScope: 'global',
   closeWindowAfterSave: false,
   language: 'auto',
+  theme: 'auto',
+  newWindowMode: 'same',
+  visibleTabs: 8,
 };
+
+// 旧版本落盘的 settings 缺新增字段，读侧统一经此合并兜底
+export function mergeSettings(partial: Partial<Settings> | undefined): Settings {
+  return { ...DEFAULT_SETTINGS, ...partial };
+}
 
 // ===== 稍后阅读纯操作（spec §5.4）=====
 

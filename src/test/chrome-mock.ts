@@ -21,6 +21,7 @@ function buildChromeMock(storageData: Record<string, unknown>) {
   return {
     runtime: {
       getURL: (path: string) => `chrome-extension://test-id/${path}`,
+      getManifest: () => ({ version: '0.1.0' }) as chrome.runtime.Manifest,
     },
     storage: {
       local: {
@@ -66,7 +67,12 @@ function buildChromeMock(storageData: Record<string, unknown>) {
       onFocusChanged: new MockEvent(),
     },
     action: { onClicked: new MockEvent() },
-    commands: { onCommand: new MockEvent() },
+    commands: {
+      onCommand: new MockEvent(),
+      getAll: vi.fn(async () => [
+        { name: 'open-manager', shortcut: '⌘⇧E', description: 'Open manager' },
+      ]),
+    },
   };
 }
 

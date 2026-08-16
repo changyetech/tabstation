@@ -1,13 +1,11 @@
 // 纸屑：17 个粒子从 (x,y) 迸发，随机角度 + 上抛偏置 + 重力，700–900ms（移植自 tab-out）
+// 色板取设计稿 CONFETTI_COLORS（品牌五色）
 const COLORS = [
-  '#c8713a',
-  '#e8a070',
-  '#5a7a62',
-  '#8aaa92',
-  '#5a6b7a',
-  '#8a9baa',
-  '#d4b896',
-  '#b35a5a',
+  'oklch(58% 0.18 255)',
+  'oklch(62% 0.15 155)',
+  'oklch(65% 0.16 55)',
+  'oklch(60% 0.17 25)',
+  'oklch(58% 0.16 300)',
 ];
 
 export function shootConfetti(x: number, y: number): void {
