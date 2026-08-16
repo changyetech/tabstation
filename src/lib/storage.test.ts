@@ -171,7 +171,7 @@ describe('mergeSettings', () => {
       language: 'en',
       theme: 'auto',
       newWindowMode: 'same',
-      visibleTabs: 8,
+      visibleTabs: 12,
     });
   });
 });

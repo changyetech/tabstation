@@ -30,7 +30,7 @@ export interface Settings {
   language: 'auto' | 'en' | 'zh-CN';
   theme: 'light' | 'dark' | 'auto';
   newWindowMode: 'max' | 'same';
-  visibleTabs: 5 | 8 | 12 | 'all';
+  visibleTabs: 8 | 12 | 16 | 'all';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -39,7 +39,7 @@ export const DEFAULT_SETTINGS: Settings = {
   language: 'auto',
   theme: 'auto',
   newWindowMode: 'same',
-  visibleTabs: 8,
+  visibleTabs: 12,
 };
 
 // 旧版本落盘的 settings 缺新增字段，读侧统一经此合并兜底

@@ -62,7 +62,7 @@ Settings {
   language: 'auto' | 'en' | 'zh-CN'            // 既有，默认 auto
   theme: 'light' | 'dark' | 'auto'             // 新增，默认 auto
   newWindowMode: 'max' | 'same'                // 新增，默认 same（2026-08-16 修订：原默认 max）
-  visibleTabs: 5 | 8 | 12 | 'all'              // 新增，默认 8
+  visibleTabs: 8 | 12 | 16 | 'all'             // 新增，默认 12
 }
 ```
 

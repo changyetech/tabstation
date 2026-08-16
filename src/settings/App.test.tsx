@@ -41,13 +41,13 @@ describe('设置页', () => {
     expect(screen.getByText('已保存，即时生效')).toBeInTheDocument();
   });
 
-  it('展示条数：选 12 落盘为数字，选全部落盘为 all', async () => {
+  it('展示条数：选 16 落盘为数字，选全部落盘为 all', async () => {
     const { storageData } = getChromeMock();
     render(<App />);
     const select = screen.getByLabelText('每个区块默认展示条数');
-    await userEvent.selectOptions(select, '12');
+    await userEvent.selectOptions(select, '16');
     await waitFor(() =>
-      expect((storageData.settings as { visibleTabs: unknown }).visibleTabs).toBe(12),
+      expect((storageData.settings as { visibleTabs: unknown }).visibleTabs).toBe(16),
     );
     await userEvent.selectOptions(select, 'all');
     await waitFor(() =>

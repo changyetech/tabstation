@@ -237,13 +237,13 @@ function SettingsPage({
                     onChange={(e) => {
                       const v = e.target.value;
                       save({
-                        visibleTabs: v === 'all' ? 'all' : (Number(v) as 5 | 8 | 12),
+                        visibleTabs: v === 'all' ? 'all' : (Number(v) as 8 | 12 | 16),
                       });
                     }}
                   >
-                    <option value="5">{t('settings.visibleTabs5')}</option>
                     <option value="8">{t('settings.visibleTabs8')}</option>
                     <option value="12">{t('settings.visibleTabs12')}</option>
+                    <option value="16">{t('settings.visibleTabs16')}</option>
                     <option value="all">{t('settings.visibleTabsAll')}</option>
                   </select>
                 </span>

@@ -72,15 +72,15 @@ describe('SessionSection', () => {
         id: 's2',
         name: '大会话',
         createdAt: 200,
-        tabs: Array.from({ length: 7 }, (_, i) => ({
+        tabs: Array.from({ length: 10 }, (_, i) => ({
           url: `https://t${i}.com/`,
           title: `T${i}`,
         })),
       },
     ];
-    const { props } = renderSection({ sessions: many, visibleLimit: 5 });
-    expect(screen.getByText('T4')).toBeInTheDocument();
-    expect(screen.queryByText('T5')).not.toBeInTheDocument();
+    const { props } = renderSection({ sessions: many, visibleLimit: 8 });
+    expect(screen.getByText('T7')).toBeInTheDocument();
+    expect(screen.queryByText('T8')).not.toBeInTheDocument();
     await userEvent.click(screen.getByText(/还有 2 个标签页/));
     expect(props.onToggleExpand).toHaveBeenCalledWith('ss2');
   });
