@@ -44,7 +44,7 @@ describe('设置页', () => {
   it('展示条数：选 12 落盘为数字，选全部落盘为 all', async () => {
     const { storageData } = getChromeMock();
     render(<App />);
-    const select = screen.getByLabelText('每个窗口默认展示条数');
+    const select = screen.getByLabelText('每个区块默认展示条数');
     await userEvent.selectOptions(select, '12');
     await waitFor(() =>
       expect((storageData.settings as { visibleTabs: unknown }).visibleTabs).toBe(12),

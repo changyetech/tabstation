@@ -26,6 +26,16 @@ describe('useT', () => {
     expect(screen.getByTestId('out')).toHaveTextContent('5 tabs');
   });
 
+  it('复数选择：{k|单数|复数} 按参数值取词', () => {
+    render(
+      <I18nProvider language="en">
+        <Probe id="window.tabCount" params={{ n: 1 }} />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId('out')).toHaveTextContent('1 tab');
+    expect(screen.getByTestId('out')).not.toHaveTextContent('1 tabs');
+  });
+
   it('缺 key 返回 key 本身', () => {
     render(
       <I18nProvider language="en">

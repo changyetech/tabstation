@@ -1,7 +1,7 @@
 {
   "extName": { "message": "Tab Station" },
   "extDescription": {
-    "message": "集中式 TAB 管理：排序、移动、去重、稍后阅读与窗口会话。100% 本地运行。"
+    "message": "标签工作站——集中管理所有标签页：排序、移动、去重、稍后阅读与窗口会话。100% 本地运行。"
   },
-  "cmdOpenManager": { "message": "打开 TAB 管理页" }
+  "cmdOpenManager": { "message": "打开管理页" }
 }

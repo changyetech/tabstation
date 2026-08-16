@@ -311,7 +311,7 @@ function AppInner({ settings }: { settings: Settings }) {
   // 会话条目「新窗口打开」：条目保留（模板式）；尺寸遵循设置
   const openSessionTabNewWindow = (tab: SessionTab) => {
     void createWindowBySetting(settings.newWindowMode, { url: tab.url, focused: true });
-    showToast(t('toast.split'));
+    showToast(t('toast.openedNewWindow'));
   };
 
   // 拖影内容（spec 2026-08-16-session-card-dnd §3.4）：
@@ -373,7 +373,7 @@ function AppInner({ settings }: { settings: Settings }) {
       tabId: tab.id,
       sourceWindowId: tab.windowId,
     });
-    showToast(t('toast.split'));
+    showToast(t('toast.openedNewWindow'));
   };
 
   // 新建空窗口（设计稿 new-win 幽灵按钮）
@@ -389,7 +389,7 @@ function AppInner({ settings }: { settings: Settings }) {
   const domainReadLater = (batch: TabWithId[]) => {
     const targets = batch.filter((x) => !x.pinned && /^https?:\/\//.test(x.url ?? ''));
     if (targets.length === 0) {
-      showToast(t('toast.domOnlyPinned'));
+      showToast(t('toast.domNoEligible'));
       return;
     }
     let list = readLater;
@@ -412,7 +412,7 @@ function AppInner({ settings }: { settings: Settings }) {
   const domainCloseAll = (batch: TabWithId[]) => {
     const targets = batch.filter((x) => !x.pinned);
     if (targets.length === 0) {
-      showToast(t('toast.domOnlyPinned'));
+      showToast(t('toast.domNoEligible'));
       return;
     }
     const host = domainHostLabel(targets);

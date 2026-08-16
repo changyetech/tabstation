@@ -338,7 +338,7 @@ describe('保存窗口', () => {
     render(<App />);
     await waitFor(() => expect(screen.getByTitle('保存会话')).toBeInTheDocument());
     await userEvent.click(screen.getByTitle('保存会话'));
-    expect(await screen.findByText('没有可保存的 tab')).toBeInTheDocument();
+    expect(await screen.findByText('没有可保存的标签页')).toBeInTheDocument();
     expect(storageData.sessions).toBeUndefined();
   });
 
