@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useLanguage, useT } from '../i18n';
+import { useT } from '../i18n';
 import { sessionDragEndToMove, type SessionDragData } from '../lib/dnd';
 import { foldTabs } from '../lib/fold';
 import { hostnameOf } from '../lib/grouping';
@@ -123,7 +123,6 @@ function SessionBlock({
   session: SavedSession;
 } & Omit<SessionSectionProps, 'sessions' | 'onMoveTab'>) {
   const t = useT();
-  const lang = useLanguage();
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(session.name);
 
@@ -131,15 +130,6 @@ function SessionBlock({
     setRenaming(false);
     if (draft.trim() && draft !== session.name) onRename(session, draft.trim());
   };
-
-  // 会话时间戳照稿：M/D HH:mm 保存
-  const metaTime = new Intl.DateTimeFormat(lang, {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(session.createdAt);
 
   // favicon 叠层：按域名去重后最多 4 个（同窗口区块头）
   const stackKeys = new Set<string>();
@@ -181,9 +171,7 @@ function SessionBlock({
             <Favicon key={tab.url} url={tab.url} favIconUrl={tab.favIconUrl} />
           ))}
         </span>
-        <span className="win-meta num">
-          {t('sessions.meta', { n: session.tabs.length, time: metaTime })}
-        </span>
+        <span className="win-meta num">{t('window.tabCount', { n: session.tabs.length })}</span>
         <span className="win-acts">
           <button
             className="ghost-btn"

@@ -41,7 +41,6 @@
   "readLater.openTitle": "Open and remove from list",
   "readLater.newWindow": "Open in new window (and remove from list)",
   "readLater.delete": "Delete from list",
-  "sessions.meta": "{n} tabs · saved {time}",
   "sessions.restore": "Restore to new window (session kept)",
   "sessions.restoreShort": "Restore",
   "sessions.rename": "Rename",

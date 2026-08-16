@@ -41,7 +41,6 @@
   "readLater.openTitle": "打开并从清单移除",
   "readLater.newWindow": "新窗口打开（并从清单移除）",
   "readLater.delete": "从清单删除",
-  "sessions.meta": "{n} 个标签页 · {time} 保存",
   "sessions.restore": "恢复到新窗口（会话保留）",
   "sessions.restoreShort": "恢复",
   "sessions.rename": "重命名",
