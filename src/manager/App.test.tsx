@@ -51,6 +51,17 @@ describe('App', () => {
     expect(stats).toHaveTextContent('0待读');
   });
 
+  it('页脚展示版权链接并跳转官网', async () => {
+    seedTwoWindows();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
+
+    const link = screen.getByRole('link', {
+      name: 'Hangzhou Changye Network Technology Co., Ltd.',
+    });
+    expect(link).toHaveAttribute('href', 'https://changyetech.com');
+  });
+
   it('全部模式：固定域名视图，跨窗口按域名聚合为区块', async () => {
     seedTwoWindows();
     render(<App />);

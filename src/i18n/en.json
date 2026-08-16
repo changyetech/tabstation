@@ -104,6 +104,8 @@
   "settings.shortcutUnset": "Not set",
   "settings.aboutName": "Tab Station",
   "settings.aboutMeta": "Version {v} · Chrome extension (Manifest V3)",
+  "footer.copyrightYear": "© {year}",
+  "footer.companyName": "Hangzhou Changye Network Technology Co., Ltd.",
   "domain.localFiles": "Local files",
   "domain.other": "Other",
   "time.justNow": "just now",

@@ -16,6 +16,7 @@ import ReadLaterSidebar from '../components/ReadLaterSidebar';
 import SessionSection from '../components/SessionSection';
 import Toast from '../components/Toast';
 import DragGhost from '../components/DragGhost';
+import { CopyrightFooter } from '../components/CopyrightFooter';
 import { Icon } from '../components/icons';
 import type { MoveTarget } from '../components/MoveMenu';
 import { I18nProvider, resolveLanguage, useLanguage, useT } from '../i18n';
@@ -587,6 +588,7 @@ function AppInner({ settings }: { settings: Settings }) {
           </aside>
         )}
       </div>
+      <CopyrightFooter />
       <Toast message={toast} />
     </>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Toast from '../components/Toast';
+import { CopyrightFooter } from '../components/CopyrightFooter';
 import { Icon } from '../components/icons';
 import { I18nProvider, resolveLanguage, useT } from '../i18n';
 import { useStorageState } from '../hooks/useStorageState';
@@ -329,6 +330,7 @@ function SettingsPage({
         </main>
       </div>
 
+      <CopyrightFooter />
       <Toast message={toast} />
     </>
   );

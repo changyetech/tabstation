@@ -20,6 +20,16 @@ describe('设置页', () => {
     await waitFor(() => expect(screen.getByText('⌘')).toBeInTheDocument());
   });
 
+  it('页脚展示版权链接并跳转官网', () => {
+    render(<App />);
+
+    const link = screen.getByRole('link', {
+      name: 'Hangzhou Changye Network Technology Co., Ltd.',
+    });
+    expect(link).toHaveAttribute('href', 'https://changyetech.com');
+    expect(screen.getAllByText(/Hangzhou Changye Network Technology Co\., Ltd\./)).toHaveLength(1);
+  });
+
   it('主题卡片：点击深色 → 落盘 + data-theme 切换 + toast', async () => {
     const { storageData } = getChromeMock();
     render(<App />);

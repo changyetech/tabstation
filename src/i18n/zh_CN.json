@@ -104,6 +104,8 @@
   "settings.shortcutUnset": "未设置",
   "settings.aboutName": "Tab Station · 标签工作站",
   "settings.aboutMeta": "版本 {v} · Chrome 扩展（Manifest V3）",
+  "footer.copyrightYear": "© {year}",
+  "footer.companyName": "Hangzhou Changye Network Technology Co., Ltd.",
   "domain.localFiles": "本地文件",
   "domain.other": "其他",
   "time.justNow": "刚刚",
