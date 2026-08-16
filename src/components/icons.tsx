@@ -12,7 +12,6 @@ export type IconName =
   | 'save'
   | 'trash'
   | 'pin'
-  | 'chevron'
   | 'restore'
   | 'edit'
   | 'win'
@@ -57,7 +56,6 @@ const STROKE_PATHS: Record<Exclude<IconName, 'check'>, ReactElement> = {
   ),
   trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   pin: <path d="M12 17v5M5 9l7-6 7 6-2 8H7L5 9Z" />,
-  chevron: <path d="M9 6l6 6-6 6" />,
   restore: (
     <>
       <path d="M9.5 4H5.5A2.5 2.5 0 0 0 3 6.5v12A2.5 2.5 0 0 0 5.5 21h12a2.5 2.5 0 0 0 2.5-2.5V14.5" />
