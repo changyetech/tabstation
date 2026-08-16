@@ -43,7 +43,9 @@ function renderSection(over: Partial<React.ComponentProps<typeof SessionSection>
 describe('SessionSection', () => {
   it('会话渲染为 win-block 卡片：名称、条目数、恢复 / 删除回调，标题不含保存时间', async () => {
     const { props, view } = renderSection();
-    expect(view.container.querySelector('.win-flow > .win-block.session-block')).toBeInTheDocument();
+    expect(
+      view.container.querySelector('.win-flow > .win-block.session-block'),
+    ).toBeInTheDocument();
     expect(screen.getByText(/2026\/8\/15 10:00/)).toBeInTheDocument();
     expect(view.container.querySelector('.win-head .win-meta')).toHaveTextContent(/^2 个标签页$/);
     await userEvent.click(screen.getByTitle('恢复到新窗口（会话保留）'));
