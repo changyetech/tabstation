@@ -26,7 +26,7 @@ function renderSection(over: Partial<React.ComponentProps<typeof SessionSection>
     onRestore: vi.fn(),
     onDelete: vi.fn(),
     onRename: vi.fn(),
-    onReorderTab: vi.fn(),
+    onMoveTab: vi.fn(),
     onDeleteTab: vi.fn(),
     onOpenTab: vi.fn(),
     onOpenTabNewWindow: vi.fn(),
@@ -87,7 +87,7 @@ describe('SessionSection', () => {
 describe('SessionSection 条目操作', () => {
   it('点击条目标题 → onOpenTab；新窗口打开 → onOpenTabNewWindow；移除 → onDeleteTab', async () => {
     const { props } = renderSection();
-    await userEvent.click(screen.getAllByTitle('单独打开')[0]);
+    await userEvent.click(screen.getAllByTitle(/单独打开/)[0]);
     expect(props.onOpenTab).toHaveBeenCalledWith(sessions[0].tabs[0]);
     await userEvent.click(screen.getAllByTitle('新窗口打开')[0]);
     expect(props.onOpenTabNewWindow).toHaveBeenCalledWith(sessions[0].tabs[0]);
@@ -102,5 +102,41 @@ describe('SessionSection 条目操作', () => {
     await userEvent.clear(input);
     await userEvent.type(input, '工作会话{Enter}');
     expect(props.onRename).toHaveBeenCalledWith(sessions[0], '工作会话');
+  });
+});
+
+describe('SessionSection 条目行对齐 by windows（spec 2026-08-16-session-card-dnd §2）', () => {
+  it('行为 tab-row 结构：grip 把手、域名列，无时间列、无 URL 子标题', () => {
+    const { view } = renderSection();
+    const row = view.container.querySelector('.session-block .tab-row');
+    expect(row).toBeInTheDocument();
+    expect(row!.querySelector('.drag-grip')).toBeInTheDocument();
+    expect(row!.querySelector('.tab-host')!.textContent).toBe('a.com');
+    expect(row!.querySelector('.tab-time')).not.toBeInTheDocument();
+    expect(view.container.querySelector('.rl-url')).not.toBeInTheDocument();
+    expect(view.container.querySelector('.session-tab-row')).not.toBeInTheDocument();
+  });
+
+  it('pinned 行：图钉图标 + ghost 态 grip', () => {
+    const pinned: SavedSession[] = [
+      {
+        id: 's3',
+        name: 'P',
+        createdAt: 1,
+        tabs: [{ url: 'https://a.com/', title: 'A', pinned: true }],
+      },
+    ];
+    const { view } = renderSection({ sessions: pinned });
+    expect(view.container.querySelector('.tab-pin')).toBeInTheDocument();
+    expect(view.container.querySelector('.drag-grip.ghost')).toBeInTheDocument();
+  });
+
+  it('整行点击 → onOpenTab；行内按钮不触发整行打开', async () => {
+    const { props } = renderSection();
+    await userEvent.click(screen.getAllByTitle(/单独打开/)[0]);
+    expect(props.onOpenTab).toHaveBeenCalledWith(sessions[0].tabs[0]);
+    await userEvent.click(screen.getAllByTitle('新窗口打开')[0]);
+    expect(props.onOpenTabNewWindow).toHaveBeenCalledWith(sessions[0].tabs[0]);
+    expect(props.onOpenTab).toHaveBeenCalledTimes(1);
   });
 });
