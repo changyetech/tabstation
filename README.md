@@ -8,6 +8,18 @@ Tab Station 是一个 Chrome Manifest V3 扩展，把所有窗口中的真实标
 
 扩展附带「稍后阅读」与「窗口会话」两类本地持久化数据。没有后端服务，不发起网络请求，全部状态保存在 `chrome.storage.local`。
 
+<p align="center">
+  <img src="screenshots/manager-by-window-light.png" alt="管理页窗口模式（浅色主题）" width="800">
+  <br>
+  <em>窗口模式：按窗口分区展示所有真实标签页</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/manager-all-tabs-dark.png" alt="管理页全部模式（深色主题）" width="800">
+  <br>
+  <em>全部模式：跨窗口按域名聚合（深色主题）</em>
+</p>
+
 ## 功能特性
 
 - **集中管理真实标签页**：在一个页面查看并操作所有窗口的标签页；支持拖拽排序、跨窗口移动、关闭窗口和拆分到新窗口。
