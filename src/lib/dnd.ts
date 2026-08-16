@@ -13,3 +13,24 @@ export function dragEndToMove(
   if (!over || over.tabId === active.tabId) return null;
   return { tabId: active.tabId, windowId: over.windowId, index: over.index };
 }
+
+// 会话卡片拖拽落点 → moveSessionTab 参数（spec 2026-08-16-session-card-dnd §3.2）
+// 无落点或原位返回 null（不写 storage）
+export interface SessionDragData {
+  sessionId: string;
+  index: number;
+}
+
+export function sessionDragEndToMove(
+  active: SessionDragData,
+  over: SessionDragData | null,
+): { fromSessionId: string; fromIndex: number; toSessionId: string; toIndex: number } | null {
+  if (!over) return null;
+  if (over.sessionId === active.sessionId && over.index === active.index) return null;
+  return {
+    fromSessionId: active.sessionId,
+    fromIndex: active.index,
+    toSessionId: over.sessionId,
+    toIndex: over.index,
+  };
+}
