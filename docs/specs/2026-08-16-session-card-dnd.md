@@ -57,7 +57,7 @@ moveSessionTab(sessions, fromSessionId, fromIndex, toSessionId, toIndex): SavedS
 
 1. `storage.test.ts` — `moveSessionTab`：同会话重排、跨会话移动（源删目标插）、源拖空自动删会话、越界/未知 id 原样返回。
 2. `SessionSection.test.tsx` — 行 markup 对齐（`tab-row`/`drag-grip`/`tab-host`，无时间列、无 URL 子标题）；pinned 行不可拖 + ghost grip + 图钉；整行点击调 `onOpenTab`，行内按钮不触发；`onDragEnd` 跨卡时以正确四参调 `onMoveTab`。
-3. `App.test.tsx` — `onMoveTab` 接线：调 `moveSessionTab` 并落盘。
+3. `dnd.test.ts` — `sessionDragEndToMove` 落点映射（跨卡 / 同卡 / 无落点或原位 → null）。App 侧接线为单行透传，jsdom 无法派发 dnd 拖拽事件，由类型检查与上述纯函数测试共同覆盖，不在 `App.test.tsx` 单测。
 
 ## 6. 非目标
 
