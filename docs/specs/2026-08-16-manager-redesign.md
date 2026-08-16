@@ -86,7 +86,7 @@ Settings {
 - **窗口区块头**：`窗口 N` + 当前窗口「当前」胶囊（强调色、区块整体强调色描边）+ 最多 4 个 favicon 叠层 + 「N 个标签页 · N 固定」 + ghost 按钮「保存会话」「关闭窗口」（danger hover）。
 - **标签行**（单行密排 min-height 34px）：拖拽手柄（hover 显形，pinned 无）、favicon、pinned 图标、标题、域名、`×N` 重复徽章（warn 色）、相对时间。整行可点 = 激活跳转到该 tab；`Enter`/`Space` 等效。
 - **favicon 来源**（2026-08-16 修订）：统一封装为 `Favicon` 组件，三级回退——① tab/条目声明的 `favIconUrl`；② 无声明或图片加载失败（如跨站热链被拒）时，经 Chrome 本地 favicon 缓存取图（扩展 `_favicon/` API，manifest `favicon` 权限，零网络请求，未加载/被 discard 的 tab 也可命中）；③ 页面 URL 也缺失时回退字母徽标。适用于标签行、窗口头 favicon 叠层、域名头（取组内任一有声明图标的 tab 代表整组）、稍后阅读与会话条目。注意不可只用 `_favicon` 单级方案：favicon 库按「已访问页面 URL」记录，从未实际加载过的页面（后台打开、会话恢复未点开）查不到图。
-- **行内操作组**：hover 时在行尾**原位替换时间显示**（无浮层）：收进稍后阅读（pinned 无）、拆到新窗口（pinned 无）、移动到其他窗口（仅窗口数 >1，弹既有 MoveMenu，样式照稿 popover）、关闭（danger）。
+- **行内操作组**：hover 时在行尾**原位替换时间显示**（无浮层）：收进稍后阅读（pinned 无）、拆到新窗口（pinned 无）、移动到其他窗口（仅窗口数 >1，弹既有 MoveMenu，样式照稿 popover）、关闭（danger）。（2026-08-16 修订）MoveMenu popover 经 portal 渲染到 `body` 并以 fixed 定位锚定触发按钮，不受 `.win-block { overflow: hidden }` 裁剪；靠近视口底部时向上展开。
 - **域名视图**（2026-08-16 修订：仅全部模式，窗口模式固定列表视图）：跨窗口按域名聚合为独立区块（带域名色顶条），标签行显示标题 + URL 两行；favicon 仅出现在域名头（代表整组），标签行内不再逐行显示（同域名下逐行重复无信息量，对应设计稿 `tabRowHtml` 的 `noFav`）。域名头带**域名批量操作组**（hover 浮现）：全部收进稍后阅读、拆到新窗口、关闭全部（前后两者跳过 pinned；若目标全为 pinned 则 toast「该域名只有固定标签，未处理」）。作用域为全浏览器。
 - **空状态**：所有窗口清空（管理页除外）→ sparkle 图标 + 「所有窗口都已清空——干得漂亮。」 + 新建窗口按钮。
 

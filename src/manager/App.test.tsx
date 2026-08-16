@@ -73,9 +73,9 @@ describe('App', () => {
     const row = a1.closest('li');
     if (!row) throw new Error('A1 所在行未找到');
     await userEvent.click(within(row).getByTitle('移动到其他窗口'));
-    // A1 在窗口 1，目标菜单应只含窗口 2（不含自己所在的窗口 1）
-    expect(within(row).queryByText(/^窗口 1 ·/)).not.toBeInTheDocument();
-    await userEvent.click(within(row).getByText('窗口 2 · B1'));
+    // A1 在窗口 1，目标菜单经 portal 挂到 body，应只含窗口 2
+    expect(screen.queryByText(/^窗口 1 ·/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText('窗口 2 · B1'));
     expect(chromeMock.tabs.move).toHaveBeenCalledWith(1, { windowId: 2, index: -1 });
   });
 

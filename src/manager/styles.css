@@ -812,14 +812,8 @@ img.favicon {
   color: var(--fg);
 }
 /* ========== 移动菜单 popover ========== */
-.move-menu {
-  position: relative;
-}
 .popover {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 6px;
+  position: fixed;
   z-index: 500;
   min-width: 236px;
   background: var(--surface);
