@@ -30,7 +30,7 @@ import { shootConfetti } from '../lib/effects/confetti';
 import { findDuplicateGroups, planDedupe, type TabWithId } from '../lib/dedupe';
 import { cardDropCollision, dragEndToMove, type DragTabData } from '../lib/dnd';
 import { domainGroupKey, hostnameOf, sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
-import { managerUrl } from '../lib/urls';
+import { ownPagePrefix } from '../lib/urls';
 import { createWindowBySetting } from '../lib/open-window';
 import { restoreSession } from '../lib/restore-session';
 import {
@@ -89,9 +89,8 @@ function AppInner({ settings }: { settings: Settings }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  const mUrl = managerUrl();
-  // 隐身范围 = 本扩展全部页面（管理页 + 设置页），前缀过滤（spec §3.2）
-  const extBase = chrome.runtime.getURL('');
+  // 隐身范围 = 本扩展全部页面（管理页 + 设置页 + 新标签页），前缀过滤（spec §3.2）
+  const extBase = ownPagePrefix();
   const visible = useMemo(() => visibleTabs(tabs, extBase), [tabs, extBase]);
   const dupGroups = useMemo(() => findDuplicateGroups(visible, extBase), [visible, extBase]);
   const dupCountByTabId = useMemo(() => {
@@ -199,7 +198,8 @@ function AppInner({ settings }: { settings: Settings }) {
   // 关闭窗口：区块级一次动效；管理页所在窗口只关其他 tab、保留管理页
   const closeWindow = (win: chrome.windows.Window, sectionEl: HTMLElement | null) => {
     const winVisible = visible.filter((x) => x.windowId === win.id);
-    const containsManager = tabs.some((x) => x.windowId === win.id && x.url?.startsWith(mUrl));
+    // 自有页面不被关闭类操作波及：窗口含任一自有页面（管理页/设置页/新标签页）时只关其余 tab
+    const containsOwnPage = tabs.some((x) => x.windowId === win.id && x.url?.startsWith(extBase));
     playCloseSound();
     if (sectionEl) {
       const rect = sectionEl.getBoundingClientRect();
@@ -207,7 +207,7 @@ function AppInner({ settings }: { settings: Settings }) {
       animateElementOut(sectionEl);
     }
     window.setTimeout(() => {
-      if (containsManager) {
+      if (containsOwnPage) {
         void chrome.tabs.remove(winVisible.map((x) => x.id)).catch(() => {
           // 动画期间用户可能已手动关闭这些 tab，remove 会 reject；
           // 吞掉即可——useTabs 的事件驱动刷新会自愈状态

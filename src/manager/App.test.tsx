@@ -150,6 +150,28 @@ describe('App', () => {
     expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
   });
 
+  it('关闭窗口·窗口含新标签页：只关其余 tab，窗口存活', async () => {
+    const { chromeMock } = getChromeMock();
+    seedTwoWindows();
+    // 窗口 2 原本不含任何自有页面（会整窗关闭），追加一个新标签页 tab 后应改为存活
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({ id: 1, windowId: 1, index: 0, title: 'A1', url: 'https://a.com/', active: true }),
+      makeTab({ id: 2, windowId: 1, index: 1, title: 'Manager', url: MANAGER }),
+      makeTab({ id: 3, windowId: 2, index: 0, title: 'B1', url: 'https://b.com/', active: true }),
+      makeTab({
+        id: 99,
+        windowId: 2,
+        index: 1,
+        url: 'chrome-extension://test-id/src/newtab/index.html',
+      }),
+    ]);
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
+    await userEvent.click(within(winBlockOf('窗口 2')).getByTitle('关闭窗口'));
+    await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([3]));
+    expect(chromeMock.windows.remove).not.toHaveBeenCalled();
+  });
+
   it('关闭窗口·windows.remove reject：区块摘掉 .closing，不永久消失', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
