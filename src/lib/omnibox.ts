@@ -82,13 +82,27 @@ function highlightMatch(text: string, query: string): string {
   return escapeXml(pre) + `<match>${escapeXml(match)}</match>` + escapeXml(post);
 }
 
-export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.SuggestResult {
+// 三类的行内类型标签；background 在 service worker 中按语言注入翻译后的文案，
+// 页面外（如单测）不传时落回中文——保持与 spec §5.1 字面表格一致
+export interface OmniboxLabels {
+  tab: string;
+  read: string;
+  session: string;
+}
+
+const DEFAULT_LABELS: OmniboxLabels = { tab: '标签页', read: '稍后阅读', session: '会话' };
+
+export function buildSuggestion(
+  item: OmniItem,
+  query: string,
+  labels: OmniboxLabels = DEFAULT_LABELS,
+): chrome.omnibox.SuggestResult {
   if (item.kind === 'tab') {
     const titleWithMatch = highlightMatch(item.title, query);
     const hostname = hostnameOf(item.url);
     const hostnameWithMatch = highlightMatch(hostname, query);
 
-    const description = `<dim>标签页</dim> ${titleWithMatch} <url>${hostnameWithMatch}</url>`;
+    const description = `<dim>${labels.tab}</dim> ${titleWithMatch} <url>${hostnameWithMatch}</url>`;
     return {
       content: toContent(item),
       description,
@@ -100,7 +114,7 @@ export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.S
     const hostname = hostnameOf(item.url);
     const hostnameWithMatch = highlightMatch(hostname, query);
 
-    const description = `<dim>稍后阅读</dim> ${titleWithMatch} <url>${hostnameWithMatch}</url>`;
+    const description = `<dim>${labels.read}</dim> ${titleWithMatch} <url>${hostnameWithMatch}</url>`;
     return {
       content: toContent(item),
       description,
@@ -110,7 +124,7 @@ export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.S
   // kind === 'session'
   const nameWithMatch = highlightMatch(item.name, query);
 
-  const description = `<dim>会话</dim> ${nameWithMatch} <dim>${item.tabCount} 个标签页</dim>`;
+  const description = `<dim>${labels.session}</dim> ${nameWithMatch} <dim>${item.tabCount} 个标签页</dim>`;
   return {
     content: toContent(item),
     description,
@@ -138,13 +152,29 @@ export function parseContent(content: string): { kind: OmniItem['kind']; id: str
   return null;
 }
 
-export function defaultDescription(input: string, count: number): string {
+// 三态默认建议文案；background 按语言现场 translate() 后传入，
+// 未传时落回中文默认值——与 spec §5.3 字面表格一致
+export interface DefaultSuggestionStrings {
+  empty: string;
+  found: string;
+  none: string;
+}
+
+export function defaultDescription(
+  input: string,
+  count: number,
+  strings: DefaultSuggestionStrings = {
+    empty: '搜索标签页、稍后阅读与会话',
+    found: `搜索「${input.trim()}」 · 找到 ${count} 项`,
+    none: '没有匹配项 · 回车打开 Tab Station',
+  },
+): string {
   const normalized = input.trim();
   if (!normalized) {
-    return '搜索标签页、稍后阅读与会话';
+    return strings.empty;
   }
   if (count > 0) {
-    return `搜索「${normalized}」 · 找到 ${count} 项`;
+    return strings.found;
   }
-  return '没有匹配项 · 回车打开 Tab Station';
+  return strings.none;
 }

@@ -122,6 +122,17 @@ describe('escapeXml 与 buildSuggestion', () => {
     expect(description).not.toMatch(/&<match>/);
     expect(description).not.toMatch(/<\/match>;/);
   });
+
+  it('传入 labels 时使用翻译后的类型标签，替换默认中文', () => {
+    const item: OmniItem = { kind: 'session', id: 's1', name: 'Demo', tabCount: 2 };
+    const { description } = buildSuggestion(item, 'demo', {
+      tab: 'Tab',
+      read: 'Read later',
+      session: 'Session',
+    });
+    expect(description).toContain('<dim>Session</dim>');
+    expect(description).not.toContain('会话');
+  });
 });
 
 describe('toContent / parseContent', () => {
@@ -148,5 +159,12 @@ describe('defaultDescription', () => {
 
   it('有输入但无结果', () => {
     expect(defaultDescription('xxx', 0)).toBe('没有匹配项 · 回车打开 Tab Station');
+  });
+
+  it('传入 strings 时使用翻译后的文案，替换默认中文', () => {
+    const strings = { empty: 'Search', found: 'Found 3', none: 'No matches' };
+    expect(defaultDescription('', 0, strings)).toBe('Search');
+    expect(defaultDescription('mv3', 3, strings)).toBe('Found 3');
+    expect(defaultDescription('xxx', 0, strings)).toBe('No matches');
   });
 });
