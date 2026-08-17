@@ -3,10 +3,12 @@ import { findManagerTab } from './lib/singleton';
 import {
   buildSuggestion,
   defaultDescription,
+  escapeXml,
   matchOmnibox,
   parseContent,
   type OmniboxLabels,
 } from './lib/omnibox';
+import { visibleTabs } from './lib/grouping';
 import { restoreSession } from './lib/restore-session';
 import {
   mergeSettings,
@@ -93,9 +95,8 @@ async function handleOmniboxInputChanged(
     chrome.tabs.query({}),
     chrome.storage.local.get() as Promise<StoredOmniData>,
   ]);
-  const ownTabsExcluded = tabs.filter((tab) => !tab.url?.startsWith(extBase));
   const items = matchOmnibox(text, {
-    tabs: ownTabsExcluded,
+    tabs: visibleTabs(tabs, extBase),
     readLater: stored.readLater ?? [],
     sessions: stored.sessions ?? [],
   });
@@ -105,13 +106,14 @@ async function handleOmniboxInputChanged(
     tab: t('omnibox.typeTab'),
     read: t('omnibox.typeRead'),
     session: t('omnibox.typeSession'),
+    tabCount: (n) => t('omnibox.sessionTabCount', { n }),
   };
   suggest(items.map((item) => buildSuggestion(item, text, labels)));
 
   chrome.omnibox.setDefaultSuggestion({
     description: defaultDescription(text, items.length, {
       empty: t('omnibox.defaultEmpty'),
-      found: t('omnibox.defaultFound', { query: text.trim(), n: items.length }),
+      found: t('omnibox.defaultFound', { query: escapeXml(text.trim()), n: items.length }),
       none: t('omnibox.defaultNone'),
     }),
   });
@@ -133,7 +135,7 @@ async function handleOmniboxInputEntered(
     if (parsed.kind === 'tab') {
       const tabId = Number(parsed.id);
       const tab = await chrome.tabs.get(tabId);
-      await chrome.windows.update(tab?.windowId, { focused: true });
+      await chrome.windows.update(tab.windowId, { focused: true });
       await chrome.tabs.update(tabId, { active: true });
       return;
     }
@@ -142,12 +144,14 @@ async function handleOmniboxInputEntered(
       const { readLater } = (await chrome.storage.local.get('readLater')) as StoredOmniData;
       const list = readLater ?? [];
       const item = list.find((r) => r.id === parsed.id);
-      if (item) {
-        if (disposition === 'currentTab') {
-          await chrome.tabs.update(undefined, { url: item.url });
-        } else {
-          await chrome.tabs.create({ url: item.url });
-        }
+      if (!item) {
+        await safeOpenManager();
+        return;
+      }
+      if (disposition === 'currentTab') {
+        await chrome.tabs.update(undefined, { url: item.url });
+      } else {
+        await chrome.tabs.create({ url: item.url });
       }
       await chrome.storage.local.set({ readLater: removeReadLater(list, parsed.id) });
       return;

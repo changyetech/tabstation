@@ -112,6 +112,46 @@ describe('omnibox', () => {
     });
   });
 
+  it('查询含 & 时，默认建议 description 仍是合法 XML（不被用户输入破坏）', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([makeTab({ id: 1, title: 'test a & b' })]);
+    chromeMock.omnibox.onInputChanged.emit('a & b', vi.fn());
+    await vi.waitFor(() => expect(chromeMock.omnibox.setDefaultSuggestion).toHaveBeenCalled());
+    const { description } = chromeMock.omnibox.setDefaultSuggestion.mock.calls[0][0];
+    expect(description).toContain('&amp;');
+    expect(() =>
+      new DOMParser().parseFromString(`<x>${description}</x>`, 'text/xml'),
+    ).not.toThrow();
+    expect(
+      new DOMParser()
+        .parseFromString(`<x>${description}</x>`, 'text/xml')
+        .querySelector('parsererror'),
+    ).toBeNull();
+  });
+
+  it('settings.language 为 en 时，会话建议的标签页计数文案也译为英文', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.settings = { language: 'en' };
+    storageData.sessions = [
+      {
+        id: 's1',
+        name: 'Demo',
+        createdAt: 1,
+        tabs: [
+          { url: 'https://a.com/', title: 'A' },
+          { url: 'https://b.com/', title: 'B' },
+        ],
+      },
+    ];
+    chromeMock.tabs.query.mockResolvedValue([]);
+    const suggest = vi.fn();
+    chromeMock.omnibox.onInputChanged.emit('demo', suggest);
+    await vi.waitFor(() => expect(suggest).toHaveBeenCalled());
+    const [suggestion] = suggest.mock.calls[0][0];
+    expect(suggestion.description).not.toContain('个标签页');
+    expect(suggestion.description).toContain('2 tabs');
+  });
+
   it('settings.language 为 en 时，建议类型标签与默认建议文案都译为英文', async () => {
     const { chromeMock, storageData } = getChromeMock();
     storageData.settings = { language: 'en' };
@@ -129,8 +169,11 @@ describe('omnibox', () => {
 
   it('选中标签页 → 聚焦其窗口并激活该 tab', async () => {
     const { chromeMock } = getChromeMock();
+    chromeMock.tabs.get.mockResolvedValue(makeTab({ id: 7, windowId: 42 }));
     chromeMock.omnibox.onInputEntered.emit('tab:7', 'currentTab');
-    await vi.waitFor(() => expect(chromeMock.windows.update).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(chromeMock.windows.update).toHaveBeenCalledWith(42, { focused: true }),
+    );
     expect(chromeMock.tabs.update).toHaveBeenCalledWith(7, { active: true });
   });
 
@@ -154,11 +197,14 @@ describe('omnibox', () => {
     expect(storageData.readLater).toEqual([]);
   });
 
-  it('稍后阅读条目已被移除：removeReadLater 为空操作，不报错', async () => {
+  it('稍后阅读条目已被移除 → 兜底打开管理页，且不写回 storage', async () => {
     const { chromeMock, storageData } = getChromeMock();
     storageData.readLater = [];
+    chromeMock.tabs.query.mockResolvedValue([]);
     chromeMock.omnibox.onInputEntered.emit('read:missing', 'currentTab');
-    await vi.waitFor(() => expect(chromeMock.tabs.update).not.toHaveBeenCalled());
+    await vi.waitFor(() => expect(chromeMock.tabs.create).toHaveBeenCalled());
+    expect(chromeMock.tabs.update).not.toHaveBeenCalled();
+    expect(chromeMock.storage.local.set).not.toHaveBeenCalled();
     expect(storageData.readLater).toEqual([]);
   });
 

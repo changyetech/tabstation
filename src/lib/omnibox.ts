@@ -88,9 +88,15 @@ export interface OmniboxLabels {
   tab: string;
   read: string;
   session: string;
+  tabCount: (n: number) => string;
 }
 
-const DEFAULT_LABELS: OmniboxLabels = { tab: '标签页', read: '稍后阅读', session: '会话' };
+const DEFAULT_LABELS: OmniboxLabels = {
+  tab: '标签页',
+  read: '稍后阅读',
+  session: '会话',
+  tabCount: (n) => `${n} 个标签页`,
+};
 
 export function buildSuggestion(
   item: OmniItem,
@@ -124,7 +130,7 @@ export function buildSuggestion(
   // kind === 'session'
   const nameWithMatch = highlightMatch(item.name, query);
 
-  const description = `<dim>${labels.session}</dim> ${nameWithMatch} <dim>${item.tabCount} 个标签页</dim>`;
+  const description = `<dim>${labels.session}</dim> ${nameWithMatch} <dim>${labels.tabCount(item.tabCount)}</dim>`;
   return {
     content: toContent(item),
     description,
@@ -165,7 +171,7 @@ export function defaultDescription(
   count: number,
   strings: DefaultSuggestionStrings = {
     empty: '搜索标签页、稍后阅读与会话',
-    found: `搜索「${input.trim()}」 · 找到 ${count} 项`,
+    found: `搜索「${escapeXml(input.trim())}」 · 找到 ${count} 项`,
     none: '没有匹配项 · 回车打开 Tab Station',
   },
 ): string {

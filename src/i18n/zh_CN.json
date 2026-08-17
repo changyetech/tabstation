@@ -115,5 +115,6 @@
   "omnibox.typeSession": "会话",
   "omnibox.defaultEmpty": "搜索标签页、稍后阅读与会话",
   "omnibox.defaultFound": "搜索「{query}」 · 找到 {n} 项",
-  "omnibox.defaultNone": "没有匹配项 · 回车打开 Tab Station"
+  "omnibox.defaultNone": "没有匹配项 · 回车打开 Tab Station",
+  "omnibox.sessionTabCount": "{n} 个标签页"
 }

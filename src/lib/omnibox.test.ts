@@ -129,6 +129,7 @@ describe('escapeXml 与 buildSuggestion', () => {
       tab: 'Tab',
       read: 'Read later',
       session: 'Session',
+      tabCount: (n) => `${n} tabs`,
     });
     expect(description).toContain('<dim>Session</dim>');
     expect(description).not.toContain('会话');
@@ -166,5 +167,18 @@ describe('defaultDescription', () => {
     expect(defaultDescription('', 0, strings)).toBe('Search');
     expect(defaultDescription('mv3', 3, strings)).toBe('Found 3');
     expect(defaultDescription('xxx', 0, strings)).toBe('No matches');
+  });
+
+  it('查询含 & < > 时，默认文案的查询词被转义（C1 回归）', () => {
+    const description = defaultDescription('AT&T', 1);
+    expect(description).toContain('&amp;T');
+    expect(() =>
+      new DOMParser().parseFromString(`<x>${description}</x>`, 'text/xml'),
+    ).not.toThrow();
+    expect(
+      new DOMParser()
+        .parseFromString(`<x>${description}</x>`, 'text/xml')
+        .querySelector('parsererror'),
+    ).toBeNull();
   });
 });
