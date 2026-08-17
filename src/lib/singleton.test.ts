@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeTab } from '../test/factories';
 import { findManagerTab } from './singleton';
+import { MANAGER_PATH, NEWTAB_PATH } from './urls';
 
 const MANAGER = 'chrome-extension://test-id/src/manager/index.html';
 
@@ -21,5 +22,12 @@ describe('findManagerTab', () => {
   it('per-window：只找当前窗口', () => {
     expect(findManagerTab([managerInWin2], MANAGER, 'per-window', 1)).toBeUndefined();
     expect(findManagerTab([managerInWin2], MANAGER, 'per-window', 2)?.id).toBe(20);
+  });
+
+  it('新标签页不得被当成管理页（单例护栏）', () => {
+    const BASE = 'chrome-extension://test-id/';
+    const managerUrl = BASE + MANAGER_PATH;
+    const newTab = makeTab({ id: 5, url: BASE + NEWTAB_PATH });
+    expect(findManagerTab([newTab], managerUrl, 'global', 1)).toBeUndefined();
   });
 });

@@ -30,7 +30,7 @@ import { shootConfetti } from '../lib/effects/confetti';
 import { findDuplicateGroups, planDedupe, type TabWithId } from '../lib/dedupe';
 import { cardDropCollision, dragEndToMove, type DragTabData } from '../lib/dnd';
 import { domainGroupKey, hostnameOf, sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
-import { managerUrl } from '../lib/manager-url';
+import { managerUrl } from '../lib/urls';
 import { createWindowBySetting } from '../lib/open-window';
 import { restoreSession } from '../lib/restore-session';
 import {

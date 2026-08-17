@@ -76,6 +76,17 @@ describe('snapshotWindow', () => {
   it('全被排除时返回空数组（调用方据此不创建会话并 toast）', () => {
     expect(snapshotWindow([makeTab({ url: 'chrome://history/' })], MANAGER)).toEqual([]);
   });
+
+  it('结果不含新标签页 URL（自有页面前缀过滤）', () => {
+    const EXT_BASE = 'chrome-extension://test-id/';
+    const tabs = [
+      makeTab({ url: EXT_BASE + 'src/newtab/index.html' }),
+      makeTab({ url: 'https://a.com/', title: 'A' }),
+    ];
+    expect(snapshotWindow(tabs, EXT_BASE)).toEqual([
+      { url: 'https://a.com/', title: 'A', favIconUrl: undefined },
+    ]);
+  });
 });
 
 describe('会话条目操作', () => {

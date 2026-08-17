@@ -1,4 +1,4 @@
-import { MANAGER_PATH } from './lib/manager-url';
+import { MANAGER_PATH, ownPagePrefix } from './lib/urls';
 import { findManagerTab } from './lib/singleton';
 import {
   buildSuggestion,
@@ -90,7 +90,7 @@ async function handleOmniboxInputChanged(
   text: string,
   suggest: (suggestions: chrome.omnibox.SuggestResult[]) => void,
 ): Promise<void> {
-  const extBase = chrome.runtime.getURL('');
+  const extBase = ownPagePrefix();
   const [tabs, stored] = await Promise.all([
     chrome.tabs.query({}),
     chrome.storage.local.get() as Promise<StoredOmniData>,

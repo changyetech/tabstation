@@ -48,6 +48,15 @@ describe('findDuplicateGroups', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].tabs.map((t) => t.id)).toEqual([2, 3]);
   });
+
+  it('两个新标签页不得被判为重复组（自有页面前缀过滤）', () => {
+    const EXT_BASE = 'chrome-extension://test-id/';
+    const tabs = [
+      makeTab({ id: 1, url: EXT_BASE + 'src/newtab/index.html' }),
+      makeTab({ id: 2, url: EXT_BASE + 'src/newtab/index.html' }),
+    ];
+    expect(findDuplicateGroups(tabs, EXT_BASE)).toHaveLength(0);
+  });
 });
 
 describe('planDedupe', () => {

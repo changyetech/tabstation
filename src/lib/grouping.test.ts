@@ -23,6 +23,14 @@ describe('visibleTabs', () => {
     ];
     expect(visibleTabs(tabs, MANAGER).map((t) => t.id)).toEqual([2]);
   });
+
+  it('新标签页不出现在可见列表中', () => {
+    const tabs = [
+      makeTab({ id: 1, url: 'https://a.com/' }),
+      makeTab({ id: 2, url: 'chrome-extension://test-id/src/newtab/index.html' }),
+    ];
+    expect(visibleTabs(tabs, 'chrome-extension://test-id/').map((t) => t.id)).toEqual([1]);
+  });
 });
 
 describe('domainGroupKey', () => {
