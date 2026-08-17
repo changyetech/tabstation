@@ -100,6 +100,28 @@ describe('escapeXml 与 buildSuggestion', () => {
         .querySelector('parsererror'),
     ).toBeNull();
   });
+
+  it('回归：高亮位置若在转义实体内会分裂实体——应在原始文本中查找匹配后逐段转义', () => {
+    // 标题包含 "&"，查询 "am" 在转义后会落在 "&amp;" 内，但在原文是 "cream" 的 "am"
+    const item: OmniItem = {
+      kind: 'tab',
+      tabId: 1,
+      windowId: 1,
+      title: 'Ben & cream',
+      url: 'https://example.com/',
+    };
+    const { description } = buildSuggestion(item, 'am');
+    // 验证输出是合法 XML
+    expect(() =>
+      new DOMParser().parseFromString(`<x>${description}</x>`, 'text/xml'),
+    ).not.toThrow();
+    const doc = new DOMParser().parseFromString(`<x>${description}</x>`, 'text/xml');
+    expect(doc.querySelector('parsererror')).toBeNull();
+    // 验证高亮标记没有分裂 &amp; 实体
+    expect(description).toMatch(/&amp;/);
+    expect(description).not.toMatch(/&<match>/);
+    expect(description).not.toMatch(/<\/match>;/);
+  });
 });
 
 describe('toContent / parseContent', () => {

@@ -20,8 +20,9 @@ export function matchOmnibox(input: string, source: OmniSource): OmniItem[] {
   const matchedTabs = source.tabs
     .filter(
       (t) =>
-        (t.title?.toLowerCase().includes(normalized) ?? false) ||
-        (t.url?.toLowerCase().includes(normalized) ?? false),
+        t.id &&
+        ((t.title?.toLowerCase().includes(normalized) ?? false) ||
+          (t.url?.toLowerCase().includes(normalized) ?? false)),
     )
     .sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))
     .slice(0, 3)
@@ -29,8 +30,8 @@ export function matchOmnibox(input: string, source: OmniSource): OmniItem[] {
       kind: 'tab',
       tabId: t.id!,
       windowId: t.windowId,
-      title: t.title!,
-      url: t.url!,
+      title: t.title || t.url || 'Unknown',
+      url: t.url || '',
     }));
 
   const matchedReads = source.readLater
@@ -64,31 +65,28 @@ export function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.SuggestResult {
+// 在原始文本中查找匹配，逐段转义后才插 match 标记，避免标记跨越转义实体
+function highlightMatch(text: string, query: string): string {
   const lowerQuery = query.toLowerCase();
+  const lowerText = text.toLowerCase();
+  const index = lowerText.indexOf(lowerQuery);
 
+  if (index === -1) {
+    return escapeXml(text);
+  }
+
+  const pre = text.slice(0, index);
+  const match = text.slice(index, index + query.length);
+  const post = text.slice(index + query.length);
+
+  return escapeXml(pre) + `<match>${escapeXml(match)}</match>` + escapeXml(post);
+}
+
+export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.SuggestResult {
   if (item.kind === 'tab') {
-    // 先转义，后插 match 标记
-    const escapedTitle = escapeXml(item.title);
-    const escapedHostname = escapeXml(hostnameOf(item.url));
-
-    let titleWithMatch = escapedTitle;
-    const titleIndex = escapedTitle.toLowerCase().indexOf(lowerQuery);
-    if (titleIndex !== -1) {
-      titleWithMatch =
-        escapedTitle.slice(0, titleIndex) +
-        `<match>${escapedTitle.slice(titleIndex, titleIndex + query.length)}</match>` +
-        escapedTitle.slice(titleIndex + query.length);
-    }
-
-    let hostnameWithMatch = escapedHostname;
-    const hostnameIndex = escapedHostname.toLowerCase().indexOf(lowerQuery);
-    if (hostnameIndex !== -1) {
-      hostnameWithMatch =
-        escapedHostname.slice(0, hostnameIndex) +
-        `<match>${escapedHostname.slice(hostnameIndex, hostnameIndex + query.length)}</match>` +
-        escapedHostname.slice(hostnameIndex + query.length);
-    }
+    const titleWithMatch = highlightMatch(item.title, query);
+    const hostname = hostnameOf(item.url);
+    const hostnameWithMatch = highlightMatch(hostname, query);
 
     const description = `<dim>标签页</dim> ${titleWithMatch} <url>${hostnameWithMatch}</url>`;
     return {
@@ -98,26 +96,9 @@ export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.S
   }
 
   if (item.kind === 'read') {
-    const escapedTitle = escapeXml(item.title);
-    const escapedHostname = escapeXml(hostnameOf(item.url));
-
-    let titleWithMatch = escapedTitle;
-    const titleIndex = escapedTitle.toLowerCase().indexOf(lowerQuery);
-    if (titleIndex !== -1) {
-      titleWithMatch =
-        escapedTitle.slice(0, titleIndex) +
-        `<match>${escapedTitle.slice(titleIndex, titleIndex + query.length)}</match>` +
-        escapedTitle.slice(titleIndex + query.length);
-    }
-
-    let hostnameWithMatch = escapedHostname;
-    const hostnameIndex = escapedHostname.toLowerCase().indexOf(lowerQuery);
-    if (hostnameIndex !== -1) {
-      hostnameWithMatch =
-        escapedHostname.slice(0, hostnameIndex) +
-        `<match>${escapedHostname.slice(hostnameIndex, hostnameIndex + query.length)}</match>` +
-        escapedHostname.slice(hostnameIndex + query.length);
-    }
+    const titleWithMatch = highlightMatch(item.title, query);
+    const hostname = hostnameOf(item.url);
+    const hostnameWithMatch = highlightMatch(hostname, query);
 
     const description = `<dim>稍后阅读</dim> ${titleWithMatch} <url>${hostnameWithMatch}</url>`;
     return {
@@ -127,15 +108,7 @@ export function buildSuggestion(item: OmniItem, query: string): chrome.omnibox.S
   }
 
   // kind === 'session'
-  const escapedName = escapeXml(item.name);
-  let nameWithMatch = escapedName;
-  const nameIndex = escapedName.toLowerCase().indexOf(lowerQuery);
-  if (nameIndex !== -1) {
-    nameWithMatch =
-      escapedName.slice(0, nameIndex) +
-      `<match>${escapedName.slice(nameIndex, nameIndex + query.length)}</match>` +
-      escapedName.slice(nameIndex + query.length);
-  }
+  const nameWithMatch = highlightMatch(item.name, query);
 
   const description = `<dim>会话</dim> ${nameWithMatch} <dim>${item.tabCount} 个标签页</dim>`;
   return {
