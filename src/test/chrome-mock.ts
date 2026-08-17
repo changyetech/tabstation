@@ -22,6 +22,7 @@ function buildChromeMock(storageData: Record<string, unknown>) {
     runtime: {
       getURL: (path: string) => `chrome-extension://test-id/${path}`,
       getManifest: () => ({ version: '0.1.0' }) as chrome.runtime.Manifest,
+      openOptionsPage: vi.fn(async () => {}),
     },
     storage: {
       local: {

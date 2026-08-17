@@ -573,7 +573,7 @@ function AppInner({ settings }: { settings: Settings }) {
           </aside>
         )}
       </div>
-      <CopyrightFooter />
+      <CopyrightFooter showOptions />
       <Toast message={toast} />
     </>
   );
