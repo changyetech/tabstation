@@ -135,7 +135,7 @@ export default function DomainGroupList(props: DomainGroupListProps) {
               className="dom-strip"
               style={{ background: `oklch(45% 0.11 ${letterBadgeHue(host)})` }}
             />
-            <div className="win-head" style={{ minHeight: 40 }}>
+            <div className="win-head">
               <span className="win-title">
                 {headFavicon(g.tabs, g.key)}
                 {label(g.key)}

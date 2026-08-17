@@ -395,6 +395,12 @@ aside {
 .dom-flow {
   column-gap: 14px;
 }
+/* 域名卡片头固定 40px：悬停浮现的 .dom-acts（24px）在 8px 内边距下会撑到 41px，
+   多列瀑布随之重排、卡片跳位；收窄纵向内边距让悬停态仍落在 40px 内（内容垂直居中，静止态观感不变） */
+.dom-flow .win-head {
+  min-height: 40px;
+  padding-block: 7px;
+}
 @media (min-width: 1160px) {
   .dom-flow {
     columns: 2;
