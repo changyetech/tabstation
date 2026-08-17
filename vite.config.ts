@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { defineConfig, type Plugin } from 'vitest/config';
+import { configDefaults, defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { MANAGER_PATH } from './src/lib/manager-url.ts';
 
@@ -38,5 +38,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['src/test/setup.ts'],
+    // .worktrees/ 与 .pnpm-store/ 已 gitignore，但不在 vitest 默认排除列表里，
+    // 会被当成源码扫到重复的测试文件
+    exclude: [...configDefaults.exclude, '.worktrees/**', '.pnpm-store/**'],
   },
 });
