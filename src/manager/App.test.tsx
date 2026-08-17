@@ -441,12 +441,19 @@ describe('测试 harness 冒烟', () => {
   it('chrome mock：storage 读写往返且触发 onChanged', async () => {
     const { chromeMock } = getChromeMock();
     let fired: string[] = [];
-    chromeMock.storage.onChanged.addListener((changes: Record<string, unknown>) => {
+    const listener = (changes: Record<string, unknown>) => {
       fired = Object.keys(changes);
-    });
-    await chromeMock.storage.local.set({ settings: { language: 'auto' } });
-    const res = await chromeMock.storage.local.get('settings');
-    expect(res.settings).toEqual({ language: 'auto' });
-    expect(fired).toEqual(['settings']);
+    };
+    chromeMock.storage.onChanged.addListener(listener);
+    try {
+      await chromeMock.storage.local.set({ settings: { language: 'auto' } });
+      const res = await chromeMock.storage.local.get('settings');
+      expect(res.settings).toEqual({ language: 'auto' });
+      expect(fired).toEqual(['settings']);
+    } finally {
+      // MockEvent 实例跨用例复用（见 chrome-mock.ts graft 注释），这里手写的裸监听器
+      // 不经 React 组件卸载清理，必须手动 removeListener，否则会泄漏到后续用例
+      chromeMock.storage.onChanged.removeListener(listener);
+    }
   });
 });

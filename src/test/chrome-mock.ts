@@ -101,6 +101,10 @@ let persistent: ReturnType<typeof buildChromeMock> | undefined;
 // 这些监听器就会绑定在被丢弃的旧实例上，之后测试里的 .emit(...) 永远打不到它们。
 // 因此这里把 MockEvent 叶子节点原地保留（复用同一实例），只把普通 vi.fn() 方法换成新的——
 // 组件类监听器（hooks 里 addListener/removeListener）靠 afterEach(cleanup) 卸载即可清理，无需依赖整体替换。
+//
+// 隐含约定：MockEvent 实例现在跨同一测试文件内的用例持续存在。凡是在 it() 内直接调用
+// addListener（不经由 React 组件的 useEffect）的测试，必须自己在用例结束前 removeListener，
+// 否则监听器会永久泄漏进同文件后续的用例。
 function graft(target: Record<string, unknown>, fresh: Record<string, unknown>): void {
   for (const key of Object.keys(fresh)) {
     const freshVal = fresh[key];

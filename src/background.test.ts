@@ -112,6 +112,21 @@ describe('omnibox', () => {
     });
   });
 
+  it('settings.language 为 en 时，建议类型标签与默认建议文案都译为英文', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.settings = { language: 'en' };
+    chromeMock.tabs.query.mockResolvedValue([makeTab({ id: 1, title: 'x English Tab' })]);
+    const suggest = vi.fn();
+    chromeMock.omnibox.onInputChanged.emit('x', suggest);
+    await vi.waitFor(() => expect(suggest).toHaveBeenCalled());
+    const [suggestion] = suggest.mock.calls[0][0];
+    expect(suggestion.description).toContain('<dim>Tab</dim>');
+    expect(suggestion.description).not.toContain('标签页');
+    expect(chromeMock.omnibox.setDefaultSuggestion).toHaveBeenCalledWith({
+      description: 'Search "x" · 1 match',
+    });
+  });
+
   it('选中标签页 → 聚焦其窗口并激活该 tab', async () => {
     const { chromeMock } = getChromeMock();
     chromeMock.omnibox.onInputEntered.emit('tab:7', 'currentTab');
