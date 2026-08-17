@@ -31,7 +31,16 @@ Tab Station 是一个 Chrome Manifest V3 扩展，把所有窗口中的真实标
 
 ## 安装体验
 
-Tab Station 当前需要从源码构建后以未打包扩展方式加载：
+Tab Station 尚未上架 Chrome 应用商店，需要以未打包扩展方式加载。两条路径任选其一。
+
+### 方式一：下载打包产物（无需 Node 环境）
+
+1. 在仓库的 [Releases](../../releases) 页面下载最新的 `tab-station-<version>.zip`。
+2. 解压到一个固定目录——Chrome 会持续引用该目录，删掉扩展就失效。
+3. 打开 Chrome 的 `chrome://extensions/`，开启右上角的「开发者模式」。
+4. 点击「加载已解压的扩展程序」，选择解压出的目录（目录里应能直接看到 `manifest.json`）。
+
+### 方式二：从源码构建
 
 1. 安装 [Node.js](https://nodejs.org/) 和 [pnpm](https://pnpm.io/)。
 2. 在仓库根目录安装依赖并构建：
@@ -44,7 +53,8 @@ Tab Station 当前需要从源码构建后以未打包扩展方式加载：
 3. 打开 Chrome 的 `chrome://extensions/`。
 4. 开启右上角的「开发者模式」。
 5. 点击「加载已解压的扩展程序」，选择仓库下的 `dist/` 目录。
-6. 点击工具栏中的 Tab Station 图标，或使用默认快捷键 `Ctrl+Shift+E`（macOS 为 `Command+Shift+E`）打开管理页。
+
+装好后，点击工具栏中的 Tab Station 图标，或使用默认快捷键 `Ctrl+Shift+E`（macOS 为 `Command+Shift+E`）打开管理页。
 
 ## 开发指南
 
@@ -54,6 +64,7 @@ Tab Station 当前需要从源码构建后以未打包扩展方式加载：
 make install     # pnpm install
 make dev         # vite build --watch
 make build       # tsc --noEmit && vite build
+make package     # 构建并把 dist/ 打成 tab-station-<version>.zip
 make test        # vitest run
 make lint        # eslint .
 make typecheck   # tsc --noEmit
@@ -69,6 +80,47 @@ make check       # fmt-check + lint + typecheck + test
 4. 修改 `background.ts`、`manifest.json` 或 `_locales/` 后，需要点击扩展卡片上的刷新按钮。
 
 更完整的 MV3 调试说明见[本地调试手册](docs/local-debugging.md)。
+
+## 持续集成与发布
+
+仓库通过 GitHub Actions 提供两条自动化流水线，定义在 `.github/workflows/`。
+
+| 流水线 | 触发条件 | 做什么 |
+| --- | --- | --- |
+| `ci.yml` | push 到 `main`、针对 `main` 的 PR | `make check` + `make build` |
+| `release.yml` | 推送 `v*` 形式的 tag | 校验版本 → `make check` → `make package` → 创建 GitHub Release 并上传 zip |
+
+CI 跑的是与本地完全相同的 `make check`，因此本地绿灯基本等价于 CI 绿灯。
+
+### 版本号的唯一来源
+
+版本号只写在 `package.json` 的 `version` 字段里。
+
+- `public/manifest.json` **不含** `version` 字段，构建时由 Vite 插件从 `package.json` 注入到 `dist/manifest.json`。所以 `public/` 目录本身不是一个可加载的扩展目录，加载和分发一律用 `dist/`。
+- git tag 不是版本来源，而是一次断言：Release 流水线会校验 tag（去掉 `v` 前缀）与 `package.json` 的 `version` 严格相等，不一致就立即失败，不会产出 Release。
+
+### 发布一个版本
+
+```bash
+# 1. 修改 package.json 的 version，例如 0.1.0 -> 0.2.0
+# 2. 本地自检并确认产物可用
+make check
+make package
+
+# 3. 提交并推送版本变更
+rtk git add package.json && rtk git commit -m "chore: release v0.2.0" && rtk git push
+
+# 4. 打同名 tag 并推送，触发 Release 流水线
+rtk git tag v0.2.0 && rtk git push origin v0.2.0
+```
+
+tag 名中带连字符（如 `v0.2.0-beta.1`）会被自动标记为预发布。Release 说明由 GitHub 依据提交记录自动生成。
+
+流水线失败时的常见原因：tag 与 `package.json` 版本不一致；或仓库 Settings → Actions → Workflow permissions 未允许写入，导致创建 Release 返回 403。
+
+### 上架 Chrome 应用商店
+
+尚未接入。Chrome Web Store 提供官方 API，上传新版本与提交审核都可以自动化，但**首次创建商店条目必须人工完成**（需注册开发者账号，含一次性注册费，金额以官方页面为准），API 只能更新已存在的条目。拿到 extension ID 之后才能把自动上传接进 `release.yml`。设计与分期见[发布自动化 spec](docs/specs/2026-08-17-release-automation.md)。
 
 ## 项目结构
 

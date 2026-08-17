@@ -17,6 +17,7 @@ pnpm vitest run src/lib/url.test.ts   # 跑单个测试文件
 pnpm test:watch   # vitest watch，逻辑开发主循环
 pnpm build        # tsc --noEmit && vite build → dist/
 pnpm dev          # vite build --watch（产物型 watch，不是 dev server）
+make package      # build + 打包 dist/ 为 tab-station-<version>.zip
 ```
 
 **没有 dev server / HMR**：扩展从 `dist/` 目录以「加载已解压」方式装入 Chrome。改 UI 刷新 manager 标签页即可；改 `background.ts` 或 manifest 必须在 `chrome://extensions` 点扩展的 ↻。完整刷新规则与 SW 调试方法见 [docs/local-debugging.md](docs/local-debugging.md)。
@@ -32,6 +33,8 @@ pnpm dev          # vite build --watch（产物型 watch，不是 dev server）
 - `src/background.ts` — MV3 service worker，唯一职责是图标点击/快捷键 → 聚焦或创建管理页单例。**SW 随时休眠，不得持有内存状态**——每次唤醒都从 storage 重读。产物固定名 `background.js`（manifest 引用，不可加 hash）。
 
 管理页路径唯一定义在 `src/lib/manager-url.ts` 的 `MANAGER_PATH`，`vite.config.ts` 直接 import 它——改页面路径只改这一处。
+
+**版本号单一来源**：只写在 `package.json` 的 `version`。`public/manifest.json` 不含 `version` 字段，由 `vite.config.ts` 的 `manifestVersion` 插件构建期注入 `dist/manifest.json`——因此 `public/` 不是可加载的扩展目录，只有 `dist/` 是。git tag 不是来源而是断言：Release 流水线校验 tag 与 `package.json` 版本相等，不等即失败。发布流程见 [README 的持续集成与发布](README.md#持续集成与发布)，设计见 [docs/specs/2026-08-17-release-automation.md](docs/specs/2026-08-17-release-automation.md)。
 
 **分层约定**：
 
@@ -107,7 +110,8 @@ tabstation/
 ├── AGENTS.md            # → @CLAUDE.md
 ├── CONTEXT.md           # 领域词汇表（ubiquitous language）——写 spec/代码前先读
 ├── ROADMAP.md           # 延后待办（V1 推迟的性能/功能项）
-├── Makefile             # build / dev / test / lint / check 等任务入口
+├── Makefile             # build / package / dev / test / lint / check 等任务入口
+├── .github/workflows/   # CI（push/PR 跑 make check）与 Release（tag → zip + GitHub Release）
 ├── public/              # manifest.json、_locales/、icons/（原样拷入 dist/）
 ├── src/
 │   ├── background.ts    # MV3 service worker（管理页单例入口）

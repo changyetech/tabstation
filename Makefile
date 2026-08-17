@@ -5,6 +5,8 @@
 # --- Variables ----------------------------------------------------------------
 
 APP_NAME        := tabstation
+VERSION          = $(shell node -p "require('./package.json').version")
+PACKAGE_NAME     = tab-station-$(VERSION).zip
 
 # Colors
 CYAN  := \033[36m
@@ -32,6 +34,12 @@ help: ## Show this help
 .PHONY: build
 build: ## Build for production
 	pnpm build
+
+.PHONY: package
+package: build ## Build and zip dist/ into a loadable extension package
+	@rm -f $(PACKAGE_NAME)
+	@cd dist && zip -qr ../$(PACKAGE_NAME) . -x '*.DS_Store'
+	@echo "$(PACKAGE_NAME)"
 
 # ==============================================================================
 # DEV

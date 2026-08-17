@@ -24,6 +24,7 @@ Thumbs.db
 /build/
 /output/
 /bin/
+/tab-station-*.zip
 
 # Dependencies (add framework-specific entries as needed)
 /node_modules/
