@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { configDefaults, defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import { MANAGER_PATH } from './src/lib/urls.ts';
+import { MANAGER_PATH, NEWTAB_PATH } from './src/lib/urls.ts';
 
 // 版本单一来源：package.json 的 version 注入产物 manifest
 // public/manifest.json 不带 version 字段，只有构建产物才是完整 manifest
@@ -27,6 +27,7 @@ export default defineConfig({
         manager: MANAGER_PATH,
         settings: 'src/settings/index.html',
         background: 'src/background.ts',
+        newtab: NEWTAB_PATH,
       },
       output: {
         // background 必须是稳定文件名，manifest 引用它

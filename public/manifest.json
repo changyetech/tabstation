@@ -22,5 +22,6 @@
       "description": "__MSG_cmdOpenManager__"
     }
   },
-  "omnibox": { "keyword": "ts" }
+  "omnibox": { "keyword": "ts" },
+  "chrome_url_overrides": { "newtab": "src/newtab/index.html" }
 }
