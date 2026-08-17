@@ -26,13 +26,14 @@ make package      # build + 打包 dist/ 为 tab-station-<version>.zip
 
 技术栈：React 18 + TypeScript（strict）+ Vite + Vitest/jsdom/Testing Library + @dnd-kit，包管理 pnpm。
 
-**三个构建入口**（`vite.config.ts` rollup 多入口）：
+**四个构建入口**（`vite.config.ts` rollup 多入口）：
 
 - `src/manager/` — 管理页（React SPA），扩展的主界面；本身是一个 tab，通过单例逻辑（`src/lib/singleton.ts`）保证按作用域只开一个。
 - `src/settings/` — 设置页（独立 React 入口），经扩展「选项」打开，改动即时保存生效。
+- `src/newtab/` — 新标签页（React 入口），经 manifest 的 `chrome_url_overrides.newtab` 接管浏览器新标签页，直接复用管理页的 `App` 组件渲染，UI 零重复；URL 路径与管理页分开（`NEWTAB_PATH`），管理页单例逻辑不受影响。
 - `src/background.ts` — MV3 service worker，扩展的命令入口：图标点击/快捷键 → 管理页单例，地址栏关键字 → 搜索自有数据。**SW 随时休眠，不得持有内存状态**——每次唤醒都从 storage 重读。产物固定名 `background.js`（manifest 引用，不可加 hash）。
 
-管理页路径唯一定义在 `src/lib/manager-url.ts` 的 `MANAGER_PATH`，`vite.config.ts` 直接 import 它——改页面路径只改这一处。
+`src/lib/urls.ts` 收口扩展自身的全部页面 URL：管理页路径 `MANAGER_PATH`、新标签页路径 `NEWTAB_PATH`，以及自有页面前缀判定 `ownPagePrefix()`（隐身与关闭窗口判定共用）。`vite.config.ts` 直接 import 它——改页面路径只改这一处。
 
 **版本号单一来源**：只写在 `package.json` 的 `version`。`public/manifest.json` 不含 `version` 字段，由 `vite.config.ts` 的 `manifestVersion` 插件构建期注入 `dist/manifest.json`——因此 `public/` 不是可加载的扩展目录，只有 `dist/` 是。git tag 不是来源而是断言：Release 流水线校验 tag 与 `package.json` 版本相等，不等即失败。发布流程见 [README 的持续集成与发布](README.md#持续集成与发布)，设计见 [docs/specs/2026-08-17-release-automation.md](docs/specs/2026-08-17-release-automation.md)。
 
@@ -117,6 +118,7 @@ tabstation/
 │   ├── background.ts    # MV3 service worker（管理页单例入口）
 │   ├── manager/         # 管理页 React 入口
 │   ├── settings/        # 设置页 React 入口
+│   ├── newtab/          # 新标签页 React 入口，接管 chrome_url_overrides.newtab，复用管理页 App
 │   ├── components/      # 管理页 UI 组件
 │   ├── hooks/           # chrome.* ↔ React state 桥接
 │   ├── lib/             # 纯函数领域逻辑与数据模型
