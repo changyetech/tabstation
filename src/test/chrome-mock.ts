@@ -34,7 +34,13 @@ function buildChromeMock(storageData: Record<string, unknown>) {
             storageData[k] = v;
             changes[k] = { newValue: v };
           }
-          onChanged.emit(changes, 'local');
+          // 通过全局 chrome（而非闭包变量 onChanged）派发：installChromeMock 每次都会
+          // 重建这个闭包，但 onChanged 这个 MockEvent 实例本身跨测试保留（见 graft 注释），
+          // 经由全局取才能保证总是派发到当前真正被监听的那一个实例上；
+          // 全局 chrome 的类型来自真实 @types/chrome（无 emit），故转到 mock 类型
+          (
+            globalThis as unknown as { chrome: ReturnType<typeof buildChromeMock> }
+          ).chrome.storage.onChanged.emit(changes, 'local');
         }),
       },
       onChanged,
@@ -73,16 +79,60 @@ function buildChromeMock(storageData: Record<string, unknown>) {
         { name: 'open-manager', shortcut: '⌘⇧E', description: 'Open manager' },
       ]),
     },
+    omnibox: {
+      setDefaultSuggestion: vi.fn(),
+      onInputStarted: new MockEvent<() => void>(),
+      onInputChanged: new MockEvent<
+        (text: string, suggest: (suggestions: chrome.omnibox.SuggestResult[]) => void) => void
+      >(),
+      onInputEntered: new MockEvent<
+        (text: string, disposition: `${chrome.omnibox.OnInputEnteredDisposition}`) => void
+      >(),
+      onInputCancelled: new MockEvent<() => void>(),
+    },
   };
 }
 
 let current: ChromeMockHandle | undefined;
+let persistent: ReturnType<typeof buildChromeMock> | undefined;
+
+// background.ts 这类模块在 import 时于顶层调用一次 addListener，绑定的是当时的
+// MockEvent 实例；若每次 installChromeMock 都整体换掉 globalThis.chrome，
+// 这些监听器就会绑定在被丢弃的旧实例上，之后测试里的 .emit(...) 永远打不到它们。
+// 因此这里把 MockEvent 叶子节点原地保留（复用同一实例），只把普通 vi.fn() 方法换成新的——
+// 组件类监听器（hooks 里 addListener/removeListener）靠 afterEach(cleanup) 卸载即可清理，无需依赖整体替换。
+function graft(target: Record<string, unknown>, fresh: Record<string, unknown>): void {
+  for (const key of Object.keys(fresh)) {
+    const freshVal = fresh[key];
+    if (freshVal instanceof MockEvent) continue;
+    const curVal = target[key];
+    if (
+      freshVal !== null &&
+      typeof freshVal === 'object' &&
+      !Array.isArray(freshVal) &&
+      curVal !== null &&
+      typeof curVal === 'object'
+    ) {
+      graft(curVal as Record<string, unknown>, freshVal as Record<string, unknown>);
+    } else {
+      target[key] = freshVal;
+    }
+  }
+}
 
 export function installChromeMock(): ChromeMockHandle {
   const storageData: Record<string, unknown> = {};
-  const chromeMock = buildChromeMock(storageData);
-  (globalThis as Record<string, unknown>).chrome = chromeMock;
-  current = { chromeMock, storageData };
+  const fresh = buildChromeMock(storageData);
+  if (!persistent) {
+    persistent = fresh;
+    (globalThis as Record<string, unknown>).chrome = persistent;
+  } else {
+    graft(
+      persistent as unknown as Record<string, unknown>,
+      fresh as unknown as Record<string, unknown>,
+    );
+  }
+  current = { chromeMock: persistent, storageData };
   return current;
 }
 
