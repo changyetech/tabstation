@@ -9,25 +9,25 @@ Tab Station 是一个 Chrome Manifest V3 扩展，把所有窗口中的真实标
 扩展附带「稍后阅读」与「窗口会话」两类本地持久化数据。没有后端服务，不发起网络请求，全部状态保存在 `chrome.storage.local`。
 
 <p align="center">
-  <img src="screenshots/manager-by-window-light.png" alt="管理页窗口模式（浅色主题）" width="800">
-  <br>
-  <em>窗口模式：按窗口分区展示所有真实标签页</em>
-</p>
-
-<p align="center">
   <img src="screenshots/manager-all-tabs-dark.png" alt="管理页全部模式（深色主题）" width="800">
   <br>
   <em>全部模式：跨窗口按域名聚合（深色主题）</em>
 </p>
 
+<p align="center">
+  <img src="screenshots/manager-by-window-light.png" alt="管理页窗口模式（浅色主题）" width="800">
+  <br>
+  <em>窗口模式：按窗口分区展示所有真实标签页</em>
+</p>
+
 ## 功能特性
 
 - **集中管理真实标签页**：在一个页面查看并操作所有窗口的标签页；支持拖拽排序、跨窗口移动、关闭窗口和拆分到新窗口。打开新标签页（⌘T / Ctrl+T）即直接进入这个管理界面，而非浏览器原生新标签页。
-- **三种模式**：窗口模式按窗口分区展示，全部模式跨窗口按域名聚合，已保存会话展示可复用的会话卡片。
+- **三种模式**：全部模式跨窗口按域名聚合，窗口模式按窗口分区展示，已保存会话展示可复用的会话卡片。管理页默认进入哪一个标签页视图（全部 / 窗口）可在设置页配置。
 - **一键去重**：基于全项目统一的 URL 归一化规则识别重复标签页，执行前可预览将保留和关闭的条目，并优先保留固定标签。
 - **稍后阅读**：保存时关闭源标签页；打开时自动从清单移除，也支持直接删除或在新窗口打开。
 - **窗口会话**：将窗口保存为模板式快照，可反复恢复；会话支持重命名，条目支持排序、单条打开和删除。
-- **本地优先与双语界面**：数据仅保存在本机，界面支持中文和英文，并提供浅色、深色、自动三种主题。
+- **本地优先与双语界面**：数据仅保存在本机，界面支持中文和英文，并提供浅色、深色、自动三种主题；页脚可直达品牌官网与设置页。
 
 ## 安装体验
 
@@ -131,6 +131,7 @@ tabstation/
 │   ├── background.ts     # MV3 service worker，负责打开管理页单例
 │   ├── manager/          # 管理页 React 入口
 │   ├── settings/         # 设置页 React 入口
+│   ├── newtab/           # 新标签页 React 入口，复用管理页 App
 │   ├── components/       # 管理页 UI 组件
 │   ├── hooks/            # chrome.* 与 React state 的桥接
 │   ├── lib/              # 领域逻辑、数据模型与纯函数
@@ -145,8 +146,8 @@ tabstation/
 
 - `src/lib/` 存放不依赖 React 的领域逻辑和数据模型。
 - `src/hooks/` 将 `chrome.storage` 与 `chrome.tabs` 事件桥接为 React state。
-- `src/components/` 存放管理页组件，并按组件配套测试。
-- `src/manager/` 与 `src/settings/` 是两个独立 UI 入口。
+- `src/components/` 存放管理页组件，并按组件配套测试；少数通用组件（如页脚）由设置页共用。
+- `src/manager/`、`src/settings/` 与 `src/newtab/` 是三个独立 UI 入口，其中新标签页直接复用管理页的 `App`。
 
 ## 权限与隐私
 

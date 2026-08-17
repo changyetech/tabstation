@@ -41,7 +41,7 @@ make package      # build + 打包 dist/ 为 tab-station-<version>.zip
 
 - `src/lib/` — 纯函数领域逻辑（storage 数据模型与操作、URL 归一化、去重、分组、折叠、DnD 计算、关闭动效），不碰 React；数据模型（`ReadLaterItem` / `SavedSession` / `Settings`）定义在 `src/lib/storage.ts`。
 - `src/hooks/` — 把 `chrome.storage` / `chrome.tabs` 事件桥接为 React state（`useStorageState`、`useTabs`、`useTheme`）。
-- `src/components/` — 管理页 UI 组件，逐组件配套 `.test.tsx`。
+- `src/components/` — 管理页 UI 组件，逐组件配套 `.test.tsx`；少数通用组件（如 `CopyrightFooter`）由设置页共用。
 - `src/i18n/` — 自研轻量 i18n（zh_CN / en JSON + resolve），manifest 层文案在 `public/_locales/`。
 
 **测试基建**（`src/test/`）：`chrome-mock.ts` 提供完整 `chrome.*` mock（storage、events），`setup.ts` 在模块级安装并于每个用例前重置；`navigator.language` 钉死为 `zh-CN`（App 级测试断言中文文案）；`factories.ts` 造测试数据。逻辑调试优先走 Vitest，浏览器只用于验收真实 `chrome.*` 行为。
@@ -125,6 +125,8 @@ tabstation/
 │   ├── i18n/            # 页面层 i18n（zh_CN / en）
 │   ├── styles/          # 设计 token
 │   └── test/            # chrome mock、setup、测试工厂
+├── design/              # 品牌与设计交付物（logo 等）
+├── screenshots/         # README 用截图
 └── docs/
     ├── naming.md        # 产品命名约定（normative）——名称 `Tab Station`、写法规范、判据
     ├── local-debugging.md  # 本地调试手册——watch 构建、扩展加载/刷新、双 DevTools
