@@ -32,6 +32,7 @@ import { cardDropCollision, dragEndToMove, type DragTabData } from '../lib/dnd';
 import { domainGroupKey, hostnameOf, sortWindowsCurrentFirst, visibleTabs } from '../lib/grouping';
 import { managerUrl } from '../lib/manager-url';
 import { createWindowBySetting } from '../lib/open-window';
+import { restoreSession } from '../lib/restore-session';
 import {
   DEFAULT_SETTINGS,
   mergeSettings,
@@ -280,22 +281,6 @@ function AppInner({ settings }: { settings: Settings }) {
     }
   };
 
-  // 恢复：新窗口按当前顺序全量打开并还原 pinned；会话保留（模板式）；尺寸遵循设置
-  const restoreSession = async (s: SavedSession) => {
-    const win = await createWindowBySetting(settings.newWindowMode, {
-      url: s.tabs.map((x) => x.url),
-      focused: true,
-    });
-    const created = win?.tabs ?? [];
-    await Promise.all(
-      s.tabs.map((st, i) => {
-        const id = created[i]?.id;
-        if (!st.pinned || id === undefined) return Promise.resolve();
-        return chrome.tabs.update(id, { pinned: true });
-      }),
-    );
-  };
-
   const deleteSession = (s: SavedSession) =>
     void setSessions(sessions.filter((x) => x.id !== s.id));
   const handleRename = (s: SavedSession, name: string) =>
@@ -495,7 +480,7 @@ function AppInner({ settings }: { settings: Settings }) {
               visibleLimit={settings.visibleTabs}
               expandedKeys={expandedKeys}
               onToggleExpand={toggleExpand}
-              onRestore={(s) => void restoreSession(s)}
+              onRestore={(s) => void restoreSession(s, settings.newWindowMode)}
               onDelete={deleteSession}
               onRename={handleRename}
               onMoveTab={handleMoveTab}
