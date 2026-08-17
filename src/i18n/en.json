@@ -109,5 +109,11 @@
   "domain.localFiles": "Local files",
   "domain.other": "Other",
   "time.justNow": "just now",
-  "dup.badge": "×{n}"
+  "dup.badge": "×{n}",
+  "omnibox.typeTab": "Tab",
+  "omnibox.typeRead": "Read later",
+  "omnibox.typeSession": "Session",
+  "omnibox.defaultEmpty": "Search tabs, read later, and sessions",
+  "omnibox.defaultFound": "Search \"{query}\" · {n} {n|match|matches}",
+  "omnibox.defaultNone": "No matches · press Enter to open Tab Station"
 }

@@ -30,7 +30,7 @@ make package      # build + 打包 dist/ 为 tab-station-<version>.zip
 
 - `src/manager/` — 管理页（React SPA），扩展的主界面；本身是一个 tab，通过单例逻辑（`src/lib/singleton.ts`）保证按作用域只开一个。
 - `src/settings/` — 设置页（独立 React 入口），经扩展「选项」打开，改动即时保存生效。
-- `src/background.ts` — MV3 service worker，唯一职责是图标点击/快捷键 → 聚焦或创建管理页单例。**SW 随时休眠，不得持有内存状态**——每次唤醒都从 storage 重读。产物固定名 `background.js`（manifest 引用，不可加 hash）。
+- `src/background.ts` — MV3 service worker，扩展的命令入口：图标点击/快捷键 → 管理页单例，地址栏关键字 → 搜索自有数据。**SW 随时休眠，不得持有内存状态**——每次唤醒都从 storage 重读。产物固定名 `background.js`（manifest 引用，不可加 hash）。
 
 管理页路径唯一定义在 `src/lib/manager-url.ts` 的 `MANAGER_PATH`，`vite.config.ts` 直接 import 它——改页面路径只改这一处。
 

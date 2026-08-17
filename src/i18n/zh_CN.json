@@ -109,5 +109,11 @@
   "domain.localFiles": "本地文件",
   "domain.other": "其他",
   "time.justNow": "刚刚",
-  "dup.badge": "×{n}"
+  "dup.badge": "×{n}",
+  "omnibox.typeTab": "标签页",
+  "omnibox.typeRead": "稍后阅读",
+  "omnibox.typeSession": "会话",
+  "omnibox.defaultEmpty": "搜索标签页、稍后阅读与会话",
+  "omnibox.defaultFound": "搜索「{query}」 · 找到 {n} 项",
+  "omnibox.defaultNone": "没有匹配项 · 回车打开 Tab Station"
 }
