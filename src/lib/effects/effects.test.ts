@@ -14,6 +14,18 @@ describe('effects 冒烟', () => {
     expect(document.body.querySelectorAll('[data-confetti]')).toHaveLength(17);
   });
 
+  it('shootConfetti：系统开启「减弱动态效果」时不发射粒子', () => {
+    document.body.querySelectorAll('[data-confetti]').forEach((el) => el.remove());
+    const matchMedia = vi.fn(() => ({ matches: true }) as unknown as MediaQueryList);
+    Object.defineProperty(window, 'matchMedia', { value: matchMedia, configurable: true });
+    try {
+      shootConfetti(100, 100);
+      expect(document.body.querySelectorAll('[data-confetti]')).toHaveLength(0);
+    } finally {
+      Object.defineProperty(window, 'matchMedia', { value: undefined, configurable: true });
+    }
+  });
+
   it('animateElementOut：加 .closing，300ms 后回调', () => {
     vi.useFakeTimers();
     const el = document.createElement('div');

@@ -48,6 +48,9 @@ import {
   type Settings,
 } from '../lib/storage';
 
+// 移动菜单里的窗口标题截断（设计稿 move-menu）
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '…' : s);
+
 export default function App() {
   const [rawSettings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
   // 旧版本落盘数据可能缺新字段，读侧统一合并兜底
@@ -75,14 +78,14 @@ function AppInner({ settings }: { settings: Settings }) {
   // 整行是拖拽把手，需位移阈值，否则行内按钮的 pointerdown 会被判成起拖
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  // 相对时间随 useTabs 的刷新一起更新，逐层下传；避免行内自持快照导致时间冻结。
-  // setNow 放进 setTimeout 回调里调用（而非效果体顶层同步调用），
-  // 以满足 react-hooks/set-state-in-effect 对「效果体内直接同步 setState」的限制
+  // 相对时间由自走定时器驱动，逐层下传；避免行内自持快照导致时间冻结。
+  // 展示粒度是分钟，30s 一跳足够；不挂在 tabs 变化上——那样每次刷新都要多一轮
+  // 全树时间重渲染，且无 tab 事件时（纯阅读）时间反而会冻住
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = window.setTimeout(() => setNow(Date.now()), 0);
-    return () => window.clearTimeout(id);
-  }, [tabs]);
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // 首屏进入动画只放一轮（设计稿 enter fadeUp），之后交给 view-switch
   const [entered, setEntered] = useState(false);
@@ -94,6 +97,19 @@ function AppInner({ settings }: { settings: Settings }) {
   // 隐身范围 = 本扩展全部页面（管理页 + 设置页 + 新标签页），前缀过滤（spec §3.2）
   const extBase = ownPagePrefix();
   const visible = useMemo(() => visibleTabs(tabs, extBase), [tabs, extBase]);
+  // 按窗口分桶算一次：窗口区块、关闭窗口、移动目标都要「某窗口的可见 tab」，
+  // 各自 filter 一遍就是 O(窗口数 × tab 数)
+  const visibleByWindowId = useMemo(() => {
+    const m = new Map<number, TabWithId[]>();
+    for (const tab of visible) {
+      const bucket = m.get(tab.windowId);
+      if (bucket) bucket.push(tab);
+      else m.set(tab.windowId, [tab]);
+    }
+    return m;
+  }, [visible]);
+  const tabsOfWindow = (windowId: number | undefined): TabWithId[] =>
+    windowId === undefined ? [] : (visibleByWindowId.get(windowId) ?? []);
   const dupGroups = useMemo(() => findDuplicateGroups(visible, extBase), [visible, extBase]);
   const dupCountByTabId = useMemo(() => {
     const m = new Map<number, number>();
@@ -149,13 +165,15 @@ function AppInner({ settings }: { settings: Settings }) {
 
   const [readLater, setReadLater] = useStorageState<ReadLaterItem[]>('readLater', []);
 
-  // 保存即关 tab（spec 沿用 §5.5）；同 URL 归一化合并在 upsertReadLater 内
+  // 保存即关 tab（spec 沿用 §5.5）；同 URL 归一化合并在 upsertReadLater 内。
+  // 清单类写入一律走函数式更新：以最新已提交清单为基准，
+  // 避免延迟提交（退场动画）或连点造成的丢更新/复活（见 useStorageState 注释）
   const saveReadLater = (tab: TabWithId) => {
     const url = tab.url;
     if (!url) return;
-    void setReadLater(
+    void setReadLater((list) =>
       upsertReadLater(
-        readLater,
+        list,
         { url, title: tab.title ?? url, favIconUrl: tab.favIconUrl },
         Date.now(),
         crypto.randomUUID(),
@@ -169,13 +187,13 @@ function AppInner({ settings }: { settings: Settings }) {
   // 打开即移除（沿用旧 spec）
   const openReadLater = (item: ReadLaterItem) => {
     void chrome.tabs.create({ url: item.url });
-    void setReadLater(removeReadLater(readLater, item.id));
+    void setReadLater((list) => removeReadLater(list, item.id));
   };
 
   // 新窗口打开：语义同「打开」，即从清单移除；尺寸遵循设置（spec §5.3）
   const openReadLaterNewWindow = (item: ReadLaterItem) => {
     void createWindowBySetting(settings.newWindowMode, { url: item.url, focused: true });
-    void setReadLater(removeReadLater(readLater, item.id));
+    void setReadLater((list) => removeReadLater(list, item.id));
   };
 
   // 全部打开：一个新窗口开全部并清空清单（spec §5.5）
@@ -190,16 +208,18 @@ function AppInner({ settings }: { settings: Settings }) {
     showToast(t('toast.rlOpenAll', { n }));
   };
 
-  // 直接删除：仅退场动画，无音效/纸屑/确认
+  // 直接删除：仅退场动画，无音效/纸屑/确认。
+  // 提交延后到动画结束（300ms），期间可能发生别的写入——必须以最新清单为基准，
+  // 否则「300ms 内连删两条」会让先删的那条复活
   const deleteReadLater = (item: ReadLaterItem, el: HTMLElement | null) => {
-    const commit = () => void setReadLater(removeReadLater(readLater, item.id));
+    const commit = () => void setReadLater((list) => removeReadLater(list, item.id));
     if (el) animateElementOut(el, commit);
     else commit();
   };
 
   // 关闭窗口：区块级一次动效；管理页所在窗口只关其他 tab、保留管理页
   const closeWindow = (win: chrome.windows.Window, sectionEl: HTMLElement | null) => {
-    const winVisible = visible.filter((x) => x.windowId === win.id);
+    const winVisible = tabsOfWindow(win.id);
     // 自有页面不被关闭类操作波及：窗口含任一自有页面（管理页/设置页/新标签页）时只关其余 tab
     const containsOwnPage = tabs.some((x) => x.windowId === win.id && x.url?.startsWith(extBase));
     playCloseSound();
@@ -239,10 +259,12 @@ function AppInner({ settings }: { settings: Settings }) {
       sortedWindows
         .map((w) => ({
           window: w,
-          tabs: visible.filter((tab) => tab.windowId === w.id).sort((a, b) => a.index - b.index),
+          tabs: [...(w.id === undefined ? [] : (visibleByWindowId.get(w.id) ?? []))].sort(
+            (a, b) => a.index - b.index,
+          ),
         }))
         .filter((entry) => entry.tabs.length > 0),
-    [sortedWindows, visible],
+    [sortedWindows, visibleByWindowId],
   );
 
   // 全部模式：按窗口顺序 + index 合并
@@ -262,8 +284,8 @@ function AppInner({ settings }: { settings: Settings }) {
       return;
     }
     const savedAt = Date.now();
-    void setSessions([
-      ...sessions,
+    void setSessions((list) => [
+      ...list,
       {
         id: crypto.randomUUID(),
         // 默认名 = 保存日期时间
@@ -284,17 +306,20 @@ function AppInner({ settings }: { settings: Settings }) {
   };
 
   const deleteSession = (s: SavedSession) =>
-    void setSessions(sessions.filter((x) => x.id !== s.id));
+    void setSessions((list) => list.filter((x) => x.id !== s.id));
   const handleRename = (s: SavedSession, name: string) =>
-    void setSessions(renameSession(sessions, s.id, name));
+    void setSessions((list) => renameSession(list, s.id, name));
   const handleMoveTab = (
     fromSessionId: string,
     fromIndex: number,
     toSessionId: string,
     toIndex: number,
-  ) => void setSessions(moveSessionTab(sessions, fromSessionId, fromIndex, toSessionId, toIndex));
+  ) =>
+    void setSessions((list) =>
+      moveSessionTab(list, fromSessionId, fromIndex, toSessionId, toIndex),
+    );
   const handleDeleteTab = (s: SavedSession, index: number) =>
-    void setSessions(removeSessionTab(sessions, s.id, index)); // 删空自动删会话（storage.ts 保证）
+    void setSessions((list) => removeSessionTab(list, s.id, index)); // 删空自动删会话（storage.ts 保证）
   const openSessionTab = (tab: SessionTab) => void chrome.tabs.create({ url: tab.url });
   // 会话条目「新窗口打开」：条目保留（模板式）；尺寸遵循设置
   const openSessionTabNewWindow = (tab: SessionTab) => {
@@ -333,22 +358,27 @@ function AppInner({ settings }: { settings: Settings }) {
       return next;
     });
 
-  // 移动目标：除源窗口外的其他所有窗口（设计稿 move-menu：窗口 N · 标题截断 + 数量）
-  const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '…' : s);
+  // 移动目标：除源窗口外的其他所有窗口（设计稿 move-menu：窗口 N · 标题截断 + 数量）。
+  // 窗口元信息按窗口算一次——原先每行都重扫「全部窗口 × 全部 tab」，行数多时是渲染热点
+  const moveTargets = useMemo<MoveTarget[]>(
+    () =>
+      windows.flatMap((w) => {
+        if (w.id === undefined) return [];
+        const winTabs = visibleByWindowId.get(w.id) ?? [];
+        if (winTabs.length === 0) return [];
+        const title = winTabs.find((x) => x.active)?.title ?? winTabs[0]?.title ?? '';
+        return [
+          {
+            windowId: w.id,
+            label: `${t('window.label', { n: numberByWindowId.get(w.id) ?? 0 })} · ${clip(title, 12)}`,
+            tabCount: winTabs.length,
+          },
+        ];
+      }),
+    [windows, visibleByWindowId, numberByWindowId, t],
+  );
   const getMoveTargets = (tab: TabWithId): MoveTarget[] =>
-    windows.flatMap((w) => {
-      if (w.id === undefined || w.id === tab.windowId) return [];
-      const winTabs = visible.filter((x) => x.windowId === w.id);
-      if (winTabs.length === 0) return [];
-      const title = winTabs.find((x) => x.active)?.title ?? winTabs[0]?.title ?? '';
-      return [
-        {
-          windowId: w.id,
-          label: `${t('window.label', { n: numberByWindowId.get(w.id) ?? 0 })} · ${clip(title, 12)}`,
-          tabCount: winTabs.length,
-        },
-      ];
-    });
+    moveTargets.filter((target) => target.windowId !== tab.windowId);
 
   const moveTab = async (tab: TabWithId, target: MoveTarget) => {
     await chrome.tabs.move(tab.id, { windowId: target.windowId, index: -1 });
@@ -380,17 +410,19 @@ function AppInner({ settings }: { settings: Settings }) {
       showToast(t('toast.domNoEligible'));
       return;
     }
-    let list = readLater;
     const savedAt = Date.now();
-    for (const tab of targets) {
-      list = upsertReadLater(
+    void setReadLater((list) =>
+      targets.reduce(
+        (acc, tab) =>
+          upsertReadLater(
+            acc,
+            { url: tab.url ?? '', title: tab.title ?? tab.url ?? '', favIconUrl: tab.favIconUrl },
+            savedAt,
+            crypto.randomUUID(),
+          ),
         list,
-        { url: tab.url ?? '', title: tab.title ?? tab.url ?? '', favIconUrl: tab.favIconUrl },
-        savedAt,
-        crypto.randomUUID(),
-      );
-    }
-    void setReadLater(list);
+      ),
+    );
     const host = domainHostLabel(targets);
     void closeTabsWithEffect(
       targets.map((x) => ({ tabId: x.id, el: rowEls.current.get(x.id) ?? null })),

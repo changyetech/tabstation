@@ -24,6 +24,19 @@ describe('Favicon', () => {
     );
   });
 
+  it('tab 换站点（favIconUrl 变化）→ 重新尝试新声明的图标，不被旧失败判死', () => {
+    const { container, rerender } = render(
+      <Favicon url="https://a.com/p" favIconUrl="https://a.com/icon.png" />,
+    );
+    const img = container.querySelector('img.favicon');
+    if (!img) throw new Error('favicon img 未渲染');
+    fireEvent.error(img);
+    rerender(<Favicon url="https://c.com/p" favIconUrl="https://c.com/icon.png" />);
+    expect(container.querySelector('img.favicon')?.getAttribute('src')).toBe(
+      'https://c.com/icon.png',
+    );
+  });
+
   it('无 favIconUrl → 直接走 _favicon', () => {
     const { container } = render(<Favicon url="https://b.com/" />);
     expect(container.querySelector('img.favicon')?.getAttribute('src')).toBe(

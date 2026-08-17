@@ -1,6 +1,6 @@
 import { useLanguage, useT } from '../i18n';
 import type { ReadLaterItem } from '../lib/storage';
-import { lastAccessedDisplay } from '../lib/time';
+import { formatRelative, lastAccessedDisplay } from '../lib/time';
 import Favicon from './Favicon';
 import { Icon } from './icons';
 
@@ -28,7 +28,7 @@ export default function ReadLaterSidebar({
   const timeText = (savedAt: number) => {
     const display = lastAccessedDisplay(savedAt, now);
     return display.kind === 'relative'
-      ? new Intl.RelativeTimeFormat(lang).format(-display.value, display.unit)
+      ? formatRelative(lang, display.value, display.unit)
       : t('time.justNow');
   };
 

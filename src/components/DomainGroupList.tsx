@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
 import { groupByDomain } from '../lib/grouping';
@@ -77,12 +78,17 @@ export default function DomainGroupList(props: DomainGroupListProps) {
           : key;
 
   // 去重预览：只保留重复组成员，空组隐藏（spec §5.4）
-  const groups = groupByDomain(tabs)
-    .map((g) => ({
-      ...g,
-      tabs: dedupePreview ? g.tabs.filter((x) => previewByTabId.has(x.id)) : g.tabs,
-    }))
-    .filter((g) => g.tabs.length > 0);
+  // 分组是 O(tab 数) 的全量重算，父级每次 tab 事件刷新都会重渲染本组件，故记忆化
+  const groups = useMemo(
+    () =>
+      groupByDomain(tabs)
+        .map((g) => ({
+          ...g,
+          tabs: dedupePreview ? g.tabs.filter((x) => previewByTabId.has(x.id)) : g.tabs,
+        }))
+        .filter((g) => g.tabs.length > 0),
+    [tabs, dedupePreview, previewByTabId],
+  );
 
   const rows = (groupTabs: TabWithId[]) =>
     groupTabs.map((tab) => (

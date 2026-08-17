@@ -39,7 +39,9 @@ export function groupByDomain<T extends chrome.tabs.Tab>(tabs: T[]): DomainGroup
   const map = new Map<string, T[]>();
   for (const tab of tabs) {
     const key = domainGroupKey(tab.url ?? '');
-    map.set(key, [...(map.get(key) ?? []), tab]);
+    const bucket = map.get(key);
+    if (bucket) bucket.push(tab);
+    else map.set(key, [tab]);
   }
   return [...map.entries()]
     .map(([key, groupTabs]) => ({ key, tabs: groupTabs }))

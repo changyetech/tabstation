@@ -13,8 +13,11 @@ export default function Favicon({
   favIconUrl?: string;
   host?: string;
 }) {
-  const [declaredFailed, setDeclaredFailed] = useState(false);
+  // 记「哪个 URL 失败了」而非布尔位：tab 导航到新站点后 favIconUrl 会换，
+  // 布尔位会把新图标一起判死、永久退到 _favicon 回退
+  const [failedUrl, setFailedUrl] = useState<string | undefined>(undefined);
+  const declaredFailed = favIconUrl !== undefined && favIconUrl === failedUrl;
   const src = favIconUrl && !declaredFailed ? favIconUrl : url ? faviconUrl(url) : undefined;
   if (!src) return <LetterBadge host={host ?? (hostnameOf(url) || '?')} />;
-  return <img className="favicon" src={src} alt="" onError={() => setDeclaredFailed(true)} />;
+  return <img className="favicon" src={src} alt="" onError={() => setFailedUrl(favIconUrl)} />;
 }

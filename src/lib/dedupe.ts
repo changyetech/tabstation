@@ -19,7 +19,9 @@ export function findDuplicateGroups(tabs: chrome.tabs.Tab[], managerUrl: string)
   for (const tab of tabs) {
     if (!hasId(tab) || !tab.url || tab.url.startsWith(managerUrl)) continue;
     const key = normalizeUrl(tab.url);
-    byUrl.set(key, [...(byUrl.get(key) ?? []), tab]);
+    const bucket = byUrl.get(key);
+    if (bucket) bucket.push(tab);
+    else byUrl.set(key, [tab]);
   }
   const groups: DuplicateGroup[] = [];
   for (const [url, group] of byUrl) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLanguage, useT } from '../i18n';
 
 export interface HeroStats {
@@ -28,11 +28,12 @@ export default function Hero({ stats }: { stats: HeroStats }) {
     return () => window.clearInterval(id);
   }, []);
 
-  const dateText = new Intl.DateTimeFormat(lang, {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
-  }).format(now);
+  // 统计数字每次 tab 事件都会变，本组件随之重渲染；formatter 构造开销不必每次重付
+  const dateFormat = useMemo(
+    () => new Intl.DateTimeFormat(lang, { month: 'long', day: 'numeric', weekday: 'long' }),
+    [lang],
+  );
+  const dateText = dateFormat.format(now);
 
   const items: [number, string][] = [
     [stats.windows, t('stats.windows')],

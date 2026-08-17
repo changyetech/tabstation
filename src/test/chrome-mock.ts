@@ -60,6 +60,7 @@ function buildChromeMock(storageData: Record<string, unknown>) {
       onActivated: new MockEvent(),
       onAttached: new MockEvent(),
       onDetached: new MockEvent(),
+      onReplaced: new MockEvent(),
     },
     windows: {
       getAll: vi.fn(async () => [] as chrome.windows.Window[]),

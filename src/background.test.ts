@@ -91,6 +91,29 @@ describe('omnibox', () => {
     expect(suggest.mock.calls[0][0]).toHaveLength(1);
   });
 
+  it('连续输入：先发起后 resolve 的旧输入结果被丢弃，不覆盖新输入的建议', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([makeTab({ id: 1, title: 'x 普通页' })]);
+    // 第一次输入的 storage 读取挂起，让它晚于第二次输入才 resolve
+    let releaseStale!: () => void;
+    chromeMock.storage.local.get.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseStale = () => resolve({});
+        }),
+    );
+
+    const staleSuggest = vi.fn();
+    const freshSuggest = vi.fn();
+    chromeMock.omnibox.onInputChanged.emit('x', staleSuggest);
+    chromeMock.omnibox.onInputChanged.emit('x 普', freshSuggest);
+    await vi.waitFor(() => expect(freshSuggest).toHaveBeenCalled());
+
+    releaseStale();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(staleSuggest).not.toHaveBeenCalled();
+  });
+
   it('建议条数受总数上限约束（matchOmnibox 内已限额，此处只验证透传）', async () => {
     const { chromeMock } = getChromeMock();
     chromeMock.tabs.query.mockResolvedValue(

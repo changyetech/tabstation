@@ -45,6 +45,20 @@ describe('closeTabsWithEffect', () => {
     expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1, 2, 3]);
   });
 
+  it('大批量：错开总时长封顶 600ms，remove 不随行数线性推迟', async () => {
+    const { chromeMock } = getChromeMock();
+    const entries = Array.from({ length: 61 }, (_, i) => entry(i + 1));
+    const done = closeTabsWithEffect(entries);
+
+    // 未封顶时（40ms × 60）要 2.7s 才 remove
+    vi.advanceTimersByTime(500);
+    expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(400); // 600（错开封顶）+ 300（退场）
+    await done;
+    expect(chromeMock.tabs.remove).toHaveBeenCalledOnce();
+    expect(shootConfetti).toHaveBeenCalledTimes(61); // 每行仍各出一次粒子
+  });
+
   it('el 为 null 的行不出粒子但 tab 照常关闭', async () => {
     const { chromeMock } = getChromeMock();
     const done = closeTabsWithEffect([{ tabId: 7, el: null }]);

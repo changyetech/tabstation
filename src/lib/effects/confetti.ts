@@ -8,9 +8,56 @@ const COLORS = [
   'oklch(58% 0.16 300)',
 ];
 
+const PARTICLES_PER_BURST = 17;
+// 活跃粒子上限：批量关闭会连续爆发（关 50 行 = 850 个元素），
+// 超过上限的粒子不再入场，避免 DOM/合成开销把关闭动效本身拖卡
+const MAX_ACTIVE = 400;
+
+interface Particle {
+  el: HTMLElement;
+  vx: number;
+  vy: number;
+  duration: number; // 秒
+  spin: number; // 每秒旋转角度，圆形粒子为 0
+  startTime: number;
+}
+
+// 单条共享 rAF 驱动全部粒子：每粒子各起一条循环时，浏览器每帧要跑上百个回调
+const particles: Particle[] = [];
+let rafId = 0;
+
+const GRAVITY = 200;
+
+function tick(now: number): void {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    const elapsed = (now - p.startTime) / 1000;
+    const progress = elapsed / p.duration;
+    if (progress >= 1) {
+      p.el.remove();
+      particles.splice(i, 1);
+      continue;
+    }
+    const px = p.vx * elapsed;
+    const py = p.vy * elapsed + 0.5 * GRAVITY * elapsed * elapsed;
+    p.el.style.transform = `translate(calc(-50% + ${px}px), calc(-50% + ${py}px)) rotate(${elapsed * p.spin}deg)`;
+    p.el.style.opacity = String(progress < 0.5 ? 1 : 1 - (progress - 0.5) * 2);
+  }
+  rafId = particles.length > 0 ? requestAnimationFrame(tick) : 0;
+}
+
 export function shootConfetti(x: number, y: number): void {
-  const particleCount = 17;
-  for (let i = 0; i < particleCount; i++) {
+  // 无障碍：系统开启「减弱动态效果」时不发射（CSS 侧已在 tokens.css 处理过渡动画，
+  // JS 驱动的粒子不受其约束，需在此显式尊重该偏好）
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+  const budget = Math.min(PARTICLES_PER_BURST, MAX_ACTIVE - particles.length);
+  if (budget <= 0) return;
+
+  // 一次爆发的元素合批插入，避免 17 次独立的 DOM 变更
+  const fragment = document.createDocumentFragment();
+  const startTime = performance.now();
+  for (let i = 0; i < budget; i++) {
     const el = document.createElement('div');
     el.dataset.confetti = '';
     const isCircle = Math.random() > 0.5;
@@ -23,29 +70,20 @@ export function shootConfetti(x: number, y: number): void {
       pointer-events: none; z-index: 9999;
       transform: translate(-50%, -50%); opacity: 1;
     `;
-    document.body.appendChild(el);
+    fragment.appendChild(el);
 
     const angle = Math.random() * Math.PI * 2;
     const speed = 60 + Math.random() * 120;
-    const vx = Math.cos(angle) * speed;
-    const vy = Math.sin(angle) * speed - 80; // 上抛偏置
-    const gravity = 200;
-    const startTime = performance.now();
-    const duration = 700 + Math.random() * 200;
-
-    const frame = (now: number) => {
-      const elapsed = (now - startTime) / 1000;
-      const progress = elapsed / (duration / 1000);
-      if (progress >= 1) {
-        el.remove();
-        return;
-      }
-      const px = vx * elapsed;
-      const py = vy * elapsed + 0.5 * gravity * elapsed * elapsed;
-      el.style.transform = `translate(calc(-50% + ${px}px), calc(-50% + ${py}px)) rotate(${elapsed * 200 * (isCircle ? 0 : 1)}deg)`;
-      el.style.opacity = String(progress < 0.5 ? 1 : 1 - (progress - 0.5) * 2);
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
+    particles.push({
+      el,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 80, // 上抛偏置
+      duration: (700 + Math.random() * 200) / 1000,
+      spin: isCircle ? 0 : 200,
+      startTime,
+    });
   }
+  document.body.appendChild(fragment);
+
+  if (rafId === 0) rafId = requestAnimationFrame(tick);
 }

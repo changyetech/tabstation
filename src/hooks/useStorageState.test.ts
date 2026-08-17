@@ -19,6 +19,29 @@ describe('useStorageState', () => {
     expect(storageData.sessions).toEqual(['a']);
   });
 
+  it('函数式写入以最新已提交值为基准：陈旧闭包不会把已有变更覆盖回去', async () => {
+    const { storageData } = getChromeMock();
+    const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
+    await waitFor(() => expect(result.current[0]).toEqual([]));
+    // 抓住某次渲染时的 writer 引用，模拟「延迟提交」场景下的陈旧闭包
+    const staleWrite = result.current[1];
+    await act(() => staleWrite((list) => [...list, 'a']));
+    await act(() => staleWrite((list) => [...list, 'b']));
+    expect(result.current[0]).toEqual(['a', 'b']);
+    expect(storageData.readLater).toEqual(['a', 'b']);
+  });
+
+  it('函数式写入的基准也包含其他页面（onChanged）同步过来的值', async () => {
+    const { chromeMock } = getChromeMock();
+    const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
+    await waitFor(() => expect(result.current[0]).toEqual([]));
+    act(() => {
+      chromeMock.storage.onChanged.emit({ readLater: { newValue: ['remote'] } }, 'local');
+    });
+    await act(() => result.current[1]((list) => [...list, 'local']));
+    expect(result.current[0]).toEqual(['remote', 'local']);
+  });
+
   it('其他页面写入（onChanged）→ 本页自动同步', async () => {
     const { chromeMock } = getChromeMock();
     const { result } = renderHook(() => useStorageState<string[]>('readLater', []));

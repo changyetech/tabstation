@@ -5,7 +5,7 @@ import { isCrossCardOver, type DragTabData } from '../lib/dnd';
 import { hostnameOf } from '../lib/grouping';
 import { useLanguage, useT } from '../i18n';
 import Favicon from './Favicon';
-import { lastAccessedDisplay } from '../lib/time';
+import { formatRelative, lastAccessedDisplay } from '../lib/time';
 import { GripIcon, Icon } from './icons';
 import MoveMenu, { type MoveTarget } from './MoveMenu';
 
@@ -69,7 +69,7 @@ export default function TabRow({
       ? '—'
       : display.kind === 'justNow'
         ? t('time.justNow')
-        : new Intl.RelativeTimeFormat(lang).format(-display.value, display.unit);
+        : formatRelative(lang, display.value, display.unit);
 
   const activate = async () => {
     await chrome.windows.update(tab.windowId, { focused: true });

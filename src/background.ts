@@ -86,15 +86,22 @@ function translatorFor(settings: Partial<Settings> | undefined) {
   return (key: string, params?: Record<string, string | number>) => translate(dict, key, params);
 }
 
+// 输入序号：用户连续敲字时多个 handler 并发，先发起的可能后 resolve，
+// 用旧输入的结果覆盖新输入的建议与默认建议（建议列表闪回上一次的匹配）。
+// 只让最后一次输入的结果落地
+let omniboxSeq = 0;
+
 async function handleOmniboxInputChanged(
   text: string,
   suggest: (suggestions: chrome.omnibox.SuggestResult[]) => void,
 ): Promise<void> {
+  const my = ++omniboxSeq;
   const extBase = ownPagePrefix();
   const [tabs, stored] = await Promise.all([
     chrome.tabs.query({}),
     chrome.storage.local.get() as Promise<StoredOmniData>,
   ]);
+  if (my !== omniboxSeq) return; // 已有更新的输入在处理，本次结果作废
   const items = matchOmnibox(text, {
     tabs: visibleTabs(tabs, extBase),
     readLater: stored.readLater ?? [],

@@ -32,6 +32,35 @@ describe('useTabs', () => {
     await waitFor(() => expect(result.current.tabs).toHaveLength(1));
   });
 
+  it('冷却窗口内连发的事件：首个立即重查，其余合并为一次尾随重查', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    renderHook(() => useTabs());
+    await waitFor(() => expect(chromeMock.tabs.query).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      for (let i = 0; i < 5; i++) {
+        chromeMock.tabs.onUpdated.emit(1 as never, {} as never, {} as never);
+      }
+    });
+    expect(chromeMock.tabs.query).toHaveBeenCalledTimes(2); // 首个事件立即
+
+    await waitFor(() => expect(chromeMock.tabs.query).toHaveBeenCalledTimes(3)); // 余下 4 个合并成 1 次
+    await new Promise((resolve) => setTimeout(resolve, 120)); // 冷却窗口过后不应再有补刷
+    expect(chromeMock.tabs.query).toHaveBeenCalledTimes(3);
+  });
+
+  it('onReplaced（预渲染换页）也触发重查', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
+    renderHook(() => useTabs());
+    await waitFor(() => expect(chromeMock.tabs.query).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      chromeMock.tabs.onReplaced.emit(2 as never, 1 as never);
+    });
+    expect(chromeMock.tabs.query).toHaveBeenCalledTimes(2);
+  });
+
   it('卸载后移除全部监听', async () => {
     const { chromeMock } = getChromeMock();
     const { unmount } = renderHook(() => useTabs());

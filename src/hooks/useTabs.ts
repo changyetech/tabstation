@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 
 // 运行时数据不落盘：Chrome 是唯一数据源（spec §6）。
 // 事件触发全量重查——tab 数量级下 query 成本可忽略，增量 diff 只增复杂度。
+//
+// 但事件本身很密：单个页面加载就会连发多条 onUpdated（status / title / favIconUrl），
+// N 个 tab 同时加载时每秒可达数十次「3 次 chrome API + 全树重渲染」。
+// 故做合流：首个事件立即重查（保持响应即时），其后冷却窗口内的事件合并为一次尾随重查。
+const COALESCE_MS = 60;
+
 export function useTabs(): {
   tabs: chrome.tabs.Tab[];
   windows: chrome.windows.Window[];
@@ -34,6 +40,25 @@ export function useTabs(): {
     };
     void refresh();
 
+    // 冷却窗口内的事件合并：cooldown 有值 = 处于窗口内，只记一个待办标记，
+    // 窗口结束时若有待办再补一次（保证最后一个事件的结果一定落地）
+    let cooldown: number | undefined;
+    let queued = false;
+    const schedule = () => {
+      if (cooldown !== undefined) {
+        queued = true;
+        return;
+      }
+      void refresh();
+      cooldown = window.setTimeout(() => {
+        cooldown = undefined;
+        if (queued) {
+          queued = false;
+          schedule();
+        }
+      }, COALESCE_MS);
+    };
+
     const events = [
       chrome.tabs.onCreated,
       chrome.tabs.onRemoved,
@@ -42,15 +67,17 @@ export function useTabs(): {
       chrome.tabs.onActivated,
       chrome.tabs.onAttached,
       chrome.tabs.onDetached,
+      // 预渲染换页会替换 tabId：不重查则列表里的 id 变陈旧，点击激活/关闭都会打空
+      chrome.tabs.onReplaced,
       chrome.windows.onCreated,
       chrome.windows.onRemoved,
       chrome.windows.onFocusChanged,
     ];
-    const handler = () => void refresh();
-    events.forEach((e) => e.addListener(handler));
+    events.forEach((e) => e.addListener(schedule));
     return () => {
       alive = false;
-      events.forEach((e) => e.removeListener(handler));
+      window.clearTimeout(cooldown);
+      events.forEach((e) => e.removeListener(schedule));
     };
   }, []);
 
