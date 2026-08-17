@@ -65,6 +65,19 @@ describe('设置页', () => {
     );
   });
 
+  it('默认视图：默认全部模式，切窗口模式落盘（default-view spec）', async () => {
+    const { storageData } = getChromeMock();
+    render(<App />);
+    const select = screen.getByLabelText('默认视图');
+    expect(select).toHaveValue('all');
+    // 已保存会话不作为默认视图选项
+    expect(screen.queryByRole('option', { name: '已保存会话' })).not.toBeInTheDocument();
+    await userEvent.selectOptions(select, 'window');
+    await waitFor(() =>
+      expect((storageData.settings as { defaultView: string }).defaultView).toBe('window'),
+    );
+  });
+
   it('新窗口默认行为：切换落盘', async () => {
     const { storageData } = getChromeMock();
     render(<App />);

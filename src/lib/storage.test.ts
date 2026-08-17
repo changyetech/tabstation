@@ -183,6 +183,7 @@ describe('mergeSettings', () => {
       theme: 'auto',
       newWindowMode: 'same',
       visibleTabs: 12,
+      defaultView: 'all',
     });
   });
 });

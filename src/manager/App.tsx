@@ -66,7 +66,9 @@ function AppInner({ settings }: { settings: Settings }) {
   const t = useT();
   const language = useLanguage();
   // 视图不可切换（spec §3.1 2026-08-16 修订）：窗口模式固定列表视图，全部模式固定域名视图
-  const [mode, setMode] = useState<Mode>('window');
+  // 打开时进入设置的默认视图；一旦手动切段就以手动选择为准，不再被设置改动带走
+  const [pickedMode, setPickedMode] = useState<Mode | null>(null);
+  const mode = pickedMode ?? settings.defaultView;
   const rowEls = useRef(new Map<number, HTMLElement>());
   useTheme(settings.theme);
 
@@ -464,7 +466,7 @@ function AppInner({ settings }: { settings: Settings }) {
       <Hero stats={stats} />
       <Toolbar
         mode={mode}
-        onMode={setMode}
+        onMode={setPickedMode}
         dedupeCloseCount={dedupePlan.closeIds.length}
         onDedupe={runDedupe}
         onDedupeHover={setDedupePreview}

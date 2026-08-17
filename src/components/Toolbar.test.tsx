@@ -30,6 +30,12 @@ describe('Toolbar', () => {
     expect(screen.queryByText('域名视图')).not.toBeInTheDocument();
   });
 
+  it('段序：全部模式 → 窗口模式 → 已保存会话（default-view spec）', () => {
+    renderToolbar();
+    const labels = [...document.querySelectorAll('.seg-group .seg')].map((el) => el.textContent);
+    expect(labels).toEqual(['全部模式', '窗口模式', '已保存会话']);
+  });
+
   it('三段按钮各含一枚图标（toolbar-seg-icons spec）', () => {
     renderToolbar();
     for (const label of ['窗口模式', '全部模式', '已保存会话']) {

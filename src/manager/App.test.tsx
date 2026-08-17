@@ -18,6 +18,11 @@ function seedTwoWindows() {
   chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 2 }));
 }
 
+// 默认视图是「全部模式」（default-view spec）：断言窗口卡片的用例需先落盘窗口视图
+function seedWindowView() {
+  getChromeMock().storageData.settings = { defaultView: 'window' };
+}
+
 const winBlockOf = (label: string) => {
   const el = screen.getByText(label).closest('section');
   if (!el) throw new Error(`${label} 区块未找到`);
@@ -27,6 +32,7 @@ const winBlockOf = (label: string) => {
 describe('App', () => {
   it('窗口模式：当前窗口置顶带「当前」胶囊、管理页隐身且不计数', async () => {
     seedTwoWindows();
+    seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
     // 当前窗口（id=2）置顶且带胶囊
@@ -43,7 +49,7 @@ describe('App', () => {
   it('Hero 统计：窗口 / 标签页 / 域名 / 待读', async () => {
     seedTwoWindows();
     render(<App />);
-    await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
     const stats = document.querySelector('.stats');
     expect(stats).toHaveTextContent('2窗口');
     expect(stats).toHaveTextContent('2标签页');
@@ -54,12 +60,31 @@ describe('App', () => {
   it('页脚展示版权链接并跳转官网', async () => {
     seedTwoWindows();
     render(<App />);
-    await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
 
     const link = screen.getByRole('link', {
       name: 'Hangzhou Changye Network Technology Co., Ltd.',
     });
     expect(link).toHaveAttribute('href', 'https://changyetech.com');
+  });
+
+  it('默认视图：无设置时进全部模式（default-view spec）', async () => {
+    seedTwoWindows();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
+    expect(screen.getByText('全部模式').closest('button')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('窗口 1')).not.toBeInTheDocument();
+  });
+
+  it('默认视图设为窗口模式：手动切到全部模式后不被设置带回', async () => {
+    seedTwoWindows();
+    seedWindowView();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('窗口 1')).toBeInTheDocument());
+    await userEvent.click(screen.getByText('全部模式'));
+    // 设置页此刻改默认视图（跨页 onChanged 同步）→ 已手动切段的页面不受影响
+    await getChromeMock().chromeMock.storage.local.set({ settings: { defaultView: 'window' } });
+    expect(screen.queryByText('窗口 1')).not.toBeInTheDocument();
   });
 
   it('全部模式：固定域名视图，跨窗口按域名聚合为区块', async () => {
@@ -114,6 +139,7 @@ describe('App', () => {
   it('新建窗口幽灵按钮：按默认尺寸策略（随最近聚焦窗口）创建空窗口', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
+    seedWindowView();
     chromeMock.windows.getLastFocused.mockResolvedValue(makeWindow({ id: 1 }));
     render(<App />);
     await waitFor(() => expect(screen.getByText('新建窗口')).toBeInTheDocument());
@@ -133,6 +159,7 @@ describe('App', () => {
   it('关闭窗口·窗口含管理页：无确认，只关非管理页 tab，窗口存活', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
+    seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 1')).toBeInTheDocument());
     await userEvent.click(within(winBlockOf('窗口 1')).getByTitle('关闭窗口'));
@@ -143,6 +170,7 @@ describe('App', () => {
   it('关闭窗口·窗口不含管理页：关整个窗口', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
+    seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
     await userEvent.click(within(winBlockOf('窗口 2')).getByTitle('关闭窗口'));
@@ -153,6 +181,7 @@ describe('App', () => {
   it('关闭窗口·窗口含新标签页：只关其余 tab，窗口存活', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
+    seedWindowView();
     // 窗口 2 原本不含任何自有页面（会整窗关闭），追加一个新标签页 tab 后应改为存活
     chromeMock.tabs.query.mockResolvedValue([
       makeTab({ id: 1, windowId: 1, index: 0, title: 'A1', url: 'https://a.com/', active: true }),
@@ -175,6 +204,7 @@ describe('App', () => {
   it('关闭窗口·windows.remove reject：区块摘掉 .closing，不永久消失', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
+    seedWindowView();
     chromeMock.windows.remove.mockRejectedValueOnce(new Error('No window'));
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
@@ -187,6 +217,7 @@ describe('App', () => {
   it('关闭窗口·tabs.remove reject（管理页豁免场景）：区块摘掉 .closing，不永久消失', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
+    seedWindowView();
     chromeMock.tabs.remove.mockRejectedValueOnce(new Error('No tab'));
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 1')).toBeInTheDocument());
@@ -368,6 +399,7 @@ describe('保存窗口', () => {
     ]);
     chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
     chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByTitle('保存会话')).toBeInTheDocument());
     await userEvent.click(screen.getByTitle('保存会话'));
@@ -383,6 +415,7 @@ describe('保存窗口', () => {
     ]);
     chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 })]);
     chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByTitle('保存会话')).toBeInTheDocument());
     await userEvent.click(screen.getByTitle('保存会话'));

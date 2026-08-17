@@ -31,6 +31,8 @@ export interface Settings {
   theme: 'light' | 'dark' | 'auto';
   newWindowMode: 'max' | 'same';
   visibleTabs: 8 | 12 | 16 | 'all';
+  /** 管理页/新标签页打开时进入的视图 */
+  defaultView: 'all' | 'window';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -40,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   newWindowMode: 'same',
   visibleTabs: 12,
+  defaultView: 'all',
 };
 
 // 旧版本落盘的 settings 缺新增字段，读侧统一经此合并兜底

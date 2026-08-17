@@ -83,6 +83,8 @@
   "settings.scopePerWindowDesc": "每个窗口各自保留一个管理页",
   "settings.closeWindowAfterSave": "保存会话后关闭窗口",
   "settings.closeAfterSaveDesc": "窗口快照保存成功后，自动关闭该窗口的全部标签页。",
+  "settings.defaultView": "默认视图",
+  "settings.defaultViewDesc": "打开管理页或新标签页时进入的视图；页面内手动切段不受影响。",
   "settings.newWindowMode": "新窗口默认行为",
   "settings.newWindowModeDesc": "一切「在新窗口打开」类操作（拆窗、恢复会话、稍后阅读等）使用的窗口尺寸。",
   "settings.nwMax": "全屏",

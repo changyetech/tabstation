@@ -210,6 +210,24 @@ function SettingsPage({
               </div>
               <div className="setting-row">
                 <div className="setting-info">
+                  <div className="setting-label">{t('settings.defaultView')}</div>
+                  <div className="setting-desc">{t('settings.defaultViewDesc')}</div>
+                </div>
+                <span className="setting-control">
+                  <select
+                    aria-label={t('settings.defaultView')}
+                    value={settings.defaultView}
+                    onChange={(e) =>
+                      save({ defaultView: e.target.value as Settings['defaultView'] })
+                    }
+                  >
+                    <option value="all">{t('toolbar.modeAll')}</option>
+                    <option value="window">{t('toolbar.modeWindow')}</option>
+                  </select>
+                </span>
+              </div>
+              <div className="setting-row">
+                <div className="setting-info">
                   <div className="setting-label">{t('settings.newWindowMode')}</div>
                   <div className="setting-desc">{t('settings.newWindowModeDesc')}</div>
                 </div>

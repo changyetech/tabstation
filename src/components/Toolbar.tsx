@@ -1,7 +1,7 @@
 import { useT } from '../i18n';
 import { Icon } from './icons';
 
-export type Mode = 'window' | 'all' | 'sessions';
+export type Mode = 'all' | 'window' | 'sessions';
 
 export interface ToolbarProps {
   mode: Mode;
@@ -25,13 +25,13 @@ export default function Toolbar({
     <div className="control-wrap">
       <div className="control-bar">
         <div className="seg-group" role="group">
-          <button className="seg" aria-pressed={mode === 'window'} onClick={() => onMode('window')}>
-            <Icon name="win" size={13} />
-            {t('toolbar.modeWindow')}
-          </button>
           <button className="seg" aria-pressed={mode === 'all'} onClick={() => onMode('all')}>
             <Icon name="globe" size={13} />
             {t('toolbar.modeAll')}
+          </button>
+          <button className="seg" aria-pressed={mode === 'window'} onClick={() => onMode('window')}>
+            <Icon name="win" size={13} />
+            {t('toolbar.modeWindow')}
           </button>
           <button
             className="seg"
