@@ -88,6 +88,13 @@ describe('WindowSection 折叠', () => {
     expect(screen.getByText('T10')).toBeInTheDocument();
     expect(screen.queryByText(/展开/)).not.toBeInTheDocument();
   });
+  // spec 2026-08-17-dup-fold-exemption
+  it('折叠区里的重复行照常渲染，more 计数排除它', () => {
+    renderSection({ dupCountByTabId: new Map([[10, 2]]) }, manyTabs);
+    expect(screen.getByText('T10')).toBeInTheDocument();
+    expect(screen.queryByText('T9')).not.toBeInTheDocument();
+    expect(screen.getByText(/还有 1 个标签页/)).toBeInTheDocument();
+  });
 });
 
 describe('WindowSection 关闭窗口', () => {

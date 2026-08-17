@@ -67,7 +67,10 @@ export default function WindowSection(props: WindowSectionProps) {
   const foldKey = `w${win.id}`;
   const fold = dedupePreview
     ? { shown: shownTabs, hiddenCount: 0, expanded: false }
-    : foldTabs(tabs, visibleLimit, expandedKeys.has(foldKey));
+    : // 重复组成员豁免折叠，否则徽标与同组高亮会被藏进折叠区（spec 2026-08-17-dup-fold-exemption）
+      foldTabs(tabs, visibleLimit, expandedKeys.has(foldKey), (tab) =>
+        props.dupCountByTabId.has(tab.id),
+      );
 
   return (
     <section

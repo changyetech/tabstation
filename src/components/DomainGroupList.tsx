@@ -124,7 +124,10 @@ export default function DomainGroupList(props: DomainGroupListProps) {
         const foldKey = `d${g.key}`;
         const fold = dedupePreview
           ? { shown: g.tabs, hiddenCount: 0, expanded: false }
-          : foldTabs(g.tabs, visibleLimit, expandedKeys.has(foldKey));
+          : // 重复组成员豁免折叠（spec 2026-08-17-dup-fold-exemption）
+            foldTabs(g.tabs, visibleLimit, expandedKeys.has(foldKey), (tab) =>
+              props.dupCountByTabId.has(tab.id),
+            );
         const host = g.key.startsWith('#') ? g.key.slice(1) : g.key;
         return (
           <section className="win-block" key={g.key}>
