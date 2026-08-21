@@ -43,7 +43,7 @@ function renderList(over: Partial<React.ComponentProps<typeof DomainGroupList>> 
 }
 
 describe('DomainGroupList', () => {
-  it('按域名聚合为区块：tab 数降序、特殊组文案', () => {
+  it('按域名聚合为区块：注册域排序、特殊组文案', () => {
     renderList();
     const titles = [...document.querySelectorAll('.win-block .win-title')].map(
       (el) => el.textContent,

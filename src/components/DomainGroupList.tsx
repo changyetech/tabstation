@@ -64,7 +64,7 @@ function DomainActs({
   );
 }
 
-// 域名视图（spec §5.1，仅全部模式）：按 hostname 聚合、tab 数降序、两行式标签行、只读不可拖
+// 域名视图（spec §5.1，仅全部模式）：按 hostname 聚合、注册域排序、两行式标签行、只读不可拖
 export default function DomainGroupList(props: DomainGroupListProps) {
   const { tabs, dedupePreview, previewByTabId, visibleLimit, expandedKeys, onToggleExpand } = props;
   const t = useT();

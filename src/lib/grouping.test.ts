@@ -50,15 +50,53 @@ describe('domainGroupKey', () => {
 });
 
 describe('groupByDomain', () => {
-  it('按 tab 数降序，组内保持传入顺序', () => {
+  it('按注册域排序，且排序不受 tab 数量影响', () => {
     const tabs = [
       makeTab({ id: 1, url: 'https://b.com/1' }),
-      makeTab({ id: 2, url: 'https://a.com/1' }),
-      makeTab({ id: 3, url: 'https://a.com/2' }),
+      makeTab({ id: 2, url: 'https://a.b.com/1' }),
+      makeTab({ id: 3, url: 'https://a.com/1' }),
+      makeTab({ id: 4, url: 'https://a.com/2' }),
+      makeTab({ id: 5, url: 'https://z.example.co.uk/1' }),
+      makeTab({ id: 6, url: 'https://example.co.uk/1' }),
     ];
     const groups = groupByDomain(tabs);
-    expect(groups.map((g) => g.key)).toEqual(['a.com', 'b.com']);
-    expect(groups[0].tabs.map((t) => t.id)).toEqual([2, 3]);
+    expect(groups.map((g) => g.key)).toEqual([
+      'a.com',
+      'b.com',
+      'a.b.com',
+      'example.co.uk',
+      'z.example.co.uk',
+    ]);
+    expect(groups[0].tabs.map((t) => t.id)).toEqual([3, 4]);
+  });
+
+  it('同一注册域内裸域优先，子域名按层级排序', () => {
+    const tabs = [
+      makeTab({ id: 1, url: 'https://v2.api.example.com/1' }),
+      makeTab({ id: 2, url: 'https://example.com/1' }),
+      makeTab({ id: 3, url: 'https://admin.api.example.com/1' }),
+      makeTab({ id: 4, url: 'https://api.example.com/1' }),
+      makeTab({ id: 5, url: 'https://v10.api.example.com/1' }),
+    ];
+    const groups = groupByDomain(tabs);
+    expect(groups.map((g) => g.key)).toEqual([
+      'example.com',
+      'api.example.com',
+      'admin.api.example.com',
+      'v2.api.example.com',
+      'v10.api.example.com',
+    ]);
+  });
+
+  it('特殊组固定排在普通域名之后且顺序稳定', () => {
+    const tabs = [
+      makeTab({ id: 1, url: 'chrome://settings/' }),
+      makeTab({ id: 2, url: 'https://a.com/1' }),
+      makeTab({ id: 3, url: 'file:///Users/x/a.pdf' }),
+      makeTab({ id: 4, url: 'chrome-extension://abc/page.html' }),
+    ];
+    const groups = groupByDomain(tabs);
+    expect(groups.map((g) => g.key)).toEqual(['a.com', '#chrome', '#file', '#other']);
   });
 });
 
