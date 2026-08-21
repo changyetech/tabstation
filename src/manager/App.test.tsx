@@ -151,6 +151,36 @@ describe('App', () => {
     expect(screen.getByText('−1')).toBeInTheDocument();
   });
 
+  it('空白点击聚焦搜索框；控件点击与文本选择不抢焦点', async () => {
+    seedTwoWindows();
+    const { container } = render(<App />);
+    container.id = 'root';
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
+
+    const search = screen.getByRole('searchbox', { name: '搜索标签页' });
+    await userEvent.click(screen.getByRole('button', { name: '窗口模式' }));
+    expect(search).not.toHaveFocus();
+    await userEvent.click(screen.getByText('A1'));
+    expect(search).not.toHaveFocus();
+    await userEvent.click(screen.getByText('标签页'));
+    expect(search).not.toHaveFocus();
+    await userEvent.click(container);
+    expect(search).toHaveFocus();
+    search.blur();
+
+    const selection = window.getSelection();
+    const selectionRange = document.createRange();
+    selectionRange.selectNodeContents(document.body);
+    selection?.removeAllRanges();
+    selection?.addRange(selectionRange);
+    await userEvent.click(document.body);
+    expect(search).not.toHaveFocus();
+
+    selection?.removeAllRanges();
+    await userEvent.click(document.body);
+    expect(search).toHaveFocus();
+  });
+
   it('移动到其他窗口：菜单不含 tab 自己所在窗口，点击调用 chrome.tabs.move', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();

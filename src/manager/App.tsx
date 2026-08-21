@@ -56,6 +56,20 @@ const tabMatchesSearch = (tab: { title?: string; url?: string }, query: string) 
 const sessionMatchesSearch = (session: SavedSession, query: string) =>
   session.name.toLowerCase().includes(query) ||
   session.tabs.some((tab) => tabMatchesSearch(tab, query));
+const SEARCH_FOCUS_AREA_SELECTOR = [
+  'html',
+  'body',
+  '#root',
+  '.hero',
+  '.hero-main',
+  '.control-wrap',
+  '.control-bar',
+  '.layout',
+  '.main',
+  '.win-flow',
+  '.dom-flow',
+  'aside',
+].join(', ');
 
 export default function App() {
   const [rawSettings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
@@ -81,7 +95,31 @@ function AppInner({ settings }: { settings: Settings }) {
   const normalizedSearch = search.trim().toLowerCase();
   const mode = pickedMode ?? settings.defaultView;
   const rowEls = useRef(new Map<number, HTMLElement>());
+  const searchInputRef = useRef<HTMLInputElement>(null);
   useTheme(settings.theme);
+
+  useEffect(() => {
+    let hadTextSelectionAtPointerDown = false;
+    const rememberTextSelection = () => {
+      hadTextSelectionAtPointerDown = Boolean(window.getSelection()?.toString());
+    };
+    const focusSearchOnBlankClick = (event: MouseEvent) => {
+      const hadTextSelection = hadTextSelectionAtPointerDown;
+      hadTextSelectionAtPointerDown = false;
+      if (event.defaultPrevented || hadTextSelection || window.getSelection()?.toString()) return;
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      // 只认布局层自身的留白；静态文案与卡片/按钮由更深的 target 承载。
+      if (!target.matches(SEARCH_FOCUS_AREA_SELECTOR)) return;
+      searchInputRef.current?.focus();
+    };
+    document.addEventListener('pointerdown', rememberTextSelection);
+    document.addEventListener('click', focusSearchOnBlankClick);
+    return () => {
+      document.removeEventListener('pointerdown', rememberTextSelection);
+      document.removeEventListener('click', focusSearchOnBlankClick);
+    };
+  }, []);
 
   // 整行是拖拽把手，需位移阈值，否则行内按钮的 pointerdown 会被判成起拖
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -540,6 +578,7 @@ function AppInner({ settings }: { settings: Settings }) {
         onMode={setPickedMode}
         dedupeCloseCount={dedupePlan.closeIds.length}
         search={search}
+        searchInputRef={searchInputRef}
         onSearch={setSearch}
         onDedupe={runDedupe}
         onDedupeHover={setDedupePreview}

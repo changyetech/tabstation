@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import { useT } from '../i18n';
 import { Icon } from './icons';
 
@@ -10,6 +11,7 @@ export interface ToolbarProps {
   dedupeCloseCount: number;
   /** 主区搜索词；仅影响展示，不改变统计与去重范围 */
   search: string;
+  searchInputRef?: RefObject<HTMLInputElement>;
   onSearch: (search: string) => void;
   onDedupe: () => void;
   onDedupeHover: (hovering: boolean) => void;
@@ -21,6 +23,7 @@ export default function Toolbar({
   onMode,
   dedupeCloseCount,
   search,
+  searchInputRef,
   onSearch,
   onDedupe,
   onDedupeHover,
@@ -55,6 +58,7 @@ export default function Toolbar({
             aria-label={t('toolbar.search')}
             placeholder={t('toolbar.search')}
             spellCheck={false}
+            ref={searchInputRef}
             onChange={(e) => onSearch(e.target.value)}
           />
         </div>
