@@ -50,6 +50,12 @@ import {
 
 // 移动菜单里的窗口标题截断（设计稿 move-menu）
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '…' : s);
+const tabMatchesSearch = (tab: { title?: string; url?: string }, query: string) =>
+  (tab.title?.toLowerCase().includes(query) ?? false) ||
+  (tab.url?.toLowerCase().includes(query) ?? false);
+const sessionMatchesSearch = (session: SavedSession, query: string) =>
+  session.name.toLowerCase().includes(query) ||
+  session.tabs.some((tab) => tabMatchesSearch(tab, query));
 
 export default function App() {
   const [rawSettings] = useStorageState<Settings>('settings', DEFAULT_SETTINGS);
@@ -71,6 +77,8 @@ function AppInner({ settings }: { settings: Settings }) {
   // 视图不可切换（spec §3.1 2026-08-16 修订）：窗口模式固定列表视图，全部模式固定域名视图
   // 打开时进入设置的默认视图；一旦手动切段就以手动选择为准，不再被设置改动带走
   const [pickedMode, setPickedMode] = useState<Mode | null>(null);
+  const [search, setSearch] = useState('');
+  const normalizedSearch = search.trim().toLowerCase();
   const mode = pickedMode ?? settings.defaultView;
   const rowEls = useRef(new Map<number, HTMLElement>());
   useTheme(settings.theme);
@@ -97,6 +105,11 @@ function AppInner({ settings }: { settings: Settings }) {
   // 隐身范围 = 本扩展全部页面（管理页 + 设置页 + 新标签页），前缀过滤（spec §3.2）
   const extBase = ownPagePrefix();
   const visible = useMemo(() => visibleTabs(tabs, extBase), [tabs, extBase]);
+  const searchVisible = useMemo(
+    () =>
+      normalizedSearch ? visible.filter((tab) => tabMatchesSearch(tab, normalizedSearch)) : visible,
+    [visible, normalizedSearch],
+  );
   // 按窗口分桶算一次：窗口区块、关闭窗口、移动目标都要「某窗口的可见 tab」，
   // 各自 filter 一遍就是 O(窗口数 × tab 数)
   const visibleByWindowId = useMemo(() => {
@@ -246,6 +259,13 @@ function AppInner({ settings }: { settings: Settings }) {
   };
 
   const [sessions, setSessions] = useStorageState<SavedSession[]>('sessions', []);
+  const searchSessions = useMemo(
+    () =>
+      normalizedSearch
+        ? sessions.filter((session) => sessionMatchesSearch(session, normalizedSearch))
+        : sessions,
+    [sessions, normalizedSearch],
+  );
 
   // 窗口序号按 getAll 顺序固定，不受置顶排序、也不受空窗口过滤影响
   const numberByWindowId = useMemo(() => new Map(windows.map((w, i) => [w.id, i + 1])), [windows]);
@@ -266,6 +286,18 @@ function AppInner({ settings }: { settings: Settings }) {
         .filter((entry) => entry.tabs.length > 0),
     [sortedWindows, visibleByWindowId],
   );
+  const searchWindowsWithTabs = useMemo(
+    () =>
+      normalizedSearch
+        ? windowsWithTabs
+            .map((entry) => ({
+              ...entry,
+              tabs: entry.tabs.filter((tab) => tabMatchesSearch(tab, normalizedSearch)),
+            }))
+            .filter((entry) => entry.tabs.length > 0)
+        : windowsWithTabs,
+    [windowsWithTabs, normalizedSearch],
+  );
 
   // 全部模式：按窗口顺序 + index 合并
   const mergedTabs = useMemo(() => {
@@ -274,6 +306,13 @@ function AppInner({ settings }: { settings: Settings }) {
       (a, b) => (order.get(a.windowId) ?? 0) - (order.get(b.windowId) ?? 0) || a.index - b.index,
     );
   }, [visible, windows]);
+  const searchMergedTabs = useMemo(
+    () =>
+      normalizedSearch
+        ? mergedTabs.filter((tab) => tabMatchesSearch(tab, normalizedSearch))
+        : mergedTabs,
+    [mergedTabs, normalizedSearch],
+  );
 
   // 点击即保存无弹窗（沿用旧 spec §5.5）；空快照 → toast 且不创建
   const saveWindow = (win: chrome.windows.Window) => {
@@ -334,7 +373,7 @@ function AppInner({ settings }: { settings: Settings }) {
   const handleDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current as DragTabData | undefined;
     if (!data) return;
-    setDragGhost(mergedTabs.find((x) => x.id === data.tabId) ?? null);
+    setDragGhost(searchMergedTabs.find((x) => x.id === data.tabId) ?? null);
   };
 
   const handleDragEnd = (e: DragEndEvent) => {
@@ -473,8 +512,8 @@ function AppInner({ settings }: { settings: Settings }) {
   const draggable = mode === 'window' && !dedupePreview;
   // 去重预览时无成员的窗口区块整体隐藏
   const previewWindows = dedupePreview
-    ? windowsWithTabs.filter((entry) => entry.tabs.some((x) => previewByTabId.has(x.id)))
-    : windowsWithTabs;
+    ? searchWindowsWithTabs.filter((entry) => entry.tabs.some((x) => previewByTabId.has(x.id)))
+    : searchWindowsWithTabs;
 
   const shared = {
     now,
@@ -500,6 +539,8 @@ function AppInner({ settings }: { settings: Settings }) {
         mode={mode}
         onMode={setPickedMode}
         dedupeCloseCount={dedupePlan.closeIds.length}
+        search={search}
+        onSearch={setSearch}
         onDedupe={runDedupe}
         onDedupeHover={setDedupePreview}
       />
@@ -508,36 +549,56 @@ function AppInner({ settings }: { settings: Settings }) {
         {/* key 随模式变化 → 重挂载重放 viewIn 过场（设计稿 view-switch） */}
         <main className="main view-switch" key={mode}>
           {mode === 'sessions' ? (
-            // 已保存会话：主区第三模式，win-block 同款卡片（spec §5.5 2026-08-16 修订）
-            <SessionSection
-              sessions={sessions}
-              visibleLimit={settings.visibleTabs}
-              expandedKeys={expandedKeys}
-              onToggleExpand={toggleExpand}
-              onRestore={(s) => void restoreSession(s, settings.newWindowMode)}
-              onDelete={deleteSession}
-              onRename={handleRename}
-              onMoveTab={handleMoveTab}
-              onDeleteTab={handleDeleteTab}
-              onOpenTab={openSessionTab}
-              onOpenTabNewWindow={openSessionTabNewWindow}
-            />
-          ) : windowsWithTabs.length === 0 ? (
-            <>
+            normalizedSearch && searchSessions.length === 0 ? (
               <div className="empty-all">
                 <span className="icon">
-                  <Icon name="sparkle" size={16} />
+                  <Icon name="search" size={16} />
                 </span>
                 <br />
-                {t('empty.allClear')}
+                {t('empty.search')}
               </div>
-              <div className="empty-all-newwin">
-                <button className="new-win" onClick={newWindow}>
-                  <Icon name="winNew" size={13} />
-                  {t('newWindow')}
-                </button>
+            ) : (
+              // 已保存会话：主区第三模式，win-block 同款卡片（spec §5.5 2026-08-16 修订）
+              <SessionSection
+                sessions={searchSessions}
+                visibleLimit={settings.visibleTabs}
+                expandedKeys={expandedKeys}
+                onToggleExpand={toggleExpand}
+                onRestore={(s) => void restoreSession(s, settings.newWindowMode)}
+                onDelete={deleteSession}
+                onRename={handleRename}
+                onMoveTab={handleMoveTab}
+                onDeleteTab={handleDeleteTab}
+                onOpenTab={openSessionTab}
+                onOpenTabNewWindow={openSessionTabNewWindow}
+              />
+            )
+          ) : searchVisible.length === 0 ? (
+            normalizedSearch ? (
+              <div className="empty-all">
+                <span className="icon">
+                  <Icon name="search" size={16} />
+                </span>
+                <br />
+                {t('empty.search')}
               </div>
-            </>
+            ) : (
+              <>
+                <div className="empty-all">
+                  <span className="icon">
+                    <Icon name="sparkle" size={16} />
+                  </span>
+                  <br />
+                  {t('empty.allClear')}
+                </div>
+                <div className="empty-all-newwin">
+                  <button className="new-win" onClick={newWindow}>
+                    <Icon name="winNew" size={13} />
+                    {t('newWindow')}
+                  </button>
+                </div>
+              </>
+            )
           ) : (
             <DndContext
               sensors={sensors}
@@ -575,7 +636,7 @@ function AppInner({ settings }: { settings: Settings }) {
                 </>
               ) : (
                 <DomainGroupList
-                  tabs={mergedTabs}
+                  tabs={searchMergedTabs}
                   visibleLimit={settings.visibleTabs}
                   expandedKeys={expandedKeys}
                   onToggleExpand={toggleExpand}

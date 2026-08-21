@@ -101,6 +101,56 @@ describe('App', () => {
     expect(screen.getByText('B1')).toBeInTheDocument();
   });
 
+  it('全部模式：搜索按标题或 URL 即时过滤，空分组隐藏且统计不变', async () => {
+    seedTwoWindows();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('A1')).toBeInTheDocument());
+
+    const search = screen.getByRole('searchbox', { name: '搜索标签页' });
+    await userEvent.type(search, 'B.COM');
+
+    expect(screen.queryByText('A1')).not.toBeInTheDocument();
+    expect(screen.getByText('B1')).toBeInTheDocument();
+    expect(document.querySelectorAll('.dom-flow .win-block')).toHaveLength(1);
+    expect(document.querySelector('.stats')).toHaveTextContent('2标签页');
+
+    await userEvent.type(search, '-missing');
+    expect(screen.getByText('没有匹配的标签页 / 会话')).toBeInTheDocument();
+    expect(screen.queryByText('B1')).not.toBeInTheDocument();
+
+    await userEvent.clear(search);
+    expect(screen.getByText('A1')).toBeInTheDocument();
+    expect(screen.getByText('B1')).toBeInTheDocument();
+  });
+
+  it('窗口模式：搜索隐藏空窗口，去重统计仍按全浏览器计算', async () => {
+    const { chromeMock } = getChromeMock();
+    chromeMock.tabs.query.mockResolvedValue([
+      makeTab({ id: 1, windowId: 1, index: 0, title: 'D1', url: 'https://d.com/' }),
+      makeTab({
+        id: 2,
+        windowId: 1,
+        index: 1,
+        title: 'D2',
+        url: 'https://d.com/',
+        lastAccessed: 200,
+      }),
+      makeTab({ id: 3, windowId: 2, index: 0, title: 'X1', url: 'https://x.com/' }),
+    ]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 }), makeWindow({ id: 2 })]);
+    chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 2 }));
+    seedWindowView();
+    render(<App />);
+    await waitFor(() => expect(screen.getByText('D1')).toBeInTheDocument());
+
+    await userEvent.type(screen.getByRole('searchbox', { name: '搜索标签页' }), 'x1');
+
+    expect(screen.getByText('X1')).toBeInTheDocument();
+    expect(screen.queryByText('D1')).not.toBeInTheDocument();
+    expect(screen.queryByText('窗口 1')).not.toBeInTheDocument();
+    expect(screen.getByText('−1')).toBeInTheDocument();
+  });
+
   it('移动到其他窗口：菜单不含 tab 自己所在窗口，点击调用 chrome.tabs.move', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
@@ -468,6 +518,46 @@ describe('保存窗口', () => {
     await waitFor(() => expect(chromeMock.tabs.update).toHaveBeenCalledWith(10, { pinned: true }));
     expect(chromeMock.tabs.update).not.toHaveBeenCalledWith(11, { pinned: true });
     expect(chromeMock.tabs.update).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('工具栏搜索 · 已保存会话', () => {
+  function seedSessions() {
+    const { storageData } = getChromeMock();
+    storageData.sessions = [
+      {
+        id: 's1',
+        name: 'Release',
+        createdAt: 1,
+        tabs: [{ url: 'https://release.example/', title: 'Checklist', pinned: false }],
+      },
+      {
+        id: 's2',
+        name: 'Trip',
+        createdAt: 2,
+        tabs: [{ url: 'https://trip.example/', title: 'Itinerary', pinned: false }],
+      },
+    ];
+    getChromeMock().chromeMock.tabs.query.mockResolvedValue([]);
+    getChromeMock().chromeMock.windows.getAll.mockResolvedValue([]);
+    getChromeMock().chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+    return storageData;
+  }
+
+  it('按会话名或条目标题 / URL 过滤，清空后恢复', async () => {
+    seedSessions();
+    render(<App />);
+    await userEvent.click(screen.getByText('已保存会话'));
+    await waitFor(() => expect(screen.getByText('Release')).toBeInTheDocument());
+
+    await userEvent.type(screen.getByRole('searchbox', { name: '搜索标签页' }), 'trip');
+
+    expect(screen.queryByText('Release')).not.toBeInTheDocument();
+    expect(screen.getByText('Trip')).toBeInTheDocument();
+
+    await userEvent.clear(screen.getByRole('searchbox', { name: '搜索标签页' }));
+    expect(screen.getByText('Release')).toBeInTheDocument();
+    expect(screen.getByText('Trip')).toBeInTheDocument();
   });
 });
 

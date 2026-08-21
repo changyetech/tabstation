@@ -8,6 +8,9 @@ export interface ToolbarProps {
   onMode: (m: Mode) => void;
   /** 去重待关数；0 = 无重复，按钮不渲染（设计稿规则） */
   dedupeCloseCount: number;
+  /** 主区搜索词；仅影响展示，不改变统计与去重范围 */
+  search: string;
+  onSearch: (search: string) => void;
   onDedupe: () => void;
   onDedupeHover: (hovering: boolean) => void;
 }
@@ -17,6 +20,8 @@ export default function Toolbar({
   mode,
   onMode,
   dedupeCloseCount,
+  search,
+  onSearch,
   onDedupe,
   onDedupeHover,
 }: ToolbarProps) {
@@ -42,7 +47,17 @@ export default function Toolbar({
             {t('toolbar.modeSessions')}
           </button>
         </div>
-        <span className="control-spacer" />
+        <div className="toolbar-search">
+          <Icon name="search" size={13} />
+          <input
+            type="search"
+            value={search}
+            aria-label={t('toolbar.search')}
+            placeholder={t('toolbar.search')}
+            spellCheck={false}
+            onChange={(e) => onSearch(e.target.value)}
+          />
+        </div>
         {/* 一键去重（spec §5.4）：仅有重复时出现；会话模式下不渲染；hover 预览、点击无确认执行 */}
         {mode !== 'sessions' && dedupeCloseCount > 0 && (
           <button

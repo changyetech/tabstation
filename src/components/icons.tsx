@@ -19,6 +19,7 @@ export type IconName =
   | 'winNew'
   | 'globe'
   | 'session'
+  | 'search'
   | 'sparkle'
   | 'check';
 
@@ -52,6 +53,12 @@ const STROKE_PATHS_20: Partial<Record<IconName, ReactElement>> = {
       <path d="M6.5 6.5v-2a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v7" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="9" cy="9" r="5.5" />
+      <path d="M13 13l4.5 4.5" />
+    </>
+  ),
   // 拆到新窗口：左窗 + 右侧新窗 + 箭头
   winNew: (
     <>
@@ -66,7 +73,7 @@ const STROKE_PATHS_20: Partial<Record<IconName, ReactElement>> = {
 };
 
 const STROKE_PATHS: Record<
-  Exclude<IconName, 'check' | 'logo' | 'win' | 'winNew' | 'globe' | 'session' | 'move'>,
+  Exclude<IconName, 'check' | 'logo' | 'win' | 'winNew' | 'globe' | 'session' | 'search' | 'move'>,
   ReactElement
 > = {
   bookClock: (

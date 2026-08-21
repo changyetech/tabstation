@@ -9,6 +9,8 @@ function renderToolbar(over: Partial<React.ComponentProps<typeof Toolbar>> = {})
     mode: 'window' as const,
     onMode: vi.fn(),
     dedupeCloseCount: 0,
+    search: '',
+    onSearch: vi.fn(),
     onDedupe: vi.fn(),
     onDedupeHover: vi.fn(),
     ...over,
@@ -42,6 +44,22 @@ describe('Toolbar', () => {
       const btn = screen.getByText(label).closest('button');
       expect(btn?.querySelector('svg')).toBeInTheDocument();
     }
+  });
+
+  it('搜索框位于三段按钮右侧、去重按钮左侧（toolbar-search spec）', () => {
+    renderToolbar({ dedupeCloseCount: 3 });
+
+    const controlBar = document.querySelector('.control-bar');
+    const search = screen.getByRole('searchbox', { name: '搜索标签页' }).closest('.toolbar-search');
+    const segGroup = document.querySelector('.seg-group');
+    const dedupe = screen.getByText(/一键去重/).closest('button');
+    if (!controlBar || !search || !segGroup || !dedupe) throw new Error('控制条元素未找到');
+    const children = [...controlBar.children];
+    const searchIndex = children.indexOf(search);
+
+    expect(searchIndex).toBeGreaterThan(children.indexOf(segGroup));
+    expect(searchIndex).toBeLessThan(children.indexOf(dedupe));
+    expect(document.querySelector('.control-spacer')).toBeNull();
   });
 
   it('第三段「已保存会话」→ onMode(sessions)（spec §3.1 2026-08-16 修订）', async () => {
