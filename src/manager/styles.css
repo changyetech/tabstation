@@ -1,11 +1,11 @@
-/* 管理页样式：结构与数值照搬 refs/design/tab-station-home.html（视觉契约） */
+/* 管理页样式：docs/specs/2026-11-13-visual-polish.md */
 @import '../styles/tokens.css';
 
 /* ========== Hero：大字问候 + 全局统计 ========== */
 .hero {
-  max-width: 1200px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 26px 20px 18px;
+  padding: 24px 24px 16px;
 }
 .hero-main {
   display: flex;
@@ -16,7 +16,7 @@
 }
 .hero-greet {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
   letter-spacing: 0; /* CJK 不加字距 */
   line-height: 1.35;
@@ -28,7 +28,7 @@
 }
 .stats {
   display: flex;
-  gap: 30px;
+  gap: 24px;
   flex-wrap: wrap;
 }
 .stat {
@@ -39,12 +39,12 @@
 .stat b {
   display: block;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 1.25;
 }
 .stat span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   letter-spacing: 0.01em;
 }
@@ -60,13 +60,13 @@
   border-bottom: 1px solid var(--border);
 }
 .control-bar {
-  max-width: 1200px;
+  max-width: 1360px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  padding: 9px 20px;
+  padding: 12px 24px;
 }
 .seg-group {
   display: flex;
@@ -79,16 +79,16 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--muted);
   white-space: nowrap;
   transition:
-    color 0.15s,
-    background 0.15s,
-    box-shadow 0.15s;
+    color var(--motion-fast),
+    background var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 .seg:hover {
   color: var(--fg);
@@ -103,7 +103,7 @@
 .toolbar-search {
   flex: 1;
   min-width: 180px;
-  height: 30px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -114,8 +114,8 @@
   color: var(--muted);
   box-shadow: var(--block-shadow);
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 .toolbar-search:focus-within {
   border-color: var(--accent);
@@ -128,7 +128,7 @@
   background: none;
   color: var(--fg);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 14px;
 }
 .toolbar-search input:focus {
   outline: none;
@@ -140,14 +140,14 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
   background: var(--accent-strong);
   color: var(--on-accent);
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 500;
   flex: none;
-  transition: background 0.15s;
+  transition: background var(--motion-fast);
 }
 .btn-dedupe:hover {
   background: var(--accent-hover);
@@ -156,7 +156,7 @@
   background: color-mix(in oklch, var(--on-accent) 22%, transparent);
   border-radius: 99px;
   padding: 0 7px;
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 18px;
 }
 .icon-btn {
@@ -168,8 +168,8 @@
   color: var(--muted);
   flex: none;
   transition:
-    background 0.15s,
-    color 0.15s;
+    background var(--motion-fast),
+    color var(--motion-fast);
 }
 .icon-btn:hover {
   background: var(--hover);
@@ -181,14 +181,14 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 20px;
-  max-width: 1200px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 14px 20px 24px;
+  padding: 16px 24px 24px;
   align-items: start;
 }
 aside {
   position: sticky;
-  top: 60px;
+  top: 84px;
 }
 /* 稍后阅读为空 → 侧栏不渲染，主区满宽；大屏多列瀑布，列数随主区宽度自适应 */
 .layout.no-aside {
@@ -196,7 +196,7 @@ aside {
 }
 .layout.no-aside .win-flow {
   columns: 480px 2; /* 窗口 / 会话卡片：最多 2 列，单列不足 480px 时塌回 1 列 */
-  column-gap: 14px;
+  column-gap: 16px;
 }
 .layout.no-aside .win-flow .win-block,
 .layout.no-aside .win-flow .new-win {
@@ -245,21 +245,7 @@ aside {
   }
 }
 .main.view-switch {
-  animation: viewIn 0.18s cubic-bezier(0.2, 0, 0, 1);
-}
-@keyframes actsIn {
-  from {
-    opacity: 0;
-    transform: translateX(4px);
-  }
-}
-.tab-row:hover .row-acts,
-.row-acts:focus-within,
-.rl-row:hover .rl-acts,
-.rl-acts:focus-within,
-.dom-sub:hover .dom-acts,
-.win-head:hover .dom-acts {
-  animation: actsIn 0.12s ease-out;
+  animation: viewIn var(--motion-normal) var(--ease-out);
 }
 .btn-dedupe:active,
 .icon-btn:active,
@@ -277,9 +263,9 @@ aside {
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--block-shadow);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow var(--motion-normal) ease;
 }
 .win-block.is-current {
   box-shadow:
@@ -289,7 +275,7 @@ aside {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -297,7 +283,7 @@ aside {
   }
 }
 .enter .win-block {
-  animation: fadeUp 0.35s ease both;
+  animation: fadeUp var(--motion-enter) var(--ease-out) both;
 }
 .enter .win-block:nth-child(2) {
   animation-delay: 0.05s;
@@ -306,14 +292,14 @@ aside {
   animation-delay: 0.1s;
 }
 .enter .win-block:nth-child(n + 4) {
-  animation-delay: 0.15s;
+  animation-delay: var(--motion-fast);
 }
 
 .win-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--head-grad);
   min-height: 44px;
@@ -332,7 +318,7 @@ aside {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--accent-strong);
   background: var(--accent-tint);
@@ -364,7 +350,7 @@ aside {
 }
 .win-meta {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .win-acts {
@@ -376,7 +362,7 @@ aside {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
   padding: 3px 10px;
@@ -384,9 +370,9 @@ aside {
   border-radius: 99px;
   white-space: nowrap;
   transition:
-    color 0.15s,
-    background 0.15s,
-    border-color 0.15s;
+    color var(--motion-fast),
+    background var(--motion-fast),
+    border-color var(--motion-fast);
 }
 .ghost-btn:hover {
   color: var(--fg);
@@ -398,7 +384,8 @@ aside {
   border-color: color-mix(in oklch, var(--danger) 35%, transparent);
 }
 .dom-strip {
-  height: 3px;
+  height: 2px;
+  opacity: 0.35;
 }
 .new-win {
   width: 100%;
@@ -411,12 +398,12 @@ aside {
   justify-content: center;
   gap: 7px;
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 500;
   transition:
-    color 0.15s,
-    border-color 0.15s,
-    background 0.15s;
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    background var(--motion-fast);
 }
 .new-win:hover {
   color: var(--fg);
@@ -426,13 +413,12 @@ aside {
 
 /* 全部模式 · 域名视图：大屏双列瀑布 */
 .dom-flow {
-  column-gap: 14px;
+  column-gap: 16px;
 }
-/* 域名卡片头固定 40px：悬停浮现的 .dom-acts（24px）在 8px 内边距下会撑到 41px，
-   多列瀑布随之重排、卡片跳位；收窄纵向内边距让悬停态仍落在 40px 内（内容垂直居中，静止态观感不变） */
+/* 批量操作常驻占位，长域名可截断，悬停不改变卡片高度。 */
 .dom-flow .win-head {
-  min-height: 40px;
-  padding-block: 7px;
+  min-height: 44px;
+  padding-block: 8px;
 }
 @media (min-width: 1160px) {
   .dom-flow {
@@ -450,7 +436,7 @@ aside {
   padding: 4px 0;
 }
 .tab-row {
-  transition: background 0.15s;
+  transition: background var(--motion-fast);
 }
 .tab-row:hover {
   background: var(--hover);
@@ -459,8 +445,8 @@ aside {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px 4px 14px;
-  min-height: 34px;
+  padding: 6px 12px 6px 16px;
+  min-height: 40px;
   cursor: pointer;
 }
 .drag-grip {
@@ -473,8 +459,8 @@ aside {
   opacity: 0;
   cursor: grab;
   transition:
-    opacity 0.15s,
-    color 0.15s;
+    opacity var(--motion-fast),
+    color var(--motion-fast);
 }
 .tab-row:hover .drag-grip {
   opacity: 0.65;
@@ -509,7 +495,7 @@ aside {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 8px 16px;
   max-width: 320px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -540,23 +526,23 @@ img.favicon {
   place-items: center;
 }
 .tab-title {
-  flex: 0 1 auto;
-  min-width: 60px;
-  font-size: 12.5px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .tab-host {
   flex: 0 1 auto;
-  max-width: 180px;
+  max-width: 140px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 两行样式（域名视图）：标题 + URL 子标题 */
+/* 两行样式（窗口/全部模式）：标题 + URL 子标题 */
 .tab-text {
   flex: 1;
   min-width: 0;
@@ -567,7 +553,7 @@ img.favicon {
 }
 .tab-url {
   display: block;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.5;
   overflow: hidden;
@@ -579,7 +565,7 @@ img.favicon {
 }
 .dup-badge {
   flex: none;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--warn);
   border: 1px solid color-mix(in oklch, var(--warn) 40%, transparent);
@@ -589,26 +575,42 @@ img.favicon {
 }
 .tab-time {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   flex: none;
 }
-/* 操作组：悬停原位替换时间展示，无覆盖层 */
+/* 时间与操作共用 grid 单元，按钮保持布局占位和键盘可达性。 */
+.row-tail {
+  display: grid;
+  align-items: center;
+  justify-items: end;
+  flex: none;
+}
+.row-tail > * {
+  grid-area: 1 / 1;
+}
+.tab-time,
+.rl-time {
+  pointer-events: none; /* 透明时间层不能截获同一 grid 单元内的按钮点击。 */
+  transition: opacity var(--motion-fast);
+}
 .row-acts {
-  display: none;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast);
   align-items: center;
   gap: 2px;
   flex: none;
 }
 .tab-row:hover .row-acts,
-.row-acts:focus-within {
-  display: flex;
+.tab-row:focus-within .row-acts {
+  opacity: 1;
+  pointer-events: auto;
 }
-.tab-row:hover .tab-time {
-  display: none;
-}
-.tab-row:has(.row-acts:focus-within) .tab-time {
-  display: none;
+.tab-row:hover .tab-time,
+.tab-row:focus-within .tab-time {
+  opacity: 0;
 }
 .row-acts .icon-btn {
   width: 26px;
@@ -626,13 +628,17 @@ img.favicon {
 /* 域名行操作组：悬停浮现，批量作用于该域名 */
 .dom-acts {
   margin-left: auto;
-  display: none;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast);
   align-items: center;
   gap: 2px;
 }
 .win-head:hover .dom-acts,
-.dom-acts:focus-within {
-  display: flex;
+.win-head:focus-within .dom-acts {
+  opacity: 1;
+  pointer-events: auto;
 }
 .dom-acts .icon-btn {
   width: 24px;
@@ -655,12 +661,12 @@ img.favicon {
   display: block;
   width: 100%;
   text-align: center;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--muted);
   padding: 5px 12px;
   transition:
-    color 0.15s,
-    background 0.15s;
+    color var(--motion-fast),
+    background var(--motion-fast);
 }
 .more-btn:hover {
   color: var(--fg);
@@ -682,16 +688,16 @@ img.favicon {
 /* 关闭退场（exit.ts 加 .closing） */
 .closing {
   opacity: 0 !important;
-  transform: translateX(24px) scale(0.97);
+  transform: translateX(8px) scale(0.99);
   transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
+    opacity var(--motion-normal) ease,
+    transform var(--motion-normal) ease;
   pointer-events: none;
 }
 .empty-all {
   text-align: center;
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: 14px;
   padding: 48px 0 20px;
 }
 .empty-all .icon {
@@ -710,14 +716,14 @@ img.favicon {
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--block-shadow);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   overflow: hidden;
 }
 .panel-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 14px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--head-grad);
 }
@@ -740,15 +746,15 @@ img.favicon {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
   padding: 2px 9px;
   border: 1px solid var(--border);
   border-radius: 99px;
   transition:
-    color 0.15s,
-    background 0.15s;
+    color var(--motion-fast),
+    background var(--motion-fast);
 }
 .panel-act:hover {
   color: var(--fg);
@@ -763,8 +769,8 @@ img.favicon {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 6px 14px;
-  transition: background 0.15s;
+  padding: 8px 16px;
+  transition: background var(--motion-fast);
   cursor: pointer;
 }
 .rl-row:hover {
@@ -778,7 +784,7 @@ img.favicon {
   display: block;
   max-width: 100%;
   text-align: left;
-  font-size: 12.5px;
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -789,7 +795,7 @@ img.favicon {
 }
 .rl-url {
   display: block;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.5;
   overflow: hidden;
@@ -798,24 +804,26 @@ img.favicon {
 }
 .rl-time {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   flex: none;
 }
 .rl-acts {
-  display: none;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast);
   align-items: center;
   gap: 2px;
   flex: none;
 }
 .rl-row:hover .rl-acts,
-.rl-acts:focus-within {
-  display: flex;
+.rl-row:focus-within .rl-acts {
+  opacity: 1;
+  pointer-events: auto;
 }
-.rl-row:hover .rl-time {
-  display: none;
-}
-.rl-row:has(.rl-acts:focus-within) .rl-time {
-  display: none;
+.rl-row:hover .rl-time,
+.rl-row:focus-within .rl-time {
+  opacity: 0;
 }
 .rl-acts .icon-btn {
   width: 24px;
@@ -845,7 +853,7 @@ img.favicon {
   flex: 1;
   min-width: 0;
   border: 1px solid var(--accent);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 2px 6px;
   background: var(--surface);
   color: var(--fg);
@@ -864,7 +872,7 @@ img.favicon {
 }
 .popover-label {
   padding: 5px 10px 3px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .popover button {
@@ -875,15 +883,15 @@ img.favicon {
   text-align: left;
   padding: 6px 10px;
   border-radius: 7px;
-  font-size: 12.5px;
-  transition: background 0.12s;
+  font-size: 14px;
+  transition: background var(--motion-fast);
 }
 .popover button:hover {
   background: var(--hover);
 }
 .popover button .sub {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 12px;
   margin-left: auto;
 }
 
@@ -897,7 +905,7 @@ img.favicon {
   color: var(--bg);
   padding: 8px 16px;
   border-radius: 10px;
-  font-size: 12.5px;
+  font-size: 14px;
   z-index: 2000;
 }
 
@@ -906,13 +914,72 @@ img.favicon {
   .row-acts,
   .rl-acts,
   .dom-acts {
-    display: flex;
+    opacity: 1;
+    pointer-events: auto;
   }
   .tab-time,
   .rl-time {
-    display: none;
+    visibility: hidden;
   }
   .drag-grip {
     opacity: 0.65;
+  }
+}
+
+.dom-flow .win-title {
+  flex: 1;
+  min-width: 0;
+}
+.dom-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.win-head .win-meta {
+  flex: none;
+}
+.tab-row:focus-within,
+.rl-row:focus-within {
+  background: var(--hover);
+}
+.tab-row:focus-within .drag-grip {
+  opacity: 0.65;
+}
+.tab-row.drop-target {
+  background: var(--accent-tint);
+}
+@media (max-width: 720px) {
+  .hero,
+  .control-bar,
+  .layout {
+    padding-inline: 16px;
+  }
+  .toolbar-search {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .control-bar {
+    gap: 8px;
+  }
+  .seg {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+  .btn-dedupe {
+    margin-left: auto;
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+  .stats {
+    gap: 16px;
+  }
+  .win-head {
+    gap: 8px;
+  }
+  .win-acts {
+    flex-wrap: wrap;
+  }
+  .dom-flow .win-head {
+    flex-wrap: nowrap;
   }
 }

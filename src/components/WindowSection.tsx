@@ -121,6 +121,7 @@ export default function WindowSection(props: WindowSectionProps) {
             <TabRow
               key={tab.id}
               tab={tab}
+              subUrl
               dupCount={props.dupCountByTabId.get(tab.id)}
               dupPreview={previewByTabId.get(tab.id)}
               draggable={draggable}

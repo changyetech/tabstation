@@ -62,28 +62,30 @@ export default function ReadLaterSidebar({
               </button>
               <span className="rl-url">{item.url.replace(/^https?:\/\//, '')}</span>
             </span>
-            <span className="rl-time num">{timeText(item.savedAt)}</span>
-            <span className="rl-acts">
-              <button
-                className="icon-btn"
-                title={t('readLater.newWindow')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenNewWindow(item);
-                }}
-              >
-                <Icon name="winNew" size={13} />
-              </button>
-              <button
-                className="icon-btn danger"
-                title={t('readLater.delete')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(item, e.currentTarget.closest('li'));
-                }}
-              >
-                <Icon name="close" size={13} />
-              </button>
+            <span className="row-tail">
+              <span className="rl-time num">{timeText(item.savedAt)}</span>
+              <span className="rl-acts">
+                <button
+                  className="icon-btn"
+                  title={t('readLater.newWindow')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenNewWindow(item);
+                  }}
+                >
+                  <Icon name="winNew" size={13} />
+                </button>
+                <button
+                  className="icon-btn danger"
+                  title={t('readLater.delete')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(item, e.currentTarget.closest('li'));
+                  }}
+                >
+                  <Icon name="close" size={13} />
+                </button>
+              </span>
             </span>
           </li>
         ))}

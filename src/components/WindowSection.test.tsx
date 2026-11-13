@@ -4,6 +4,7 @@ import { DndContext } from '@dnd-kit/core';
 import { describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../i18n';
 import { makeTab, makeWindow } from '../test/factories';
+import { getChromeMock } from '../test/chrome-mock';
 import WindowSection from './WindowSection';
 
 const noop = () => undefined;
@@ -57,6 +58,41 @@ describe('WindowSection', () => {
     expect(screen.getByText('Active Doc')).toBeInTheDocument();
     expect(screen.getByText('Other')).toBeInTheDocument();
   });
+  // spec: 2026-11-13-visual-polish「窗口模式显示完整 URL 信息」
+  it.each([
+    [
+      'https://github.com/changyetech/tabstation/pulls?state=open#review',
+      'github.com/changyetech/tabstation/pulls?state=open#review',
+    ],
+    ['http://localhost:3000/docs?lang=zh#intro', 'localhost:3000/docs?lang=zh#intro'],
+    ['chrome://extensions/', 'chrome://extensions/'],
+    ['file:///Users/kang/Documents/notes.pdf', 'file:///Users/kang/Documents/notes.pdf'],
+  ])('窗口行保留 URL 路径和参数，悬停显示完整地址：%s', (url, displayUrl) => {
+    renderSection({}, [makeTab({ id: 1, title: 'Project Page', url, pinned: true })]);
+
+    expect(screen.getByText('Project Page')).toBeInTheDocument();
+    expect(screen.getByText(displayUrl)).toHaveAttribute('title', url);
+    expect(screen.getByTitle('固定标签')).toBeInTheDocument();
+    expect(document.querySelector('.tab-line .favicon')).toBeInTheDocument();
+  });
+
+  it('窗口行 URL 缺失时仍显示标题，不生成空 URL 提示', () => {
+    renderSection({}, [makeTab({ id: 1, title: 'No URL', url: undefined })]);
+
+    expect(screen.getByText('No URL')).toBeInTheDocument();
+    expect(document.querySelector('.tab-url')).not.toBeInTheDocument();
+  });
+
+  it('点击窗口行 URL 仍聚焦窗口并激活标签', async () => {
+    const { chromeMock } = getChromeMock();
+    renderSection({}, [makeTab({ id: 5, windowId: 1, url: 'https://example.com/docs/path' })]);
+
+    await userEvent.click(screen.getByText('example.com/docs/path'));
+
+    expect(chromeMock.windows.update).toHaveBeenCalledWith(1, { focused: true });
+    expect(chromeMock.tabs.update).toHaveBeenCalledWith(5, { active: true });
+  });
+
   it('固定数出现在 meta（N 固定）', () => {
     renderSection({}, [
       makeTab({ id: 1, title: 'P', pinned: true, index: 0 }),

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import Toast from '../components/Toast';
 import { CopyrightFooter } from '../components/CopyrightFooter';
 import { Icon } from '../components/icons';
 import { I18nProvider, resolveLanguage, useT } from '../i18n';
@@ -56,17 +55,20 @@ function SettingsPage({
   const t = useT();
   useTheme(settings.theme);
 
-  // 所有改动即时保存并生效（设计稿产品承诺），每次落盘弹 toast
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<number | undefined>(undefined);
-  const showToast = (msg: string) => {
-    window.clearTimeout(toastTimer.current);
-    setToast(msg);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2200);
-  };
-  const save = (patch: Partial<Settings>, msg = t('settings.saved')) => {
+  // 反馈就近显示，只保留最近一次修改；存 key 以跟随语言即时切换。
+  const [feedback, setFeedback] = useState<{
+    group: 'appearance' | 'behavior' | 'language';
+    messageKey: string;
+  } | null>(null);
+  const feedbackTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(feedbackTimer.current), []);
+
+  const save = (patch: Partial<Settings>, messageKey = 'settings.saved') => {
     setSettings({ ...settings, ...patch });
-    showToast(msg);
+    window.clearTimeout(feedbackTimer.current);
+    const group = 'theme' in patch ? 'appearance' : 'language' in patch ? 'language' : 'behavior';
+    setFeedback({ group, messageKey });
+    feedbackTimer.current = window.setTimeout(() => setFeedback(null), 2200);
   };
 
   // 左侧锚点导航：点击高亮
@@ -128,6 +130,9 @@ function SettingsPage({
           <section className="group" id="appearance">
             <div className="group-head">
               <h2>{t('settings.navAppearance')}</h2>
+              <span className="save-feedback" role="status" aria-atomic="true">
+                {feedback?.group === 'appearance' ? t(feedback.messageKey) : null}
+              </span>
               <p>{t('settings.appearanceDesc')}</p>
             </div>
             <div className="group-card">
@@ -137,7 +142,7 @@ function SettingsPage({
                     key={kind}
                     className="theme-option"
                     aria-pressed={settings.theme === kind}
-                    onClick={() => save({ theme: kind }, t('settings.themeSaved'))}
+                    onClick={() => save({ theme: kind }, 'settings.themeSaved')}
                   >
                     <span className="theme-check">
                       <Icon name="check" size={8} />
@@ -160,6 +165,9 @@ function SettingsPage({
           <section className="group" id="behavior">
             <div className="group-head">
               <h2>{t('settings.navBehavior')}</h2>
+              <span className="save-feedback" role="status" aria-atomic="true">
+                {feedback?.group === 'behavior' ? t(feedback.messageKey) : null}
+              </span>
             </div>
             <div className="group-card">
               <div className="setting-row">
@@ -274,6 +282,9 @@ function SettingsPage({
           <section className="group" id="language">
             <div className="group-head">
               <h2>{t('settings.navLanguage')}</h2>
+              <span className="save-feedback" role="status" aria-atomic="true">
+                {feedback?.group === 'language' ? t(feedback.messageKey) : null}
+              </span>
             </div>
             <div className="group-card">
               <div className="setting-row">
@@ -349,7 +360,6 @@ function SettingsPage({
       </div>
 
       <CopyrightFooter />
-      <Toast message={toast} />
     </>
   );
 }

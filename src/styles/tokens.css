@@ -1,12 +1,16 @@
-/* ========== 设计令牌：modern-minimal（源 refs/design/brand-spec.md）========== */
-/* 管理页与设置页共享；值逐字取自设计稿，不得改动、不得在组件层引入新色 */
+/* 两页共享设计令牌；本轮视觉依据：docs/specs/2026-11-13-visual-polish.md */
 
 :root {
-  --bg: oklch(99% 0.002 240);
+  color-scheme: light;
+  --motion-fast: 140ms;
+  --motion-normal: 200ms;
+  --motion-enter: 240ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --bg: oklch(97.5% 0.004 250);
   --surface: oklch(100% 0 0);
   --fg: oklch(18% 0.012 250);
-  --muted: oklch(54% 0.012 250);
-  --border: oklch(92% 0.005 250);
+  --muted: oklch(49% 0.012 250);
+  --border: oklch(89% 0.006 250);
   --accent: oklch(58% 0.18 255);
 
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
@@ -35,10 +39,11 @@
 
 /* 深色：非纯黑基底 + 半透明白边框，成对重定义 */
 html[data-theme='dark'] {
-  --bg: oklch(17% 0.008 250);
-  --surface: oklch(21% 0.01 250);
+  color-scheme: dark;
+  --bg: oklch(18% 0.008 250);
+  --surface: oklch(23% 0.01 250);
   --fg: oklch(93% 0.005 250);
-  --muted: oklch(66% 0.01 250);
+  --muted: oklch(72% 0.01 250);
   --border: oklch(100% 0 0 / 0.09);
   --accent: oklch(70% 0.15 255);
 
@@ -46,7 +51,7 @@ html[data-theme='dark'] {
   --accent-hover: oklch(77% 0.12 255);
   --on-accent: oklch(16% 0.02 255);
   --accent-tint: oklch(28% 0.05 255);
-  --hover: oklch(26% 0.012 250);
+  --hover: oklch(29% 0.012 250);
   --seg-bg: oklch(25% 0.01 250);
   --success: oklch(76% 0.12 155);
   --success-tint: oklch(27% 0.04 155);
@@ -71,12 +76,12 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.7; /* CJK 正文行高下限 */
   -webkit-font-smoothing: antialiased;
   transition:
-    background 0.25s ease,
-    color 0.25s ease;
+    background var(--motion-normal) ease,
+    color var(--motion-normal) ease;
 }
 button {
   font: inherit;
@@ -103,6 +108,9 @@ a {
   *,
   *::before,
   *::after {
+    --motion-fast: 0.01ms;
+    --motion-normal: 0.01ms;
+    --motion-enter: 0.01ms;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

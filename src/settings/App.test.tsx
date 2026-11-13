@@ -1,11 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getChromeMock } from '../test/chrome-mock';
 import App from './App';
 
 afterEach(() => {
   delete document.documentElement.dataset.theme;
+  vi.useRealTimers();
 });
 
 describe('设置页', () => {
@@ -30,7 +31,7 @@ describe('设置页', () => {
     expect(screen.getAllByText(/Hangzhou Changye Network Technology Co\., Ltd\./)).toHaveLength(1);
   });
 
-  it('主题卡片：点击深色 → 落盘 + data-theme 切换 + toast', async () => {
+  it('主题卡片：点击深色 → 落盘 + data-theme 切换 + 分组反馈', async () => {
     const { storageData } = getChromeMock();
     render(<App />);
     await userEvent.click(screen.getByText('深色'));
@@ -39,7 +40,7 @@ describe('设置页', () => {
     expect(screen.getByText('主题已切换')).toBeInTheDocument();
   });
 
-  it('保存会话后关闭窗口：开关落盘并弹保存 toast', async () => {
+  it('保存会话后关闭窗口：开关落盘并显示保存反馈', async () => {
     const { storageData } = getChromeMock();
     render(<App />);
     await userEvent.click(screen.getByRole('checkbox'));
@@ -49,6 +50,37 @@ describe('设置页', () => {
       ),
     );
     expect(screen.getByText('已保存，即时生效')).toBeInTheDocument();
+  });
+
+  it('保存反馈位于对应分组，连续修改只保留最新分组的提示', async () => {
+    render(<App />);
+    const appearance = screen.getByRole('heading', { name: '外观' }).closest('section')!;
+    const behavior = screen.getByRole('heading', { name: '行为' }).closest('section')!;
+    await userEvent.click(screen.getByText('深色'));
+    expect(within(appearance).getByRole('status')).toHaveTextContent('主题已切换');
+    await userEvent.click(screen.getByRole('checkbox'));
+    expect(within(appearance).getByRole('status')).toBeEmptyDOMElement();
+    expect(within(behavior).getByRole('status')).toHaveTextContent('已保存，即时生效');
+  });
+
+  it('语言切换后的保存反馈同步使用当前语言', async () => {
+    render(<App />);
+    await userEvent.selectOptions(screen.getByLabelText('界面语言'), 'en');
+    const language = screen.getByRole('heading', { name: 'Language' }).closest('section')!;
+    expect(within(language).getByRole('status')).toHaveTextContent('Saved');
+  });
+
+  it('连续保存重置提示时限，2.2 秒后清空', async () => {
+    vi.useFakeTimers();
+    render(<App />);
+    fireEvent.click(screen.getByText('深色'));
+    expect(screen.getAllByRole('status').some((el) => el.closest('#appearance'))).toBe(true);
+    await act(() => vi.advanceTimersByTimeAsync(1500));
+    fireEvent.click(screen.getByText('浅色'));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByText('主题已切换')).toBeInTheDocument();
+    await act(() => vi.advanceTimersByTimeAsync(1200));
+    expect(screen.queryByText('主题已切换')).not.toBeInTheDocument();
   });
 
   it('展示条数：选 16 落盘为数字，选全部落盘为 all', async () => {

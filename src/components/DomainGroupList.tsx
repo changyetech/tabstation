@@ -144,7 +144,7 @@ export default function DomainGroupList(props: DomainGroupListProps) {
             <div className="win-head">
               <span className="win-title">
                 {headFavicon(g.tabs, g.key)}
-                {label(g.key)}
+                <span className="dom-name">{label(g.key)}</span>
               </span>
               <span className="win-meta num">{t('window.tabCount', { n: g.tabs.length })}</span>
               <DomainActs

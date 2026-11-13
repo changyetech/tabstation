@@ -14,7 +14,7 @@ export interface TabRowProps {
   dupCount?: number;
   dupPreview?: 'keep' | 'close';
   draggable: boolean;
-  /** 两行样式（域名视图）：标题 + URL 子标题，隐藏域名列 */
+  /** 两行样式（窗口/全部模式）：标题 + URL 子标题，隐藏域名列 */
   subUrl?: boolean;
   /** 不显示行内 favicon（域名视图：图标仅在域名头，spec §5.1） */
   noFav?: boolean;
@@ -122,7 +122,11 @@ export default function TabRow({
         {subUrl ? (
           <span className="tab-text">
             <span className="tab-title">{tab.title}</span>
-            <span className="tab-url">{(tab.url ?? '').replace(/^https?:\/\//, '')}</span>
+            {tab.url && (
+              <span className="tab-url" title={tab.url}>
+                {tab.url.replace(/^https?:\/\//i, '')}
+              </span>
+            )}
           </span>
         ) : (
           <>
@@ -134,46 +138,48 @@ export default function TabRow({
         {dupCount !== undefined && (
           <span className="dup-badge num">{t('dup.badge', { n: dupCount })}</span>
         )}
-        <span className="tab-time num">{timeText}</span>
-        <span className="row-acts">
-          {/* 稍后阅读仅 http(s)、非 pinned（沿用旧 spec §5.4） */}
-          {onReadLater && !tab.pinned && /^https?:\/\//.test(tab.url ?? '') && (
+        <span className="row-tail">
+          <span className="tab-time num">{timeText}</span>
+          <span className="row-acts">
+            {/* 稍后阅读仅 http(s)、非 pinned（沿用旧 spec §5.4） */}
+            {onReadLater && !tab.pinned && /^https?:\/\//.test(tab.url ?? '') && (
+              <button
+                className="icon-btn"
+                title={t('tab.readLater')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReadLater(tab);
+                }}
+              >
+                <Icon name="bookAdd" size={13} />
+              </button>
+            )}
+            {onSplit && !tab.pinned && (
+              <button
+                className="icon-btn"
+                title={t('tab.split')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSplit(tab);
+                }}
+              >
+                <Icon name="winNew" size={13} />
+              </button>
+            )}
+            {moveTargets.length > 0 && onMove && (
+              <MoveMenu targets={moveTargets} onPick={(target) => onMove(tab, target)} />
+            )}
             <button
-              className="icon-btn"
-              title={t('tab.readLater')}
+              className="icon-btn danger"
+              title={t('tab.close')}
               onClick={(e) => {
                 e.stopPropagation();
-                onReadLater(tab);
+                onClose(tab);
               }}
             >
-              <Icon name="bookAdd" size={13} />
+              <Icon name="close" size={13} />
             </button>
-          )}
-          {onSplit && !tab.pinned && (
-            <button
-              className="icon-btn"
-              title={t('tab.split')}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSplit(tab);
-              }}
-            >
-              <Icon name="winNew" size={13} />
-            </button>
-          )}
-          {moveTargets.length > 0 && onMove && (
-            <MoveMenu targets={moveTargets} onPick={(target) => onMove(tab, target)} />
-          )}
-          <button
-            className="icon-btn danger"
-            title={t('tab.close')}
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose(tab);
-            }}
-          >
-            <Icon name="close" size={13} />
-          </button>
+          </span>
         </span>
       </div>
     </li>
