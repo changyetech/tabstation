@@ -15,17 +15,16 @@ describe('Icon', () => {
     const { container } = render(<Icon name="check" />);
     expect(container.querySelector('svg')).toHaveAttribute('stroke-width', '3.4');
   });
-  it('logo 是实心品牌 mark、128 网格；>16px 带 favicon 孔', () => {
-    const { container } = render(<Icon name="logo" size={22} />);
+  it.each([15, 16, 22])('logo 在 %ipx 保持实心品牌 mark、128 网格', (size) => {
+    const { container } = render(<Icon name="logo" size={size} />);
     const svg = container.querySelector('svg');
     expect(svg).toHaveAttribute('fill', 'currentColor');
     expect(svg).toHaveAttribute('viewBox', '0 0 128 128');
     expect(svg).not.toHaveAttribute('stroke');
-    expect(container.querySelector('path')?.getAttribute('d')).toContain('a7 7');
-  });
-  it('logo ≤16px 用去孔简化版', () => {
-    const { container } = render(<Icon name="logo" size={15} />);
-    expect(container.querySelector('path')?.getAttribute('d')).not.toContain('a7 7');
+    expect(svg).toHaveAttribute('width', String(size));
+    expect(svg).toHaveAttribute('height', String(size));
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg?.childElementCount).toBeGreaterThan(0);
   });
   it('20 视窗图标族（设计系统稿「图标」区块）：1.7 描边、20 viewBox', () => {
     for (const name of ['win', 'winNew', 'move', 'globe', 'session'] as const) {

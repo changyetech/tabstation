@@ -1,7 +1,7 @@
 # 品牌 Logo 落地（Brand Logo）
 
 - 日期：2026-08-16
-- 状态：已实现
+- 状态：历史快照；已由 [2026-11-14 标签成 T](2026-11-14-brand-logo.md) 替代
 - 依据：`design/brand-spec.md`（品牌规格）、`design/tab-station-logo.html`（Logo 提案）
 - 范围：`public/icons/*.png`、`src/components/icons.tsx`（`logo` 图标）及测试
 

@@ -100,7 +100,7 @@ function SettingsPage({
       <header className="topbar">
         <span className="brand">
           <span className="brand-mark">
-            <Icon name="logo" size={15} />
+            <Icon name="logo" size={26} />
           </span>
           <span className="brand-name">Tab Station</span>
           <span className="brand-ver num">v{version}</span>
@@ -347,7 +347,7 @@ function SettingsPage({
             <div className="group-card">
               <div className="about-row">
                 <span className="about-mark">
-                  <Icon name="logo" size={22} />
+                  <Icon name="logo" size={40} />
                 </span>
                 <span>
                   <span className="about-name">{t('settings.aboutName')}</span>

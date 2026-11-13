@@ -23,13 +23,6 @@ export type IconName =
   | 'sparkle'
   | 'check';
 
-// 品牌 mark：带 favicon 圆孔的标签落在站台杆上（⊥ / T 双关），路径取自 design/brand-spec.md
-// 实心填充、128 网格，不走描边体系；≤16px 用去孔简化版（规范唯一允许的图形改动）
-const LOGO_MARK_PATH =
-  'M57 32h14a10 10 0 0 1 10 10v42h15a6 6 0 0 1 0 12H32a6 6 0 0 1 0-12h15V42a10 10 0 0 1 10-10Zm7 13a7 7 0 1 0 0 14 7 7 0 1 0 0-14Z';
-const LOGO_MARK_PATH_16 =
-  'M55 28h18a10 10 0 0 1 10 10v40h13a8 8 0 0 1 0 16H32a8 8 0 0 1 0-16h13V38a10 10 0 0 1 10-10Z';
-
 // 20 视窗图标族：路径逐字取自 design/tab-station-design-system.html「图标」区块
 const STROKE_PATHS_20: Partial<Record<IconName, ReactElement>> = {
   // 窗口模式：窗口框 + 工具条线 + 标签分隔
@@ -114,7 +107,10 @@ export function Icon({ name, size = 16 }: { name: IconName; size?: number }) {
   if (name === 'logo') {
     return (
       <svg width={size} height={size} viewBox="0 0 128 128" fill="currentColor" aria-hidden="true">
-        <path fillRule="evenodd" d={size <= 16 ? LOGO_MARK_PATH_16 : LOGO_MARK_PATH} />
+        {/* 标签成 T：各尺寸共用同一几何，见 design/brand-spec.md。 */}
+        <rect x="24" y="30" width="22" height="28" rx="6" />
+        <rect x="53" y="30" width="22" height="68" rx="6" />
+        <rect x="82" y="30" width="22" height="28" rx="6" />
       </svg>
     );
   }

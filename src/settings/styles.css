@@ -24,9 +24,9 @@
 .brand-mark {
   width: 26px;
   height: 26px;
-  border-radius: 7px;
-  background: var(--fg);
-  color: var(--bg);
+  border-radius: 22%;
+  background: var(--brand);
+  color: var(--on-brand);
   display: grid;
   place-items: center;
   flex: none;
@@ -396,9 +396,9 @@ kbd {
 .about-mark {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
-  background: var(--fg);
-  color: var(--bg);
+  border-radius: 22%;
+  background: var(--brand);
+  color: var(--on-brand);
   display: grid;
   place-items: center;
   flex: none;

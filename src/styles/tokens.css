@@ -12,6 +12,9 @@
   --muted: oklch(49% 0.012 250);
   --border: oklch(89% 0.006 250);
   --accent: oklch(58% 0.18 255);
+  /* Logo 品牌色独立于交互色，浅深主题保持一致。 */
+  --brand: #ed693c;
+  --on-brand: #fff7e8;
 
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
