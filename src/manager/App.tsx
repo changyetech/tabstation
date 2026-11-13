@@ -140,7 +140,7 @@ function AppInner({ settings }: { settings: Settings }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  // 隐身范围 = 本扩展全部页面（管理页 + 设置页 + 新标签页），前缀过滤（spec §3.2）
+  // 隐身范围 = 本扩展全部页面（管理页 + 设置页），前缀过滤（spec §3.2）
   const extBase = ownPagePrefix();
   const visible = useMemo(() => visibleTabs(tabs, extBase), [tabs, extBase]);
   const searchVisible = useMemo(
@@ -271,7 +271,7 @@ function AppInner({ settings }: { settings: Settings }) {
   // 关闭窗口：区块级一次动效；管理页所在窗口只关其他 tab、保留管理页
   const closeWindow = (win: chrome.windows.Window, sectionEl: HTMLElement | null) => {
     const winVisible = tabsOfWindow(win.id);
-    // 自有页面不被关闭类操作波及：窗口含任一自有页面（管理页/设置页/新标签页）时只关其余 tab
+    // 自有页面不被关闭类操作波及：窗口含任一自有页面（管理页/设置页）时只关其余 tab
     const containsOwnPage = tabs.some((x) => x.windowId === win.id && x.url?.startsWith(extBase));
     playCloseSound();
     if (sectionEl) {

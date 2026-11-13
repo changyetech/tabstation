@@ -70,7 +70,7 @@ describe('safeOpenManager', () => {
 });
 
 describe('omnibox', () => {
-  it('建议中排除自有页面（管理页与新标签页）', async () => {
+  it('建议中排除自有页面（管理页与设置页）', async () => {
     const { chromeMock } = getChromeMock();
     chromeMock.tabs.query.mockResolvedValue([
       makeTab({ id: 1, title: 'x 普通页' }),
@@ -81,8 +81,8 @@ describe('omnibox', () => {
       }),
       makeTab({
         id: 3,
-        url: 'chrome-extension://test-id/src/newtab/index.html',
-        title: 'x 新标签页',
+        url: 'chrome-extension://test-id/src/settings/index.html',
+        title: 'x 设置页',
       }),
     ]);
     const suggest = vi.fn();

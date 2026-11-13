@@ -258,11 +258,11 @@ describe('App', () => {
     expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
   });
 
-  it('关闭窗口·窗口含新标签页：只关其余 tab，窗口存活', async () => {
+  it('关闭窗口·窗口含设置页：只关其余 tab，窗口存活', async () => {
     const { chromeMock } = getChromeMock();
     seedTwoWindows();
     seedWindowView();
-    // 窗口 2 原本不含任何自有页面（会整窗关闭），追加一个新标签页 tab 后应改为存活
+    // 窗口 2 原本不含任何自有页面（会整窗关闭），追加一个设置页 tab 后应改为存活
     chromeMock.tabs.query.mockResolvedValue([
       makeTab({ id: 1, windowId: 1, index: 0, title: 'A1', url: 'https://a.com/', active: true }),
       makeTab({ id: 2, windowId: 1, index: 1, title: 'Manager', url: MANAGER }),
@@ -271,7 +271,7 @@ describe('App', () => {
         id: 99,
         windowId: 2,
         index: 1,
-        url: 'chrome-extension://test-id/src/newtab/index.html',
+        url: 'chrome-extension://test-id/src/settings/index.html',
       }),
     ]);
     render(<App />);

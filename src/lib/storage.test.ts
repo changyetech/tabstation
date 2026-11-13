@@ -77,10 +77,10 @@ describe('snapshotWindow', () => {
     expect(snapshotWindow([makeTab({ url: 'chrome://history/' })], MANAGER)).toEqual([]);
   });
 
-  it('结果不含新标签页 URL（自有页面前缀过滤）', () => {
+  it('结果不含设置页 URL（自有页面前缀过滤）', () => {
     const EXT_BASE = 'chrome-extension://test-id/';
     const tabs = [
-      makeTab({ url: EXT_BASE + 'src/newtab/index.html' }),
+      makeTab({ url: EXT_BASE + 'src/settings/index.html' }),
       makeTab({ url: 'https://a.com/', title: 'A' }),
     ];
     expect(snapshotWindow(tabs, EXT_BASE)).toEqual([

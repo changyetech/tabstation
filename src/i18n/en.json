@@ -86,7 +86,7 @@
   "settings.closeWindowAfterSave": "Close window after saving a session",
   "settings.closeAfterSaveDesc": "After a window snapshot is saved, close all tabs of that window.",
   "settings.defaultView": "Default view",
-  "settings.defaultViewDesc": "The view the manager page and new tab page open in; switching segments on the page is unaffected.",
+  "settings.defaultViewDesc": "The view the manager page opens in; switching segments on the page is unaffected.",
   "settings.newWindowMode": "Default new-window behavior",
   "settings.newWindowModeDesc": "Window size for every action that opens a new window (split, restore session, read later, etc.).",
   "settings.nwMax": "Full screen",

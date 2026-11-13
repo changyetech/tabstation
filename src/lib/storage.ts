@@ -31,7 +31,7 @@ export interface Settings {
   theme: 'light' | 'dark' | 'auto';
   newWindowMode: 'max' | 'same';
   visibleTabs: 8 | 12 | 16 | 'all';
-  /** 管理页/新标签页打开时进入的视图 */
+  /** 管理页打开时进入的视图 */
   defaultView: 'all' | 'window';
 }
 
