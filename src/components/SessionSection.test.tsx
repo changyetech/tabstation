@@ -107,16 +107,54 @@ describe('SessionSection 条目操作', () => {
   });
 });
 
-describe('SessionSection 条目行对齐 by windows（spec 2026-08-16-session-card-dnd §2）', () => {
-  it('行为 tab-row 结构：grip 把手、域名列，无时间列、无 URL 子标题', () => {
+describe('SessionSection 条目行对齐窗口模式（spec 2026-11-13-visual-polish）', () => {
+  it('保留拖拽把手，标题与 URL 分两行，无独立域名列和时间列', () => {
     const { view } = renderSection();
     const row = view.container.querySelector('.session-block .tab-row');
     expect(row).toBeInTheDocument();
     expect(row!.querySelector('.drag-grip')).toBeInTheDocument();
-    expect(row!.querySelector('.tab-host')!.textContent).toBe('a.com');
+    expect(row!.querySelector('.tab-text .tab-title')).toHaveTextContent('A');
+    expect(row!.querySelector('.tab-text .tab-url')).toHaveTextContent('a.com/');
+    expect(row!.querySelector('.tab-host')).not.toBeInTheDocument();
     expect(row!.querySelector('.tab-time')).not.toBeInTheDocument();
     expect(view.container.querySelector('.rl-url')).not.toBeInTheDocument();
     expect(view.container.querySelector('.session-tab-row')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      'https://example.com/docs/guide?source=saved&lang=zh#details',
+      'example.com/docs/guide?source=saved&lang=zh#details',
+    ],
+    [
+      'http://example.com/a%20b?q=hello%20world#section',
+      'example.com/a%20b?q=hello%20world#section',
+    ],
+    ['chrome://extensions/?id=test#details', 'chrome://extensions/?id=test#details'],
+    [
+      'file:///Users/test/Documents/guide.html#intro',
+      'file:///Users/test/Documents/guide.html#intro',
+    ],
+  ])('展示完整地址 %s，悬停和点击使用原始 URL', async (url, text) => {
+    const tab = { url, title: '已保存页面' };
+    const { props } = renderSection({ sessions: [{ ...sessions[0], tabs: [tab] }] });
+
+    const subtitle = screen.getByTitle(url);
+    expect(subtitle).toHaveTextContent(text);
+    await userEvent.click(subtitle);
+
+    expect(props.onOpenTab).toHaveBeenCalledExactlyOnceWith(tab);
+    expect(props.onOpenTabNewWindow).not.toHaveBeenCalled();
+    expect(props.onDeleteTab).not.toHaveBeenCalled();
+  });
+
+  it('空 URL 仅显示标题，不生成空地址子标题', () => {
+    const { view } = renderSection({
+      sessions: [{ ...sessions[0], tabs: [{ title: '无地址页面', url: '' }] }],
+    });
+
+    expect(screen.getByText('无地址页面')).toBeInTheDocument();
+    expect(view.container.querySelector('.tab-url')).not.toBeInTheDocument();
   });
 
   it('pinned 行：图钉图标 + ghost 态 grip', () => {

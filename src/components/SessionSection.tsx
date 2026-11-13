@@ -43,7 +43,7 @@ export interface SessionSectionProps {
   onOpenTabNewWindow: (tab: SessionTab) => void;
 }
 
-// 会话条目行：markup 对齐 TabRow（tab-row/tab-line），复用既有 CSS；
+// 会话条目行：对齐窗口模式的标题 + URL 两行结构，复用 TabRow 的既有 CSS；
 // 整行可点 = 当前窗口打开（模板式，条目保留）；pinned 不可拖（对齐 by windows）
 function SessionTabRow({
   sessionId,
@@ -104,9 +104,14 @@ function SessionTabRow({
             <Icon name="pin" size={12} />
           </span>
         )}
-        <span className="tab-title">{tab.title}</span>
-        <span className="tab-host">{hostnameOf(tab.url)}</span>
-        <span className="row-spacer" />
+        <span className="tab-text">
+          <span className="tab-title">{tab.title}</span>
+          {tab.url && (
+            <span className="tab-url" title={tab.url}>
+              {tab.url.replace(/^https?:\/\//i, '')}
+            </span>
+          )}
+        </span>
         <span className="row-acts">
           <button
             className="icon-btn"

@@ -72,6 +72,12 @@ html,
 body {
   margin: 0;
 }
+/* 短页面撑满视口，让版权页脚吸收剩余空间；长页面仍由内容撑高。 */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 body {
   background: var(--bg);
   color: var(--fg);
