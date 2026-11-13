@@ -1,12 +1,6 @@
 // 纸屑：17 个粒子从 (x,y) 迸发，随机角度 + 上抛偏置 + 重力，700–900ms（移植自 tab-out）
-// 色板取设计稿 CONFETTI_COLORS（品牌五色）
-const COLORS = [
-  'oklch(58% 0.18 255)',
-  'oklch(62% 0.15 155)',
-  'oklch(65% 0.16 55)',
-  'oklch(60% 0.17 25)',
-  'oklch(58% 0.16 300)',
-];
+// 暖橙品牌五色，见 docs/specs/2026-11-14-warm-theme.md。
+const COLORS = ['#ed693c', '#efbd83', '#90b69a', '#d98294', '#b09ac4'];
 
 const PARTICLES_PER_BURST = 17;
 // 活跃粒子上限：批量关闭会连续爆发（关 50 行 = 850 个元素），

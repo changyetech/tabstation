@@ -1,4 +1,4 @@
-/* 设置页样式：docs/specs/2026-11-13-visual-polish.md */
+/* 设置页：布局见 2026-11-13-visual-polish；配色见 2026-11-14-warm-theme spec。 */
 @import '../styles/tokens.css';
 
 /* ========== 顶栏：与主页同构 ========== */
@@ -83,8 +83,8 @@
     background var(--motion-fast);
 }
 .side-nav a:hover {
-  color: var(--fg);
-  background: var(--hover);
+  color: var(--accent-strong);
+  background: var(--accent-tint);
 }
 .side-nav a.active {
   color: var(--accent-strong);
@@ -222,7 +222,7 @@
   height: 56px;
   border-radius: 7px;
   overflow: hidden;
-  border: 1px solid oklch(50% 0.01 250 / 0.25);
+  border: 1px solid rgb(120 102 92 / 0.3);
   position: relative;
   display: flex;
 }
@@ -242,7 +242,7 @@
   width: 3.5px;
   height: 3.5px;
   border-radius: 99px;
-  background: oklch(60% 0.01 250 / 0.6);
+  background: rgb(120 102 92 / 0.6);
 }
 .mini-row {
   height: 5px;
@@ -251,27 +251,35 @@
 }
 .mini.light .mini-pane,
 .mini-pane.light {
-  background: oklch(98% 0.002 240);
+  background: #f8f5f0;
 }
 .mini.light .mini-bar,
 .mini-pane.light .mini-bar {
-  background: oklch(94% 0.004 250);
+  background: #ede3d8;
 }
 .mini.light .mini-row,
 .mini-pane.light .mini-row {
-  background: oklch(88% 0.005 250);
+  background: #dfd2c6;
 }
 .mini.dark .mini-pane,
 .mini-pane.dark {
-  background: oklch(19% 0.008 250);
+  background: #201b18;
 }
 .mini.dark .mini-bar,
 .mini-pane.dark .mini-bar {
-  background: oklch(25% 0.01 250);
+  background: #2b2420;
 }
 .mini.dark .mini-row,
 .mini-pane.dark .mini-row {
-  background: oklch(33% 0.01 250);
+  background: #524238;
+}
+.mini.light .mini-row:nth-child(2),
+.mini-pane.light .mini-row:nth-child(2) {
+  background: #c4552d;
+}
+.mini.dark .mini-row:nth-child(2),
+.mini-pane.dark .mini-row:nth-child(2) {
+  background: #ef916b;
 }
 .theme-option-label {
   font-size: 12px;
@@ -324,7 +332,7 @@
   height: 16px;
   border-radius: 99px;
   background: var(--surface);
-  box-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.25);
+  box-shadow: 0 1px 2px rgb(66 42 32 / 0.25);
   transition:
     transform var(--motion-normal) var(--ease-out),
     background var(--motion-fast);
@@ -337,6 +345,14 @@
 .switch-row input:checked + .switch {
   background: var(--accent-strong);
   border-color: var(--accent-strong);
+}
+.switch-row:hover input:checked + .switch {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.switch-row:active input:checked + .switch {
+  background: var(--accent-active);
+  border-color: var(--accent-active);
 }
 .switch-row input:checked + .switch::after {
   transform: translateX(14px);
@@ -382,8 +398,8 @@ kbd {
     background var(--motion-fast);
 }
 .ghost-btn:hover {
-  color: var(--fg);
-  background: var(--hover);
+  color: var(--accent-strong);
+  background: var(--accent-tint);
 }
 
 /* ---- 关于 ---- */
@@ -430,7 +446,7 @@ select {
   transition: border-color var(--motion-fast);
 }
 select:hover {
-  border-color: var(--muted);
+  border-color: var(--accent);
 }
 @media (max-width: 600px) {
   .topbar {

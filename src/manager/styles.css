@@ -1,4 +1,4 @@
-/* 管理页样式：docs/specs/2026-11-13-visual-polish.md */
+/* 管理页：布局见 2026-11-13-visual-polish；配色见 2026-11-14-warm-theme spec。 */
 @import '../styles/tokens.css';
 
 /* ========== Hero：大字问候 + 全局统计 ========== */
@@ -92,13 +92,14 @@
     box-shadow var(--motion-fast);
 }
 .seg:hover {
-  color: var(--fg);
+  color: var(--accent-strong);
+  background: var(--hover);
 }
 .seg[aria-pressed='true'] {
-  background: var(--surface);
-  color: var(--fg);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
   box-shadow:
-    0 1px 2px oklch(20% 0.01 250 / 0.08),
+    var(--block-shadow),
     0 0 0 1px var(--border);
 }
 .toolbar-search {
@@ -153,8 +154,11 @@
 .btn-dedupe:hover {
   background: var(--accent-hover);
 }
+.btn-dedupe:active {
+  background: var(--accent-active);
+}
 .btn-dedupe .count {
-  background: color-mix(in oklch, var(--on-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--on-accent) 10%, transparent);
   border-radius: 99px;
   padding: 0 7px;
   font-size: 12px;
@@ -173,8 +177,8 @@
     color var(--motion-fast);
 }
 .icon-btn:hover {
-  background: var(--hover);
-  color: var(--fg);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
 }
 
 /* ========== 布局：主列 + 右侧面板列 ========== */
@@ -377,8 +381,8 @@ aside {
     border-color var(--motion-fast);
 }
 .ghost-btn:hover {
-  color: var(--fg);
-  background: var(--hover);
+  color: var(--accent-strong);
+  background: var(--accent-tint);
 }
 .ghost-btn.danger:hover {
   color: var(--danger);
@@ -408,9 +412,9 @@ aside {
     background var(--motion-fast);
 }
 .new-win:hover {
-  color: var(--fg);
-  border-color: color-mix(in oklch, var(--fg) 40%, transparent);
-  background: var(--hover);
+  color: var(--accent-strong);
+  border-color: var(--accent);
+  background: var(--accent-tint);
 }
 
 /* 全部模式 · 域名视图：大屏双列瀑布 */
@@ -620,8 +624,8 @@ img.favicon {
   border-radius: 7px;
 }
 .row-acts .icon-btn:hover {
-  background: color-mix(in oklch, var(--fg) 8%, var(--hover));
-  color: var(--fg);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
 }
 .row-acts .icon-btn.danger:hover {
   color: var(--danger);
@@ -648,8 +652,8 @@ img.favicon {
   border-radius: 7px;
 }
 .dom-acts .icon-btn:hover {
-  background: color-mix(in oklch, var(--fg) 8%, var(--hover));
-  color: var(--fg);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
 }
 .dom-acts .icon-btn.danger:hover {
   color: var(--danger);
@@ -759,8 +763,8 @@ img.favicon {
     background var(--motion-fast);
 }
 .panel-act:hover {
-  color: var(--fg);
-  background: var(--hover);
+  color: var(--accent-strong);
+  background: var(--accent-tint);
 }
 .rl-list {
   list-style: none;
@@ -833,8 +837,8 @@ img.favicon {
   border-radius: 7px;
 }
 .rl-acts .icon-btn:hover {
-  background: color-mix(in oklch, var(--fg) 8%, var(--hover));
-  color: var(--fg);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
 }
 .rl-acts .icon-btn.danger:hover {
   color: var(--danger);
@@ -889,7 +893,8 @@ img.favicon {
   transition: background var(--motion-fast);
 }
 .popover button:hover {
-  background: var(--hover);
+  color: var(--accent-strong);
+  background: var(--accent-tint);
 }
 .popover button .sub {
   color: var(--muted);

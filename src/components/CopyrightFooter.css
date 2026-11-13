@@ -33,7 +33,7 @@
 .copyright-footer a:focus-visible,
 .copyright-footer .footer-action:hover,
 .copyright-footer .footer-action:focus-visible {
-  color: var(--fg);
+  color: var(--accent-strong);
 }
 
 .copyright-footer a:focus-visible,

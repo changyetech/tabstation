@@ -1,4 +1,4 @@
-/* 两页共享设计令牌；本轮视觉依据：docs/specs/2026-11-13-visual-polish.md */
+/* 两页共享设计令牌；配色依据：docs/specs/2026-11-14-warm-theme.md */
 
 :root {
   color-scheme: light;
@@ -6,32 +6,33 @@
   --motion-normal: 200ms;
   --motion-enter: 240ms;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --bg: oklch(97.5% 0.004 250);
-  --surface: oklch(100% 0 0);
-  --fg: oklch(18% 0.012 250);
-  --muted: oklch(49% 0.012 250);
-  --border: oklch(89% 0.006 250);
-  --accent: oklch(58% 0.18 255);
-  /* Logo 品牌色独立于交互色，浅深主题保持一致。 */
+  --bg: #f8f5f0;
+  --surface: #fffcf7;
+  --fg: #33251f;
+  --muted: #705e54;
+  --border: #dfd2c6;
+  --accent: #c4552d;
+  /* Logo 保持原色；交互色使用同色系对比更强的色阶。 */
   --brand: #ed693c;
   --on-brand: #fff7e8;
 
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
 
-  --accent-strong: oklch(46% 0.17 255);
-  --accent-hover: oklch(40% 0.16 255);
-  --on-accent: oklch(99% 0 0);
-  --accent-tint: oklch(96% 0.02 255);
-  --hover: oklch(96.5% 0.004 250);
-  --seg-bg: oklch(95.5% 0.004 250);
-  --success: oklch(46% 0.12 155);
-  --success-tint: oklch(96.5% 0.025 155);
-  --danger: oklch(48% 0.16 25);
-  --danger-tint: oklch(96.5% 0.02 25);
-  --warn: oklch(46% 0.11 75);
-  --block-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.05);
-  --pop-shadow: 0 8px 28px oklch(20% 0.01 250 / 0.14);
+  --accent-strong: #ad401f;
+  --accent-hover: #923416;
+  --accent-active: #7b2b12;
+  --on-accent: #fff7e8;
+  --accent-tint: #fbe9dd;
+  --hover: #f1e8de;
+  --seg-bg: #ede3d8;
+  --success: #267151;
+  --success-tint: #e8f1e7;
+  --danger: #b62e49;
+  --danger-tint: #fbe7ec;
+  --warn: #805a15;
+  --block-shadow: 0 1px 2px rgb(66 42 32 / 0.06);
+  --pop-shadow: 0 8px 28px rgb(66 42 32 / 0.15);
   --frost: color-mix(in oklch, var(--surface) 82%, transparent);
   --head-grad: linear-gradient(
     180deg,
@@ -40,29 +41,30 @@
   );
 }
 
-/* 深色：非纯黑基底 + 半透明白边框，成对重定义 */
+/* 深色：可可棕基底 + 暖色边框，成对重定义 */
 html[data-theme='dark'] {
   color-scheme: dark;
-  --bg: oklch(18% 0.008 250);
-  --surface: oklch(23% 0.01 250);
-  --fg: oklch(93% 0.005 250);
-  --muted: oklch(72% 0.01 250);
-  --border: oklch(100% 0 0 / 0.09);
-  --accent: oklch(70% 0.15 255);
+  --bg: #201b18;
+  --surface: #2b2420;
+  --fg: #f5ebdd;
+  --muted: #c0aea0;
+  --border: #524238;
+  --accent: #ef916b;
 
-  --accent-strong: oklch(70% 0.14 255);
-  --accent-hover: oklch(77% 0.12 255);
-  --on-accent: oklch(16% 0.02 255);
-  --accent-tint: oklch(28% 0.05 255);
-  --hover: oklch(29% 0.012 250);
-  --seg-bg: oklch(25% 0.01 250);
-  --success: oklch(76% 0.12 155);
-  --success-tint: oklch(27% 0.04 155);
-  --danger: oklch(72% 0.14 25);
-  --danger-tint: oklch(27% 0.035 25);
-  --warn: oklch(78% 0.11 85);
-  --block-shadow: 0 1px 2px oklch(0% 0 0 / 0.25);
-  --pop-shadow: 0 8px 28px oklch(0% 0 0 / 0.5);
+  --accent-strong: #f2a17c;
+  --accent-hover: #ffb898;
+  --accent-active: #e58f67;
+  --on-accent: #2b1c15;
+  --accent-tint: #442d22;
+  --hover: #382e28;
+  --seg-bg: #251f1b;
+  --success: #91c9a5;
+  --success-tint: #24382b;
+  --danger: #f698ac;
+  --danger-tint: #46232e;
+  --warn: #e8c17b;
+  --block-shadow: 0 1px 2px rgb(15 10 7 / 0.24);
+  --pop-shadow: 0 8px 28px rgb(15 10 7 / 0.42);
   --frost: color-mix(in oklch, var(--bg) 80%, transparent);
 }
 
@@ -107,6 +109,10 @@ a {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+::selection {
+  background: var(--accent-tint);
+  color: var(--accent-strong);
 }
 .num {
   font-variant-numeric: tabular-nums;
