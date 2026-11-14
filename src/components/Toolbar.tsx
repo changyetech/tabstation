@@ -11,7 +11,7 @@ export interface ToolbarProps {
   dedupeCloseCount: number;
   /** 主区搜索词；仅影响展示，不改变统计与去重范围 */
   search: string;
-  searchInputRef?: RefObject<HTMLInputElement>;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
   onSearch: (search: string) => void;
   onDedupe: () => void;
   onDedupeHover: (hovering: boolean) => void;

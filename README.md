@@ -58,7 +58,9 @@ Tab Station 尚未上架 Chrome 应用商店，需要以未打包扩展方式加
 
 ## 开发指南
 
-项目使用 React 18、TypeScript、Vite 和 Vitest。扩展没有传统 dev server 或 HMR；`pnpm dev` 运行的是产物型 watch 构建，输出到 `dist/`。
+项目使用 React 19、TypeScript、Vite 和 Vitest。扩展没有传统 dev server 或 HMR；`pnpm dev` 运行的是产物型 watch 构建，输出到 `dist/`。
+
+类型检查使用 TypeScript 7（`@typescript/native` 别名提供 `tsc`），ESLint 通过 `typescript` 别名使用 TS 6 API，遵循 [TypeScript 官方并行安装方案](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)。
 
 ```bash
 make install     # pnpm install

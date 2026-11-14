@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
-import { playCloseSound } from './sound';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+let playCloseSound: typeof import('./sound').playCloseSound;
 
 // 最小 AudioContext 替身：只提供 playCloseSound 用到的节点与方法
 const construct = vi.fn();
@@ -52,6 +53,13 @@ Object.defineProperty(window, 'AudioContext', {
 });
 
 describe('playCloseSound', () => {
+  beforeEach(async () => {
+    // 每个用例独立初始化模块级 AudioContext，避免依赖其他用例的播放记录
+    vi.resetModules();
+    contextState = 'running';
+    ({ playCloseSound } = await import('./sound'));
+  });
+
   it('连续播放复用同一个 AudioContext（不每次新建 / 关闭）', () => {
     playCloseSound();
     playCloseSound();
@@ -60,6 +68,7 @@ describe('playCloseSound', () => {
   });
 
   it('context 被浏览器挂起时先 resume 再播', () => {
+    playCloseSound();
     contextState = 'suspended';
     resume.mockClear();
     playCloseSound();

@@ -1,0 +1,6 @@
+minimumReleaseAgeExclude:
+  - tldts-core@7.5.2
+  - tldts@7.5.2
+  - '@eslint/config-array@0.23.6'
+  - eslint@10.15.0
+  - jsdom@31.0.1

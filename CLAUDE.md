@@ -24,7 +24,7 @@ make package      # build + 打包 dist/ 为 tab-station-<version>.zip
 
 ## 架构
 
-技术栈：React 18 + TypeScript（strict）+ Vite + Vitest/jsdom/Testing Library + @dnd-kit，包管理 pnpm。
+技术栈：React 19 + TypeScript（strict，TS 7 类型检查，TS 6 API 供 ESLint 使用）+ Vite + Vitest/jsdom/Testing Library + @dnd-kit，包管理 pnpm。
 
 **三个构建入口**（`vite.config.ts` rollup 多入口）：
 
