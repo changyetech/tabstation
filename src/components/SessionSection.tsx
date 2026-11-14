@@ -208,15 +208,14 @@ function SessionBlock({
         <span className="win-meta num">{t('window.tabCount', { n: session.tabs.length })}</span>
         <span className="win-acts">
           <TooltipButton
-            className="ghost-btn"
+            className="icon-btn"
             title={t('sessions.restore')}
             onClick={() => onRestore(session)}
           >
             <Icon name="restore" size={13} />
-            {t('sessions.restoreShort')}
           </TooltipButton>
           <TooltipButton
-            className="ghost-btn"
+            className="icon-btn"
             title={t('sessions.rename')}
             onClick={() => {
               setRenaming(true);
@@ -224,15 +223,13 @@ function SessionBlock({
             }}
           >
             <Icon name="edit" size={13} />
-            {t('sessions.rename')}
           </TooltipButton>
           <TooltipButton
-            className="ghost-btn danger"
+            className="icon-btn danger"
             title={t('sessions.delete')}
             onClick={() => onDelete(session)}
           >
             <Icon name="trash" size={13} />
-            {t('sessions.delete')}
           </TooltipButton>
         </span>
       </div>

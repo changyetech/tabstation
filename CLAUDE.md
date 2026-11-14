@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-**Tab Station（标签工作站）** —— Chrome Manifest V3 扩展，集中管理真实浏览器 tab，附带「稍后阅读」与「窗口会话」两类本地持久化数据。无后端、无网络请求；全部状态存于 `chrome.storage.local`。
+**Tab Station（标签工作站）** —— Chrome Manifest V3 扩展，集中管理真实浏览器 tab，附带「稍后阅读」与「已保存窗口」两类本地持久化数据。无后端、无网络请求；全部状态存于 `chrome.storage.local`。
 
-领域词汇表（ubiquitous language）在 [CONTEXT.md](CONTEXT.md)——写 spec 或代码前先读，术语（管理页/设置页、模式/视图、稍后阅读/会话、URL 归一化、重复组等）必须与其一致。产品命名写法遵循 [docs/naming.md](docs/naming.md)（normative）。
+领域词汇表（ubiquitous language）在 [CONTEXT.md](CONTEXT.md)——写 spec 或代码前先读，术语（管理页/设置页、模式/视图、稍后阅读/已保存窗口、URL 归一化、重复组等）必须与其一致。产品命名写法遵循 [docs/naming.md](docs/naming.md)（normative）。
 
 ## 常用命令
 

@@ -94,7 +94,7 @@ export interface OmniboxLabels {
 const DEFAULT_LABELS: OmniboxLabels = {
   tab: '标签页',
   read: '稍后阅读',
-  session: '会话',
+  session: '已保存窗口',
   tabCount: (n) => `${n} 个标签页`,
 };
 
@@ -170,7 +170,7 @@ export function defaultDescription(
   input: string,
   count: number,
   strings: DefaultSuggestionStrings = {
-    empty: '搜索标签页、稍后阅读与会话',
+    empty: '搜索标签页、稍后阅读与已保存窗口',
     found: `搜索「${escapeXml(input.trim())}」 · 找到 ${count} 项`,
     none: '没有匹配项 · 回车打开 Tab Station',
   },

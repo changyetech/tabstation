@@ -41,13 +41,8 @@ export default function ReadLaterSidebar({
         </span>
         <span className="panel-title">{t('readLater.title')}</span>
         <span className="panel-count num">{t('readLater.count', { n: items.length })}</span>
-        <TooltipButton
-          className="panel-act"
-          title={t('readLater.openAllTitle')}
-          onClick={onOpenAll}
-        >
+        <TooltipButton className="icon-btn" title={t('readLater.openAllTitle')} onClick={onOpenAll}>
           <Icon name="restore" size={13} />
-          {t('readLater.openAll')}
         </TooltipButton>
       </div>
       <ul className="rl-list">

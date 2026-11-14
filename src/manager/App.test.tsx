@@ -115,7 +115,7 @@ describe('App', () => {
     expect(document.querySelector('.stats')).toHaveTextContent('2标签页');
 
     await userEvent.type(search, '-missing');
-    expect(screen.getByText('没有匹配的标签页 / 会话')).toBeInTheDocument();
+    expect(screen.getByText('没有匹配的标签页 / 已保存窗口')).toBeInTheDocument();
     expect(screen.queryByText('B1')).not.toBeInTheDocument();
 
     await userEvent.clear(search);
@@ -480,7 +480,7 @@ describe('稍后阅读', () => {
     chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
     render(<App />);
     await waitFor(() => expect(screen.getByText('RA')).toBeInTheDocument());
-    await userEvent.click(screen.getByText('全部打开'));
+    await userEvent.click(screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' }));
     await waitFor(() =>
       expect(chromeMock.windows.create).toHaveBeenCalledWith(
         expect.objectContaining({ url: ['https://a.com/', 'https://b.com/'], focused: true }),
@@ -508,9 +508,9 @@ describe('保存窗口', () => {
     seedWindowView();
     render(<App />);
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: '保存会话' })).toBeInTheDocument(),
+      expect(screen.getByRole('button', { name: '保存窗口' })).toBeInTheDocument(),
     );
-    await userEvent.click(screen.getByRole('button', { name: '保存会话' }));
+    await userEvent.click(screen.getByRole('button', { name: '保存窗口' }));
     expect(await screen.findByText('没有可保存的标签页')).toBeInTheDocument();
     expect(storageData.sessions).toBeUndefined();
   });
@@ -526,9 +526,9 @@ describe('保存窗口', () => {
     seedWindowView();
     render(<App />);
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: '保存会话' })).toBeInTheDocument(),
+      expect(screen.getByRole('button', { name: '保存窗口' })).toBeInTheDocument(),
     );
-    await userEvent.click(screen.getByRole('button', { name: '保存会话' }));
+    await userEvent.click(screen.getByRole('button', { name: '保存窗口' }));
     await waitFor(() => expect(storageData.sessions).toBeDefined());
     const sessions = storageData.sessions as { tabs: { url: string }[] }[];
     expect(sessions).toHaveLength(1);
@@ -562,11 +562,11 @@ describe('保存窗口', () => {
     chromeMock.tabs.update.mockResolvedValue(undefined);
     render(<App />);
     // 会话已迁入主区第三模式（spec §5.5 2026-08-16 修订）：默认窗口模式下不可见，需切段
-    await waitFor(() => expect(screen.getByText('已保存会话')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('已保存窗口')).toBeInTheDocument());
     expect(screen.queryByText(/2026\/8\/15 09:00/)).not.toBeInTheDocument();
-    await userEvent.click(screen.getByText('已保存会话'));
+    await userEvent.click(screen.getByText('已保存窗口'));
     await waitFor(() => expect(screen.getByText(/2026\/8\/15 09:00/)).toBeInTheDocument());
-    await userEvent.click(screen.getByRole('button', { name: '恢复到新窗口（会话保留）' }));
+    await userEvent.click(screen.getByRole('button', { name: '恢复到新窗口（保留已保存窗口）' }));
     await waitFor(() =>
       expect(chromeMock.windows.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -581,7 +581,7 @@ describe('保存窗口', () => {
   });
 });
 
-describe('工具栏搜索 · 已保存会话', () => {
+describe('工具栏搜索 · 已保存窗口', () => {
   function seedSessions() {
     const { storageData } = getChromeMock();
     storageData.sessions = [
@@ -607,7 +607,7 @@ describe('工具栏搜索 · 已保存会话', () => {
   it('按会话名或条目标题 / URL 过滤，清空后恢复', async () => {
     seedSessions();
     render(<App />);
-    await userEvent.click(screen.getByText('已保存会话'));
+    await userEvent.click(screen.getByText('已保存窗口'));
     await waitFor(() => expect(screen.getByText('Release')).toBeInTheDocument());
 
     await userEvent.type(screen.getByRole('searchbox', { name: '搜索标签页' }), 'trip');

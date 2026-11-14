@@ -45,13 +45,15 @@ describe('ReadLaterSidebar', () => {
 
   it('「全部打开」仅非空时显示并回调', async () => {
     const props = renderPanel();
-    await userEvent.click(screen.getByText('全部打开'));
+    await userEvent.click(screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' }));
     expect(props.onOpenAll).toHaveBeenCalled();
   });
 
   it('空清单：整卡隐藏，不渲染任何内容', () => {
     renderPanel({ items: [] });
     expect(screen.queryByText('稍后阅读')).not.toBeInTheDocument();
-    expect(screen.queryByText('全部打开')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '在新窗口打开全部，并清空清单' }),
+    ).not.toBeInTheDocument();
   });
 });

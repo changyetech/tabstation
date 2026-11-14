@@ -22,7 +22,7 @@ describe('保存与关闭的异步顺序', () => {
   it.each([
     ['all', '收进稍后阅读（保存并关闭）'],
     ['all', '全部收进稍后阅读（保存并关闭，固定与非网页标签除外）'],
-    ['window', '保存会话'],
+    ['window', '保存窗口'],
   ] as const)('%s：%s 必须等持久化成功才关闭源对象', async (mode, title) => {
     const { chromeMock, storageData } = seed();
     storageData.settings = { defaultView: mode, closeWindowAfterSave: true };
@@ -50,11 +50,11 @@ describe('保存与关闭的异步顺序', () => {
   it.each([
     '收进稍后阅读（保存并关闭）',
     '全部收进稍后阅读（保存并关闭，固定与非网页标签除外）',
-    '保存会话',
+    '保存窗口',
   ])('%s：写入失败保留源对象并反馈失败', async (title) => {
     const { chromeMock, storageData } = seed();
     storageData.settings = {
-      defaultView: title === '保存会话' ? 'window' : 'all',
+      defaultView: title === '保存窗口' ? 'window' : 'all',
       closeWindowAfterSave: true,
     };
     render(<App />);
@@ -81,8 +81,8 @@ describe('稍后阅读打开成功后才移除', () => {
         complete = resolve;
       }),
     );
-    await userEvent.click(screen.getByText('全部打开'));
-    await userEvent.click(screen.getByText('全部打开'));
+    await userEvent.click(screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' }));
+    await userEvent.click(screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' }));
 
     expect(chromeMock.windows.create).toHaveBeenCalledTimes(1);
     await act(async () => complete({ id: 2, tabs: [] }));
@@ -116,7 +116,7 @@ describe('稍后阅读打开成功后才移除', () => {
 
       await userEvent.click(
         title === '全部打开'
-          ? screen.getByText(title)
+          ? screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' })
           : screen.getByRole('button', {
               name: title === '打开并从清单移除' ? readItem.title : title,
             }),
@@ -129,7 +129,7 @@ describe('稍后阅读打开成功后才移除', () => {
       // 失败后解除防重入标记，用户可以立即重试。
       await userEvent.click(
         title === '全部打开'
-          ? screen.getByText(title)
+          ? screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' })
           : screen.getByRole('button', {
               name: title === '打开并从清单移除' ? readItem.title : title,
             }),
@@ -149,7 +149,7 @@ describe('稍后阅读打开成功后才移除', () => {
         complete = resolve;
       }),
     );
-    await userEvent.click(screen.getByText('全部打开'));
+    await userEvent.click(screen.getByRole('button', { name: '在新窗口打开全部，并清空清单' }));
     await waitFor(() => expect(chromeMock.windows.create).toHaveBeenCalled());
     const added = { ...readItem, id: 'r2', url: 'https://b.com/', title: 'Added' };
     await act(() => chromeMock.storage.local.set({ readLater: [readItem, added] }));
@@ -176,7 +176,7 @@ describe('会话条目并发修改', () => {
       },
     ];
     render(<App />);
-    await userEvent.click(screen.getByText('已保存会话'));
+    await userEvent.click(screen.getByText('已保存窗口'));
     await screen.findByText('A');
     const originalSet = chromeMock.storage.local.set.getMockImplementation()!;
     let complete!: () => Promise<void>;

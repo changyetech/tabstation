@@ -63,9 +63,9 @@ describe('SessionSection', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/2026\/8\/15 10:00/)).toBeInTheDocument();
     expect(view.container.querySelector('.win-head .win-meta')).toHaveTextContent(/^2 个标签页$/);
-    await userEvent.click(screen.getByRole('button', { name: '恢复到新窗口（会话保留）' }));
+    await userEvent.click(screen.getByRole('button', { name: '恢复到新窗口（保留已保存窗口）' }));
     expect(props.onRestore).toHaveBeenCalledWith(sessions[0]);
-    await userEvent.click(screen.getByRole('button', { name: '删除会话' }));
+    await userEvent.click(screen.getByRole('button', { name: '删除已保存窗口' }));
     expect(props.onDelete).toHaveBeenCalledWith(sessions[0]);
   });
 
@@ -78,7 +78,7 @@ describe('SessionSection', () => {
 
   it('无会话时渲染空态文案', () => {
     renderSection({ sessions: [] });
-    expect(screen.getByText(/还没有已保存的会话/)).toBeInTheDocument();
+    expect(screen.getByText(/还没有已保存窗口/)).toBeInTheDocument();
   });
 
   it('超出 visibleTabs 折叠，展开走 onToggleExpand（spec §5.2）', async () => {

@@ -97,22 +97,20 @@ export default function WindowSection(props: WindowSectionProps) {
         <span className="win-acts">
           {props.onSaveWindow && (
             <TooltipButton
-              className="ghost-btn"
+              className="icon-btn"
               title={t('window.save')}
               onClick={() => props.onSaveWindow?.(win)}
             >
               <Icon name="save" size={13} />
-              {t('window.save')}
             </TooltipButton>
           )}
           {props.onCloseWindow && (
             <TooltipButton
-              className="ghost-btn danger"
+              className="icon-btn danger"
               title={t('window.close')}
               onClick={() => props.onCloseWindow?.(win, sectionRef.current)}
             >
               <Icon name="close" size={13} />
-              {t('window.close')}
             </TooltipButton>
           )}
         </span>

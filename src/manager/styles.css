@@ -255,9 +255,7 @@ aside {
 }
 .btn-dedupe:active,
 .icon-btn:active,
-.ghost-btn:active,
 .seg:active,
-.panel-act:active,
 .more-btn:active,
 .new-win:active {
   transform: translateY(1px);
@@ -362,32 +360,8 @@ aside {
 .win-acts {
   margin-left: auto;
   display: flex;
-  gap: 6px;
-}
-.ghost-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  padding: 3px 10px;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  white-space: nowrap;
-  transition:
-    color var(--motion-fast),
-    background var(--motion-fast),
-    border-color var(--motion-fast);
-}
-.ghost-btn:hover {
-  color: var(--accent-strong);
-  background: var(--accent-tint);
-}
-.ghost-btn.danger:hover {
-  color: var(--danger);
-  background: var(--danger-tint);
-  border-color: color-mix(in oklch, var(--danger) 35%, transparent);
+  gap: 2px;
 }
 .dom-strip {
   height: 2px;
@@ -652,21 +626,15 @@ img.favicon {
   color: var(--danger);
   background: var(--danger-tint);
 }
-/* 域名行操作组：悬停浮现，批量作用于该域名 */
+/* 域名卡片操作组：常驻显示，批量作用于该域名 */
 .dom-acts {
   margin-left: auto;
   display: flex;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-fast);
   align-items: center;
   gap: 2px;
 }
-.win-head:hover .dom-acts,
-.win-head:focus-within .dom-acts {
-  opacity: 1;
-  pointer-events: auto;
-}
+.win-acts .icon-btn,
+.panel-head > .icon-btn,
 .dom-acts .icon-btn {
   width: 24px;
   height: 24px;
@@ -676,6 +644,7 @@ img.favicon {
   background: var(--accent-tint);
   color: var(--accent-strong);
 }
+.win-acts .icon-btn.danger:hover,
 .dom-acts .icon-btn.danger:hover {
   color: var(--danger);
   background: var(--danger-tint);
@@ -768,24 +737,6 @@ img.favicon {
   margin-left: auto;
   color: var(--muted);
   font-size: 12px;
-}
-.panel-act {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  padding: 2px 9px;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  transition:
-    color var(--motion-fast),
-    background var(--motion-fast);
-}
-.panel-act:hover {
-  color: var(--accent-strong);
-  background: var(--accent-tint);
 }
 .rl-list {
   list-style: none;
@@ -941,8 +892,7 @@ img.favicon {
 /* ========== 触屏适配（spec §5.7）：无 hover 能力时操作组常驻，时间列不占位 ========== */
 @media (hover: none) {
   .row-acts,
-  .rl-acts,
-  .dom-acts {
+  .rl-acts {
     opacity: 1;
     pointer-events: auto;
   }

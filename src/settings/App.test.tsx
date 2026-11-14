@@ -79,7 +79,7 @@ describe('设置页', () => {
     expect(screen.getByText('主题已切换')).toBeInTheDocument();
   });
 
-  it('保存会话后关闭窗口：开关落盘并显示保存反馈', async () => {
+  it('保存后关闭窗口：开关落盘并显示保存反馈', async () => {
     const { storageData } = getChromeMock();
     render(<App />);
     await userEvent.click(screen.getByRole('checkbox'));
@@ -141,8 +141,8 @@ describe('设置页', () => {
     render(<App />);
     const select = screen.getByLabelText('默认视图');
     expect(select).toHaveValue('all');
-    // 已保存会话不作为默认视图选项
-    expect(screen.queryByRole('option', { name: '已保存会话' })).not.toBeInTheDocument();
+    // 已保存窗口不作为默认视图选项
+    expect(screen.queryByRole('option', { name: '已保存窗口' })).not.toBeInTheDocument();
     await userEvent.selectOptions(select, 'window');
     await waitFor(() =>
       expect((storageData.settings as { defaultView: string }).defaultView).toBe('window'),

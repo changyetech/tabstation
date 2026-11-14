@@ -151,7 +151,7 @@ describe('toContent / parseContent', () => {
 
 describe('defaultDescription', () => {
   it('空输入显示默认文案', () => {
-    expect(defaultDescription('', 0)).toBe('搜索标签页、稍后阅读与会话');
+    expect(defaultDescription('', 0)).toBe('搜索标签页、稍后阅读与已保存窗口');
   });
 
   it('有输入且有结果', () => {
