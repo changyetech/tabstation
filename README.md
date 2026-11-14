@@ -24,7 +24,8 @@ Tab Station 是一个 Chrome Manifest V3 扩展，把所有窗口中的真实标
 
 - **集中管理真实标签页**：在一个页面查看并操作所有窗口的标签页；支持拖拽排序、跨窗口移动、关闭窗口和拆分到新窗口。点击扩展图标或使用快捷键打开管理页，不接管浏览器新标签页。
 - **三种模式**：全部模式跨窗口按域名聚合，窗口模式按窗口分区展示，已保存窗口展示可复用的窗口卡片。管理页默认进入哪一个标签页视图（全部 / 窗口）可在设置页配置。
-- **一键去重**：基于全项目统一的 URL 归一化规则识别重复标签页，执行前可预览将保留和关闭的条目，并优先保留固定标签。
+- **搜索与快速定位**：管理页按标题或 URL 筛选真实标签页，已保存窗口还支持按名称及窗口内条目匹配；搜索不改变全局计数与去重范围。在 Chrome 地址栏输入 `ts` 后按 Tab，再输入关键词，可搜索真实标签页、稍后阅读与已保存窗口。
+- **一键去重**：基于全项目统一的 URL 归一化规则识别重复标签页，悬停可预览将保留和关闭的条目，点击直接执行，并优先保留固定标签；点击标签行的重复数徽标可只清理该重复组。
 - **稍后阅读**：保存时关闭源标签页；打开时自动从清单移除，也支持直接删除或在新窗口打开。
 - **已保存窗口**：将窗口保存为模板式快照，可反复恢复；已保存窗口支持重命名，条目支持排序、单条打开和删除。
 - **本地优先与双语界面**：数据仅保存在本机，界面支持中文和英文，并提供浅色、深色、自动三种主题；页脚可直达品牌官网与设置页。
@@ -42,7 +43,7 @@ Tab Station 尚未上架 Chrome 应用商店，需要以未打包扩展方式加
 
 ### 方式二：从源码构建
 
-1. 安装 [Node.js](https://nodejs.org/) 和 [pnpm](https://pnpm.io/)。
+1. 安装 [Node.js](https://nodejs.org/) 24（与 CI 一致），并按 `package.json` 的 `packageManager` 字段使用 pnpm（当前为 `pnpm@11.3.0`）。
 2. 在仓库根目录安装依赖并构建：
 
    ```bash
@@ -57,6 +58,8 @@ Tab Station 尚未上架 Chrome 应用商店，需要以未打包扩展方式加
 装好后，点击工具栏中的 Tab Station 图标，或使用默认快捷键 `Ctrl+Shift+E`（macOS 为 `Command+Shift+E`）打开管理页。
 
 ## 开发指南
+
+开始修改前先阅读 [AGENTS.md](AGENTS.md) 的项目规则与文档索引，以及 [CONTEXT.md](CONTEXT.md) 的领域词汇表。`CLAUDE.md` 通过 `@AGENTS.md` 加载同一份规则。
 
 项目使用 React 19、TypeScript、Vite 和 Vitest。扩展没有传统 dev server 或 HMR；`pnpm dev` 运行的是产物型 watch 构建，输出到 `dist/`。
 
@@ -82,6 +85,8 @@ make check       # fmt-check + lint + typecheck + test
 4. 修改 `background.ts`、`manifest.json` 或 `_locales/` 后，需要点击扩展卡片上的刷新按钮。
 
 更完整的 MV3 调试说明见[本地调试手册](docs/local-debugging.md)。
+
+`node scripts/performance.mjs` 可测量当前域名分组与批量稍后阅读算法；`--compare` 与运行时 `HEAD` 对比，适合测量尚未提交的算法改动。结果仅代表本机算法微基准，不能替代真实 Chrome 扩展验收。
 
 ## 持续集成与发布
 
@@ -128,9 +133,14 @@ tag 名中带连字符（如 `v0.2.0-beta.1`）会被自动标记为预发布。
 
 ```text
 tabstation/
+├── AGENTS.md             # 项目规则与文档索引的权威正文
+├── CLAUDE.md             # 引用 AGENTS.md
+├── CONTEXT.md            # 领域词汇表
+├── ROADMAP.md            # 后续方向与待验证边界
+├── scripts/              # 算法性能测量脚本
 ├── public/               # manifest.json、多语言文案与图标
 ├── src/
-│   ├── background.ts     # MV3 service worker，负责打开管理页单例
+│   ├── background.ts     # MV3 service worker，管理页单例与地址栏搜索入口
 │   ├── manager/          # 管理页 React 入口
 │   ├── settings/         # 设置页 React 入口
 │   ├── components/       # 管理页 UI 组件
@@ -165,7 +175,7 @@ Tab Station 没有后端服务，不上传浏览记录，也不做数据分析�
 ## 相关文档
 
 - [领域词汇表](CONTEXT.md)
-- [项目开发约定](CLAUDE.md)
+- [项目开发约定与 Agent 指令](AGENTS.md)
 - [产品命名规范](docs/naming.md)
 - [本地调试手册](docs/local-debugging.md)
 - [产品路线图](ROADMAP.md)
