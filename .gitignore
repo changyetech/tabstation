@@ -33,6 +33,7 @@ Thumbs.db
 
 # Coverage
 /coverage/
+/.vitest/
 
 # Logs
 *.log

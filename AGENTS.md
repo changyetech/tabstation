@@ -82,6 +82,7 @@ node scripts/performance.mjs  # Node.js 24+，当前算法的本机微基准
 
 ## 文档维护
 
+- [Chrome 网上应用店上架填写资料](docs/chrome-web-store-listing.md) 提供中英文商店文案、权限与数据声明、后台选项及审核测试说明；发布前按实际安装包核对。
 - `AGENTS.md` 维护长期开发规则与文档入口；`CLAUDE.md` 只引用它。
 - [README.md](README.md) 说明当前可用功能、安装与开发/发布方式，以代码和配置核实后更新。
 - [ROADMAP.md](ROADMAP.md) 维护尚未实现的方向、观察项及待验证边界；已实现能力不再列为非目标或待办。

@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+  <meta charset="utf-8" /><title>Tab Station — marquee-promo-en</title
+  ><style>
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      width: 1400px;
+      height: 560px;
+      overflow: hidden;
+    }
+    body {
+      background: #201b18;
+      color: #fff7e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Arial', sans-serif;
+    }
+    .art {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 88% 55%, #643621 0, transparent 63%);
+    }
+    .brand {
+      position: absolute;
+      left: 64px;
+      top: 43px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.7px;
+    }
+    .brand svg {
+      width: 58px;
+      height: 58px;
+    }
+    h1 {
+      position: absolute;
+      left: 76px;
+      top: 143px;
+      margin: 0;
+      font-size: 72px;
+      line-height: 1.08;
+      letter-spacing: -2.4px;
+      font-weight: 650;
+    }
+    h1 em {
+      font-style: normal;
+      color: #ef916b;
+    }
+    .sub {
+      position: absolute;
+      left: 78px;
+      top: 339px;
+      font-size: 22px;
+      line-height: 1.6;
+      color: #d1b7a5;
+    }
+    .tags {
+      position: absolute;
+      left: 78px;
+      bottom: 59px;
+      display: flex;
+      gap: 11px;
+      color: #e9d5c6;
+      font-size: 16px;
+    }
+    .tags b {
+      font-weight: 400;
+      padding: 9px 15px;
+      border: 1px solid #79503a;
+      border-radius: 20px;
+    }
+    .tabs {
+      position: absolute;
+      left: 855px;
+      top: 174px;
+      transform: rotate(-6deg);
+    }
+    .tab {
+      position: absolute;
+      width: 140px;
+      height: 63px;
+      border: 1px solid #916044;
+      border-radius: 10px;
+      background: #493126;
+      box-shadow: 0 9px 25px #100a0740;
+      display: flex;
+      align-items: center;
+      padding: 13px;
+      gap: 10px;
+    }
+    .tab:before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: -9px;
+      width: 50px;
+      height: 10px;
+      border-radius: 5px 5px 0 0;
+      background: inherit;
+      border: 1px solid #916044;
+      border-bottom: 0;
+    }
+    .tab i {
+      display: block;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: #ed693c;
+    }
+    .tab span {
+      display: block;
+      width: 70px;
+      height: 5px;
+      background: #b39682;
+      border-radius: 3px;
+    }
+    .c1 {
+      background: #c4552d;
+      border-color: #ed996d;
+    }
+    .c1:before {
+      border-color: #ed996d;
+    }
+    .c1 i {
+      background: #fff7e8;
+    }
+    .c1 span {
+      background: #f4c5a7;
+    }
+    .tabs:before {
+      content: '';
+      position: absolute;
+      left: -70px;
+      top: -59px;
+      width: 520px;
+      height: 340px;
+      border: 1px solid #79503a50;
+      border-radius: 28px;
+    }
+    .dot {
+      position: absolute;
+      right: 73px;
+      top: 85px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef916b;
+    }
+  </style>
+  <div class="art">
+    <div class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="#ED693C">
+        <rect x="24" y="30" width="22" height="28" rx="6" />
+        <rect x="53" y="30" width="22" height="68" rx="6" />
+        <rect x="82" y="30" width="22" height="28" rx="6" />
+      </svg>
+      <span>Tab Station</span>
+    </div>
+    <h1>Your tabs.<br /><em>In your hands.</em></h1>
+    <div class="sub">Find, rearrange, and restore.<br />One workspace for your browser tabs.</div>
+    <div class="tags"><b>Search</b><b>Rearrange</b><b>Save & restore</b></div>
+    <div class="tabs">
+      <div class="tab c0" style="left: 0px; top: 0px"><i></i><span></span></div>
+      <div class="tab c1" style="left: 155px; top: 0px"><i></i><span></span></div>
+      <div class="tab c2" style="left: 310px; top: 0px"><i></i><span></span></div>
+      <div class="tab c0" style="left: 0px; top: 80px"><i></i><span></span></div>
+      <div class="tab c1" style="left: 155px; top: 80px"><i></i><span></span></div>
+      <div class="tab c2" style="left: 310px; top: 80px"><i></i><span></span></div>
+      <div class="tab c0" style="left: 0px; top: 160px"><i></i><span></span></div>
+      <div class="tab c1" style="left: 155px; top: 160px"><i></i><span></span></div>
+      <div class="tab c2" style="left: 310px; top: 160px"><i></i><span></span></div>
+    </div>
+    <div class="dot"></div>
+  </div>
+</html>

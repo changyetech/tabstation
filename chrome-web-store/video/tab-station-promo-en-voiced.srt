@@ -1,0 +1,51 @@
+1
+00:00:00,150 --> 00:00:02,310
+Open Tab Station from Chrome.
+
+2
+00:00:04,150 --> 00:00:06,470
+Or use the shortcut for your system.
+
+3
+00:00:08,150 --> 00:00:10,710
+All your tabs, in one workspace.
+
+4
+00:00:11,150 --> 00:00:13,630
+See tabs across your browser windows.
+
+5
+00:00:14,150 --> 00:00:16,470
+Find any tab with a quick search.
+
+6
+00:00:17,150 --> 00:00:19,850
+Preview which duplicates stay or close.
+
+7
+00:00:20,150 --> 00:00:22,790
+Remove duplicates, keeping pinned tabs.
+
+8
+00:00:23,150 --> 00:00:24,670
+Save a page for later.
+
+9
+00:00:26,150 --> 00:00:28,550
+Open it, and clear the saved item.
+
+10
+00:00:29,150 --> 00:00:31,230
+Save a window for future use.
+
+11
+00:00:32,150 --> 00:00:34,630
+Restore your workspace when you need it.
+
+12
+00:00:35,150 --> 00:00:37,850
+Your saved window stays available to reuse.
+
+13
+00:00:38,150 --> 00:00:40,850
+Tab Station. Your tabs, in your hands.

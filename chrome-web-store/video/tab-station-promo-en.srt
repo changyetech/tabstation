@@ -1,0 +1,69 @@
+1
+00:00:00,000 --> 00:00:02,000
+Open with the extension icon.
+Click Tab Station in Chrome to open your manager.
+
+2
+00:00:02,000 --> 00:00:04,000
+Your manager opens in one step.
+Organize your real browser tabs.
+
+3
+00:00:04,000 --> 00:00:08,000
+Open Tab Station with a keyboard shortcut.
+Mac: Command+Shift+E. Windows / Linux: Ctrl+Shift+E.
+
+4
+00:00:08,000 --> 00:00:11,000
+All your tabs. One workspace.
+Tab Station — organize the tabs you actually use.
+
+5
+00:00:11,000 --> 00:00:14,000
+See every window
+Manage real tabs across browser windows.
+
+6
+00:00:14,000 --> 00:00:17,000
+Find it instantly
+Search open tabs by title or URL.
+
+7
+00:00:17,000 --> 00:00:20,000
+Preview before you clean up
+See which duplicate tabs will stay or close.
+
+8
+00:00:20,000 --> 00:00:23,000
+Remove duplicate tabs
+Pinned tabs take priority.
+
+9
+00:00:23,000 --> 00:00:26,000
+Save a page for later
+Read later saves the page and closes its source tab.
+
+10
+00:00:26,000 --> 00:00:29,000
+Pick up where you left off
+Opening a Read later item removes it from the list.
+
+11
+00:00:29,000 --> 00:00:32,000
+Save a browsing task
+Keep a window snapshot for future use.
+
+12
+00:00:32,000 --> 00:00:35,000
+Restore your workspace
+Saved windows can be reused.
+
+13
+00:00:35,000 --> 00:00:38,000
+Restore again whenever you need
+Restoring a window keeps its saved snapshot.
+
+14
+00:00:38,000 --> 00:00:41,000
+Tab Station — Your tabs. In your hands.
+Find, rearrange, and restore.

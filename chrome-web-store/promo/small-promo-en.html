@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+  <meta charset="utf-8" /><title>Tab Station — small-promo-en</title
+  ><style>
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      width: 440px;
+      height: 280px;
+      overflow: hidden;
+    }
+    body {
+      background: #201b18;
+      color: #fff7e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Arial', sans-serif;
+    }
+    .art {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 88% 55%, #643621 0, transparent 63%);
+    }
+    .brand {
+      position: absolute;
+      left: 24px;
+      top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 23px;
+      font-weight: 600;
+      letter-spacing: -0.7px;
+    }
+    .brand svg {
+      width: 44px;
+      height: 44px;
+    }
+    h1 {
+      position: absolute;
+      left: 29px;
+      top: 81px;
+      margin: 0;
+      font-size: 33px;
+      line-height: 1.08;
+      letter-spacing: -0.9px;
+      font-weight: 650;
+    }
+    h1 em {
+      font-style: normal;
+      color: #ef916b;
+    }
+    .sub {
+      position: absolute;
+      left: 78px;
+      top: 339px;
+      font-size: 22px;
+      line-height: 1.6;
+      color: #d1b7a5;
+    }
+    .tags {
+      position: absolute;
+      left: 30px;
+      bottom: 26px;
+      display: flex;
+      gap: 11px;
+      color: #e9d5c6;
+      font-size: 12px;
+    }
+    .tags b {
+      font-weight: 400;
+    }
+    .tabs {
+      position: absolute;
+      left: 311px;
+      top: 113px;
+      transform: rotate(-7deg);
+    }
+    .tab {
+      position: absolute;
+      width: 30px;
+      height: 33px;
+      border: 1px solid #916044;
+      border-radius: 5px;
+      background: #493126;
+      box-shadow: 0 9px 25px #100a0740;
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      gap: 10px;
+    }
+    .tab:before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: -5px;
+      width: 13px;
+      height: 5px;
+      border-radius: 5px 5px 0 0;
+      background: inherit;
+      border: 1px solid #916044;
+      border-bottom: 0;
+    }
+    .tab i {
+      display: block;
+      width: 9px;
+      height: 9px;
+      border-radius: 4px;
+      background: #ed693c;
+    }
+    .tab span {
+      display: none;
+      width: 70px;
+      height: 5px;
+      background: #b39682;
+      border-radius: 3px;
+    }
+    .c1 {
+      background: #c4552d;
+      border-color: #ed996d;
+    }
+    .c1:before {
+      border-color: #ed996d;
+    }
+    .c1 i {
+      background: #fff7e8;
+    }
+    .c1 span {
+      background: #f4c5a7;
+    }
+    .tabs:before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: -28px;
+      width: 142px;
+      height: 182px;
+      border: 1px solid #79503a50;
+      border-radius: 18px;
+    }
+    .dot {
+      position: absolute;
+      right: 34px;
+      top: 82px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef916b;
+    }
+  </style>
+  <div class="art">
+    <div class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="#ED693C">
+        <rect x="24" y="30" width="22" height="28" rx="6" />
+        <rect x="53" y="30" width="22" height="68" rx="6" />
+        <rect x="82" y="30" width="22" height="28" rx="6" />
+      </svg>
+      <span>Tab Station</span>
+    </div>
+    <h1>Your tabs.<br /><em>In your hands.</em></h1>
+    <div class="tags"><b>Find. Arrange. Resume.</b></div>
+    <div class="tabs">
+      <div class="tab c0" style="left: 0px; top: 0px"><i></i><span></span></div>
+      <div class="tab c1" style="left: 34px; top: 0px"><i></i><span></span></div>
+      <div class="tab c2" style="left: 68px; top: 0px"><i></i><span></span></div>
+      <div class="tab c0" style="left: 0px; top: 41px"><i></i><span></span></div>
+      <div class="tab c1" style="left: 34px; top: 41px"><i></i><span></span></div>
+      <div class="tab c2" style="left: 68px; top: 41px"><i></i><span></span></div>
+      <div class="tab c0" style="left: 0px; top: 82px"><i></i><span></span></div>
+      <div class="tab c1" style="left: 34px; top: 82px"><i></i><span></span></div>
+      <div class="tab c2" style="left: 68px; top: 82px"><i></i><span></span></div>
+    </div>
+    <div class="dot"></div>
+  </div>
+</html>
