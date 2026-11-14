@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../i18n';
@@ -7,6 +7,71 @@ import MoveMenu, { type MoveTarget } from './MoveMenu';
 const noop = () => undefined;
 
 describe('MoveMenu', () => {
+  it('视口增高后先应用新限高再定位，长菜单仍不越界', async () => {
+    let viewport = 300;
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ top: 100, bottom: 126, right: 300 } as DOMRect);
+    const heightSpy = vi
+      .spyOn(HTMLElement.prototype, 'offsetHeight', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return Math.min(1000, Number.parseFloat(this.style.maxHeight) || 1000);
+      });
+    const innerHeightSpy = vi
+      .spyOn(window, 'innerHeight', 'get')
+      .mockImplementation(() => viewport);
+    try {
+      render(
+        <I18nProvider language="zh-CN">
+          <MoveMenu targets={[{ windowId: 2, label: '窗口 2', tabCount: 1 }]} onPick={noop} />
+        </I18nProvider>,
+      );
+      await userEvent.click(screen.getByTitle('移动到其他窗口'));
+      viewport = 740;
+      fireEvent.resize(window);
+      expect(screen.getByText('移动到窗口').closest('ul')).toHaveStyle({
+        top: '8px',
+        maxHeight: '724px',
+      });
+    } finally {
+      rectSpy.mockRestore();
+      heightSpy.mockRestore();
+      innerHeightSpy.mockRestore();
+    }
+  });
+
+  it('超高菜单限制高度、内部滚动且定位在视口内', async () => {
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ top: 100, bottom: 126, right: 300 } as DOMRect);
+    const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(1000);
+    const innerHeightSpy = vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(740);
+    try {
+      render(
+        <I18nProvider language="zh-CN">
+          <MoveMenu
+            targets={Array.from({ length: 40 }, (_, i) => ({
+              windowId: i + 2,
+              label: `窗口 ${i + 2}`,
+              tabCount: 1,
+            }))}
+            onPick={noop}
+          />
+        </I18nProvider>,
+      );
+      await userEvent.click(screen.getByTitle('移动到其他窗口'));
+      expect(screen.getByText('移动到窗口').closest('ul')).toHaveStyle({
+        top: '8px',
+        maxHeight: '724px',
+        overflowY: 'auto',
+      });
+    } finally {
+      rectSpy.mockRestore();
+      heightSpy.mockRestore();
+      innerHeightSpy.mockRestore();
+    }
+  });
+
   it('popover 只列其他窗口（无新窗口选项），点击回调', async () => {
     const onPick = vi.fn();
     const targets: MoveTarget[] = [

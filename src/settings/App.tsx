@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CopyrightFooter } from '../components/CopyrightFooter';
 import { Icon } from '../components/icons';
 import { I18nProvider, resolveLanguage, useT } from '../i18n';
-import { useStorageState } from '../hooks/useStorageState';
+import { useStorageState, type StorageWriter } from '../hooks/useStorageState';
 import { useTheme } from '../hooks/useTheme';
 import { DEFAULT_SETTINGS, mergeSettings, type Settings } from '../lib/storage';
 
@@ -16,7 +16,7 @@ export default function App() {
 
   return (
     <I18nProvider language={language}>
-      <SettingsPage settings={settings} setSettings={(next) => void setSettings(next)} />
+      <SettingsPage settings={settings} setSettings={setSettings} />
     </I18nProvider>
   );
 }
@@ -50,7 +50,7 @@ function SettingsPage({
   setSettings,
 }: {
   settings: Settings;
-  setSettings: (next: Settings) => void;
+  setSettings: StorageWriter<Settings>;
 }) {
   const t = useT();
   useTheme(settings.theme);
@@ -61,14 +61,28 @@ function SettingsPage({
     messageKey: string;
   } | null>(null);
   const feedbackTimer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(feedbackTimer.current), []);
+  const saveSeq = useRef(0);
+  useEffect(
+    () => () => {
+      saveSeq.current += 1;
+      window.clearTimeout(feedbackTimer.current);
+    },
+    [],
+  );
 
   const save = (patch: Partial<Settings>, messageKey = 'settings.saved') => {
-    setSettings({ ...settings, ...patch });
+    const seq = ++saveSeq.current;
     window.clearTimeout(feedbackTimer.current);
     const group = 'theme' in patch ? 'appearance' : 'language' in patch ? 'language' : 'behavior';
-    setFeedback({ group, messageKey });
-    feedbackTimer.current = window.setTimeout(() => setFeedback(null), 2200);
+    setFeedback(null);
+    const finish = (key: string) => {
+      if (seq !== saveSeq.current) return;
+      setFeedback({ group, messageKey: key });
+      feedbackTimer.current = window.setTimeout(() => setFeedback(null), 2200);
+    };
+    void setSettings((previous) => ({ ...mergeSettings(previous), ...patch }))
+      .then(() => finish(messageKey))
+      .catch(() => finish('settings.saveFailed'));
   };
 
   // 左侧锚点导航：点击高亮

@@ -50,6 +50,30 @@ describe('domainGroupKey', () => {
 });
 
 describe('groupByDomain', () => {
+  it('私有后缀、IP、localhost 与尾点域名保持排序及组内输入顺序，且不修改输入', () => {
+    const tabs = [
+      makeTab({ id: 1, url: 'https://z.github.io/' }),
+      makeTab({ id: 2, url: 'https://api.a.github.io/' }),
+      makeTab({ id: 3, url: 'https://a.github.io/' }),
+      makeTab({ id: 4, url: 'http://localhost/' }),
+      makeTab({ id: 5, url: 'http://127.0.0.1/' }),
+      makeTab({ id: 6, url: 'https://EXAMPLE.com./a' }),
+      makeTab({ id: 7, url: 'https://a.github.io/b' }),
+    ];
+    const original = structuredClone(tabs);
+    const groups = groupByDomain(tabs);
+    expect(groups.map((g) => g.key)).toEqual([
+      '127.0.0.1',
+      'a.github.io',
+      'api.a.github.io',
+      'example.com.',
+      'localhost',
+      'z.github.io',
+    ]);
+    expect(groups.find((g) => g.key === 'a.github.io')?.tabs.map((t) => t.id)).toEqual([3, 7]);
+    expect(tabs).toEqual(original);
+  });
+
   it('按注册域排序，且排序不受 tab 数量影响', () => {
     const tabs = [
       makeTab({ id: 1, url: 'https://b.com/1' }),

@@ -8,6 +8,34 @@ import { useEffect, useState } from 'react';
 // 故做合流：首个事件立即重查（保持响应即时），其后冷却窗口内的事件合并为一次尾随重查。
 const COALESCE_MS = 60;
 
+function sameFields<T extends object>(left: T, right: T): boolean {
+  const keys = Object.keys(left) as (keyof T)[];
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every((key) => Object.is(left[key], right[key]))
+  );
+}
+
+function sameTab(left: chrome.tabs.Tab, right: chrome.tabs.Tab): boolean {
+  const keys = Object.keys(left) as (keyof chrome.tabs.Tab)[];
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every((key) => {
+      if (key === 'mutedInfo' && left.mutedInfo && right.mutedInfo) {
+        return sameFields(left.mutedInfo, right.mutedInfo);
+      }
+      return Object.is(left[key], right[key]);
+    })
+  );
+}
+
+function reuseSnapshot<T>(previous: T[], next: T[], equal: (left: T, right: T) => boolean): T[] {
+  return previous.length === next.length &&
+    previous.every((item, index) => equal(item, next[index]))
+    ? previous
+    : next;
+}
+
 export function useTabs(): {
   tabs: chrome.tabs.Tab[];
   windows: chrome.windows.Window[];
@@ -34,8 +62,9 @@ export function useTabs(): {
       // 口径不一致会让 app/devtools 等窗口里的 tab 出现在 tabs 里却没有对应窗口——
       // 这类 tab 在窗口模式下不渲染，却仍会被去重统计/关闭。这里按已知窗口过滤，保持两者一致
       const knownWindowIds = new Set(allWindows.map((w) => w.id));
-      setTabs(allTabs.filter((tab) => knownWindowIds.has(tab.windowId)));
-      setWindows(allWindows);
+      const knownTabs = allTabs.filter((tab) => knownWindowIds.has(tab.windowId));
+      setTabs((previous) => reuseSnapshot(previous, knownTabs, sameTab));
+      setWindows((previous) => reuseSnapshot(previous, allWindows, sameFields));
       setCurrentWindowId(current.id);
     };
     void refresh();

@@ -10,6 +10,45 @@ afterEach(() => {
 });
 
 describe('设置页', () => {
+  it('存储写入尚未完成时不显示成功反馈', async () => {
+    const { chromeMock } = getChromeMock();
+    render(<App />);
+    await screen.findByText('⌘');
+    const originalSet = chromeMock.storage.local.set.getMockImplementation()!;
+    let complete!: () => Promise<void>;
+    chromeMock.storage.local.set.mockImplementationOnce(
+      (items) =>
+        new Promise<void>((resolve) => {
+          complete = async () => {
+            await originalSet(items);
+            resolve();
+          };
+        }),
+    );
+
+    await userEvent.click(screen.getByText('深色'));
+    expect(screen.queryByText('主题已切换')).not.toBeInTheDocument();
+
+    await act(() => complete());
+    expect(await screen.findByText('主题已切换')).toBeInTheDocument();
+  });
+
+  it('写入失败显示失败反馈，不谎报成功，并恢复已保存设置', async () => {
+    const { chromeMock } = getChromeMock();
+    render(<App />);
+    await screen.findByText('⌘');
+    chromeMock.storage.local.set.mockRejectedValueOnce(new Error('Storage failed'));
+
+    await userEvent.click(screen.getByText('深色'));
+
+    expect(await screen.findByText('保存失败，请重试')).toBeInTheDocument();
+    expect(screen.queryByText('主题已切换')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '自动（跟随系统）' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
   it('渲染五个分组与版本号', async () => {
     render(<App />);
     expect(screen.getByText('设置')).toBeInTheDocument();

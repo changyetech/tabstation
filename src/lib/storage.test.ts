@@ -4,6 +4,7 @@ import { getChromeMock } from '../test/chrome-mock';
 import {
   DEFAULT_SETTINGS,
   mergeSettings,
+  isSessionSnapshotCurrent,
   moveSessionTab,
   readKey,
   removeReadLater,
@@ -11,6 +12,8 @@ import {
   renameSession,
   snapshotWindow,
   upsertReadLater,
+  upsertReadLaterBatch,
+  updateKey,
   writeKey,
   type ReadLaterItem,
   type SavedSession,
@@ -52,6 +55,47 @@ describe('upsertReadLater', () => {
   });
 });
 
+describe('upsertReadLaterBatch', () => {
+  it('与逐条保存等价，批次内及原清单重复只更新时间，并保留顺序和元信息', () => {
+    const list = [
+      item({ url: 'https://a.com/#old', title: 'Original' }),
+      item({ id: 'b', url: 'https://b.com/' }),
+    ];
+    const tabs = [
+      { url: 'https://a.com/#new', title: 'New title' },
+      { url: 'https://c.com/#first', title: 'First' },
+      { url: 'https://c.com/#second', title: 'Second' },
+      { url: 'https://d.com/', title: 'D' },
+    ];
+    const original = structuredClone(list);
+    const result = upsertReadLaterBatch(list, tabs, 200, () => 'new');
+    const expected = tabs.reduce((acc, tab) => upsertReadLater(acc, tab, 200, 'new'), list);
+    expect(result).toStrictEqual(expected);
+    expect(result.map((i) => i.title)).toEqual(['Original', 'A', 'First', 'D']);
+    expect(list).toEqual(original);
+  });
+
+  it('空批次返回原清单且不生成 id', () => {
+    const list = [item({})];
+    expect(
+      upsertReadLaterBatch(list, [], 200, () => {
+        throw new Error('Unexpected id');
+      }),
+    ).toBe(list);
+  });
+
+  it('历史清单已有同 URL 重复时与逐条保存一致，仅更新首项', () => {
+    const list = [item({ id: 'first' }), item({ id: 'second' })];
+    const next = upsertReadLaterBatch(
+      list,
+      [{ url: 'https://a.com/#x', title: 'X' }],
+      200,
+      () => 'unused',
+    );
+    expect(next.map((i) => i.savedAt)).toEqual([200, 100]);
+  });
+});
+
 describe('removeReadLater', () => {
   it('按 id 删除', () => {
     expect(removeReadLater([item({ id: 'x' }), item({ id: 'y' })], 'x').map((i) => i.id)).toEqual([
@@ -90,6 +134,17 @@ describe('snapshotWindow', () => {
 });
 
 describe('会话条目操作', () => {
+  it('快照校验忽略会话改名，条目变动或会话消失则拒绝旧下标', () => {
+    const snapshot = session({});
+    expect(isSessionSnapshotCurrent([{ ...snapshot, name: 'Renamed' }], snapshot)).toBe(true);
+    expect(isSessionSnapshotCurrent(removeSessionTab([snapshot], 's1', 0), snapshot)).toBe(false);
+    expect(isSessionSnapshotCurrent(moveSessionTab([snapshot], 's1', 0, 's1', 1), snapshot)).toBe(
+      false,
+    );
+    expect(isSessionSnapshotCurrent([], snapshot)).toBe(false);
+    expect(isSessionSnapshotCurrent([snapshot], undefined)).toBe(false);
+  });
+
   it('removeSessionTab 删指定下标', () => {
     const next = removeSessionTab([session({})], 's1', 0);
     expect(next[0].tabs.map((t) => t.url)).toEqual(['https://b.com/']);
@@ -141,6 +196,27 @@ describe('会话条目操作', () => {
 });
 
 describe('storage IO', () => {
+  it('并发读改写按最新持久化值串行，不丢失任何一项', async () => {
+    const { storageData } = getChromeMock();
+    storageData.readLater = ['saved'];
+    await Promise.all([
+      updateKey<string[]>('readLater', [], (list) => [...list, 'one']),
+      updateKey<string[]>('readLater', [], (list) => [...list, 'two']),
+    ]);
+    expect(storageData.readLater).toEqual(['saved', 'one', 'two']);
+  });
+
+  it('写入失败释放锁，后续更新仍基于原持久化值成功', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.readLater = ['saved'];
+    chromeMock.storage.local.set.mockRejectedValueOnce(new Error('Storage failed'));
+    await expect(
+      updateKey<string[]>('readLater', [], (list) => [...list, 'failed']),
+    ).rejects.toThrow();
+    await updateKey<string[]>('readLater', [], (list) => [...list, 'success']);
+    expect(storageData.readLater).toEqual(['saved', 'success']);
+  });
+
   it('readKey：key 不存在时返回 fallback', async () => {
     const fallback = {
       managerPageScope: 'global' as const,

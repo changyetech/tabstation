@@ -888,6 +888,7 @@ img.favicon {
 /* ========== 移动菜单 popover ========== */
 .popover {
   position: fixed;
+  margin: 0;
   z-index: 500;
   min-width: 236px;
   background: var(--surface);

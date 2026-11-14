@@ -127,6 +127,25 @@ function graft(target: Record<string, unknown>, fresh: Record<string, unknown>):
 }
 
 export function installChromeMock(): ChromeMockHandle {
+  const pendingLocks = new Map<string, Promise<unknown>>();
+  Object.defineProperty(navigator, 'locks', {
+    configurable: true,
+    value: {
+      request: (name: string, callback: () => unknown) => {
+        const previous = pendingLocks.get(name) ?? Promise.resolve();
+        const result = previous.then(callback);
+        const settled = result.then(
+          () => {},
+          () => {},
+        );
+        pendingLocks.set(name, settled);
+        void settled.then(() => {
+          if (pendingLocks.get(name) === settled) pendingLocks.delete(name);
+        });
+        return result;
+      },
+    },
+  });
   const storageData: Record<string, unknown> = {};
   const fresh = buildChromeMock(storageData);
   if (!persistent) {

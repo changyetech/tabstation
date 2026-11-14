@@ -8,11 +8,12 @@ import {
   parseContent,
   type OmniboxLabels,
 } from './lib/omnibox';
-import { visibleTabs } from './lib/grouping';
+import { visibleTabs } from './lib/tabs';
 import { restoreSession } from './lib/restore-session';
 import {
   mergeSettings,
   removeReadLater,
+  updateKey,
   type ReadLaterItem,
   type SavedSession,
   type Settings,
@@ -24,6 +25,10 @@ import zhCN from './i18n/zh_CN.json';
 // background：扩展的命令入口——图标点击/快捷键 → 管理页单例，地址栏关键字 → 搜索自有数据（spec §4.2、omnibox spec §8）
 // service worker 随时休眠，不持有状态——每次都从 storage 读设置
 export async function openManager(): Promise<void> {
+  await navigator.locks.request('tabstation:open-manager', openManagerUnlocked);
+}
+
+async function openManagerUnlocked(): Promise<void> {
   const url = chrome.runtime.getURL(MANAGER_PATH);
   const [{ settings }, current, tabs] = await Promise.all([
     chrome.storage.local.get('settings') as Promise<{
@@ -98,8 +103,10 @@ async function handleOmniboxInputChanged(
   const my = ++omniboxSeq;
   const extBase = ownPagePrefix();
   const [tabs, stored] = await Promise.all([
-    chrome.tabs.query({}),
-    chrome.storage.local.get() as Promise<StoredOmniData>,
+    text.trim() ? chrome.tabs.query({}) : Promise.resolve([]),
+    (text.trim()
+      ? chrome.storage.local.get()
+      : chrome.storage.local.get('settings')) as Promise<StoredOmniData>,
   ]);
   if (my !== omniboxSeq) return; // 已有更新的输入在处理，本次结果作废
   const items = matchOmnibox(text, {
@@ -158,9 +165,11 @@ async function handleOmniboxInputEntered(
       if (disposition === 'currentTab') {
         await chrome.tabs.update(undefined, { url: item.url });
       } else {
-        await chrome.tabs.create({ url: item.url });
+        await chrome.tabs.create({ url: item.url, active: disposition !== 'newBackgroundTab' });
       }
-      await chrome.storage.local.set({ readLater: removeReadLater(list, parsed.id) });
+      await updateKey<ReadLaterItem[]>('readLater', [], (latest) =>
+        removeReadLater(latest, parsed.id),
+      );
       return;
     }
 
@@ -176,8 +185,16 @@ async function handleOmniboxInputEntered(
 }
 
 chrome.omnibox.onInputChanged.addListener((text, suggest) => {
-  void handleOmniboxInputChanged(text, suggest);
+  const pending = handleOmniboxInputChanged(text, suggest);
+  const seq = omniboxSeq;
+  void pending.catch(() => {
+    if (seq === omniboxSeq) suggest([]);
+  });
 });
 chrome.omnibox.onInputEntered.addListener((content, disposition) => {
+  omniboxSeq += 1;
   void handleOmniboxInputEntered(content, disposition);
+});
+chrome.omnibox.onInputCancelled.addListener(() => {
+  omniboxSeq += 1;
 });

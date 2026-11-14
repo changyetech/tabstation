@@ -1,28 +1,13 @@
 import { getDomain } from 'tldts';
-import { hasId, type TabWithId } from './dedupe';
-
-// 管理页在一切列表与计数中隐身（spec §4.3）；同时收窄掉无 id 的 tab，
-// 使 UI 层拿到的一律是 TabWithId，无需再做非空断言
-export function visibleTabs(tabs: chrome.tabs.Tab[], managerUrl: string): TabWithId[] {
-  return tabs.filter((t) => !t.url?.startsWith(managerUrl)).filter(hasId);
-}
-
-// 从 URL 取 hostname；无 URL 或非法 URL 返回空串。全项目唯一实现——TabRow 与 domainGroupKey 共用
-export function hostnameOf(url: string | undefined): string {
-  if (!url) return '';
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return '';
-  }
-}
+export { hostnameOf } from './url';
+export { visibleTabs } from './tabs';
 
 // 域名分组 key：http/https 用 hostname；chrome://、file:// 与其余协议进特殊兜底组（spec §5.7）
 // '#' 不会出现在合法 hostname 中，用作特殊组前缀无碰撞
 export function domainGroupKey(url: string): string {
   try {
     const u = new URL(url);
-    if (u.protocol === 'http:' || u.protocol === 'https:') return hostnameOf(url);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return u.hostname;
     if (u.protocol === 'chrome:') return '#chrome';
     if (u.protocol === 'file:') return '#file';
     return '#other';
@@ -56,28 +41,33 @@ function subdomainLabels(hostname: string, registeredDomain: string): string[] {
     .reverse();
 }
 
-function compareHostnames(left: string, right: string): number {
-  const leftHostname = normalizeHostname(left);
-  const rightHostname = normalizeHostname(right);
-  const leftDomain = getDomain(leftHostname, { allowPrivateDomains: true }) ?? leftHostname;
-  const rightDomain = getDomain(rightHostname, { allowPrivateDomains: true }) ?? rightHostname;
-  const byRegisteredDomain = hostnameCollator.compare(leftDomain, rightDomain);
+function domainSortKey(key: string) {
+  const hostname = normalizeHostname(key);
+  const domain = getDomain(hostname, { allowPrivateDomains: true }) ?? hostname;
+  return {
+    order: specialGroupOrder.get(key) ?? 0,
+    domain,
+    subdomains: subdomainLabels(hostname, domain),
+  };
+}
+
+function compareDomainKeys(
+  left: ReturnType<typeof domainSortKey>,
+  right: ReturnType<typeof domainSortKey>,
+): number {
+  const byOrder = left.order - right.order;
+  if (byOrder !== 0) return byOrder;
+  const byRegisteredDomain = hostnameCollator.compare(left.domain, right.domain);
   if (byRegisteredDomain !== 0) return byRegisteredDomain;
 
-  const leftSubdomains = subdomainLabels(leftHostname, leftDomain);
-  const rightSubdomains = subdomainLabels(rightHostname, rightDomain);
+  const leftSubdomains = left.subdomains;
+  const rightSubdomains = right.subdomains;
   const depth = Math.min(leftSubdomains.length, rightSubdomains.length);
   for (let i = 0; i < depth; i += 1) {
     const byLabel = hostnameCollator.compare(leftSubdomains[i], rightSubdomains[i]);
     if (byLabel !== 0) return byLabel;
   }
   return leftSubdomains.length - rightSubdomains.length;
-}
-
-function compareDomainGroupKeys(left: string, right: string): number {
-  const leftOrder = specialGroupOrder.get(left) ?? 0;
-  const rightOrder = specialGroupOrder.get(right) ?? 0;
-  return leftOrder - rightOrder || compareHostnames(left, right);
 }
 
 export function groupByDomain<T extends chrome.tabs.Tab>(tabs: T[]): DomainGroup<T>[] {
@@ -88,9 +78,13 @@ export function groupByDomain<T extends chrome.tabs.Tab>(tabs: T[]): DomainGroup
     if (bucket) bucket.push(tab);
     else map.set(key, [tab]);
   }
-  return [...map.entries()]
-    .map(([key, groupTabs]) => ({ key, tabs: groupTabs }))
-    .sort((a, b) => compareDomainGroupKeys(a.key, b.key));
+  return (
+    [...map.entries()]
+      // 注册域解析只做每组一次，而不是每次排序比较时重复执行。
+      .map(([key, groupTabs]) => ({ key, tabs: groupTabs, sortKey: domainSortKey(key) }))
+      .sort((a, b) => compareDomainKeys(a.sortKey, b.sortKey))
+      .map(({ key, tabs }) => ({ key, tabs }))
+  );
 }
 
 // 当前窗口置顶，其余保持原顺序（Array.sort 是稳定排序）

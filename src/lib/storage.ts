@@ -68,6 +68,40 @@ export function upsertReadLater(
   ];
 }
 
+// 批量保存共享一次索引与一次数组复制，避免逐条 upsert 的反复扫描/复制。
+export function upsertReadLaterBatch(
+  list: ReadLaterItem[],
+  tabs: { url: string; title: string; favIconUrl?: string }[],
+  now: number,
+  newId: () => string,
+): ReadLaterItem[] {
+  if (tabs.length === 0) return list;
+  const next = [...list];
+  const indexByUrl = new Map<string, number>();
+  list.forEach((item, index) => {
+    const key = normalizeUrl(item.url);
+    // 与单条 upsert 的 find 一致：旧数据已有重复时只更新首项。
+    if (!indexByUrl.has(key)) indexByUrl.set(key, index);
+  });
+  for (const tab of tabs) {
+    const key = normalizeUrl(tab.url);
+    const index = indexByUrl.get(key);
+    if (index !== undefined) {
+      next[index] = { ...next[index], savedAt: now };
+    } else {
+      indexByUrl.set(key, next.length);
+      next.push({
+        id: newId(),
+        url: tab.url,
+        title: tab.title,
+        favIconUrl: tab.favIconUrl,
+        savedAt: now,
+      });
+    }
+  }
+  return next;
+}
+
 export function removeReadLater(list: ReadLaterItem[], id: string): ReadLaterItem[] {
   return list.filter((i) => i.id !== id);
 }
@@ -146,6 +180,28 @@ export function renameSession(
   return sessions.map((s) => (s.id === sessionId ? { ...s, name } : s));
 }
 
+// 会话条目没有独立 id；锁内按操作时的完整条目快照验证下标，防止串行写入后下标偏移。
+export function isSessionSnapshotCurrent(
+  sessions: SavedSession[],
+  snapshot: SavedSession | undefined,
+): boolean {
+  const current = sessions.find((session) => session.id === snapshot?.id);
+  return Boolean(
+    current &&
+    snapshot &&
+    current.tabs.length === snapshot.tabs.length &&
+    current.tabs.every((tab, index) => {
+      const expected = snapshot.tabs[index];
+      return (
+        tab.url === expected.url &&
+        tab.title === expected.title &&
+        tab.favIconUrl === expected.favIconUrl &&
+        Boolean(tab.pinned) === Boolean(expected.pinned)
+      );
+    }),
+  );
+}
+
 // ===== storage IO 薄层 =====
 
 export type StorageKey = 'readLater' | 'sessions' | 'settings';
@@ -157,4 +213,19 @@ export async function readKey<T>(key: StorageKey, fallback: T): Promise<T> {
 
 export async function writeKey<T>(key: StorageKey, value: T): Promise<void> {
   await chrome.storage.local.set({ [key]: value });
+}
+
+// 页面与 SW 共用同源锁；先拿锁再读取，避免各自的旧快照覆盖彼此。
+// 锁仅覆盖 storage 读改写，不包含动画、打开标签页等副作用。
+export async function updateKey<T>(
+  key: StorageKey,
+  fallback: T,
+  next: T | ((previous: T) => T),
+): Promise<T> {
+  return navigator.locks.request(`tabstation:storage:${key}`, async () => {
+    const previous = await readKey(key, fallback);
+    const resolved = typeof next === 'function' ? (next as (value: T) => T)(previous) : next;
+    await writeKey(key, resolved);
+    return resolved;
+  });
 }

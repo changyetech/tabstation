@@ -4,6 +4,105 @@ import { getChromeMock } from '../test/chrome-mock';
 import { useStorageState } from './useStorageState';
 
 describe('useStorageState', () => {
+  it('持久化完成前收到更新事件，旧写入返回值不会覆盖它', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.readLater = ['saved'];
+    const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
+    await waitFor(() => expect(result.current[0]).toEqual(['saved']));
+    const originalSet = chromeMock.storage.local.set.getMockImplementation()!;
+    let complete!: () => void;
+    chromeMock.storage.local.set.mockImplementationOnce(async (items) => {
+      await originalSet(items);
+      await new Promise<void>((resolve) => {
+        complete = resolve;
+      });
+    });
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current[1](['first']);
+    });
+    await waitFor(() => expect(result.current[0]).toEqual(['first']));
+    await act(() => chromeMock.storage.local.set({ readLater: ['newer'] }));
+
+    await act(async () => {
+      complete();
+      await pending;
+    });
+
+    expect(result.current[0]).toEqual(['newer']);
+  });
+
+  it('初始读取未完成时写入失败，初始已保存值仍能加载', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.readLater = ['saved'];
+    let complete!: (value: Record<string, unknown>) => void;
+    chromeMock.storage.local.get.mockReturnValueOnce(
+      new Promise((resolve) => {
+        complete = resolve;
+      }),
+    );
+    const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
+    chromeMock.storage.local.set.mockRejectedValueOnce(new Error('Storage failed'));
+
+    await act(async () => {
+      await expect(result.current[1]((list) => [...list, 'failed'])).rejects.toThrow();
+      complete({ readLater: ['saved'] });
+    });
+
+    expect(result.current[0]).toEqual(['saved']);
+  });
+
+  it('两个页面同时函数式更新不会互相覆盖，并都同步到最终值', async () => {
+    const { storageData } = getChromeMock();
+    storageData.readLater = ['saved'];
+    const first = renderHook(() => useStorageState<string[]>('readLater', []));
+    const second = renderHook(() => useStorageState<string[]>('readLater', []));
+    await waitFor(() => expect(second.result.current[0]).toEqual(['saved']));
+
+    await act(() =>
+      Promise.all([
+        first.result.current[1]((list) => [...list, 'one']),
+        second.result.current[1]((list) => [...list, 'two']),
+      ]),
+    );
+
+    expect(storageData.readLater).toEqual(['saved', 'one', 'two']);
+    expect(first.result.current[0]).toEqual(['saved', 'one', 'two']);
+    expect(second.result.current[0]).toEqual(['saved', 'one', 'two']);
+  });
+
+  it('持久化失败时保留已保存状态，并向调用方报告失败', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.readLater = ['saved'];
+    const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
+    await waitFor(() => expect(result.current[0]).toEqual(['saved']));
+    chromeMock.storage.local.set.mockRejectedValueOnce(new Error('Storage failed'));
+
+    await act(async () => {
+      await expect(result.current[1](['new'])).rejects.toThrow('Storage failed');
+    });
+
+    expect(result.current[0]).toEqual(['saved']);
+    expect(storageData.readLater).toEqual(['saved']);
+  });
+
+  it('初始读取晚于跨页更新完成时，不覆盖新值或函数式写入基准', async () => {
+    const { chromeMock } = getChromeMock();
+    let resolveRead!: (value: Record<string, unknown>) => void;
+    chromeMock.storage.local.get.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRead = resolve;
+      }),
+    );
+    const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
+
+    await act(() => chromeMock.storage.local.set({ readLater: ['remote'] }));
+    await act(async () => resolveRead({ readLater: ['old'] }));
+    expect(result.current[0]).toEqual(['remote']);
+    await act(() => result.current[1]((list) => [...list, 'local']));
+    expect(result.current[0]).toEqual(['remote', 'local']);
+  });
+
   it('挂载时读取已存值，无值用 fallback', async () => {
     const { storageData } = getChromeMock();
     storageData.readLater = [{ id: 'x' }];
@@ -35,9 +134,7 @@ describe('useStorageState', () => {
     const { chromeMock } = getChromeMock();
     const { result } = renderHook(() => useStorageState<string[]>('readLater', []));
     await waitFor(() => expect(result.current[0]).toEqual([]));
-    act(() => {
-      chromeMock.storage.onChanged.emit({ readLater: { newValue: ['remote'] } }, 'local');
-    });
+    await act(() => chromeMock.storage.local.set({ readLater: ['remote'] }));
     await act(() => result.current[1]((list) => [...list, 'local']));
     expect(result.current[0]).toEqual(['remote', 'local']);
   });

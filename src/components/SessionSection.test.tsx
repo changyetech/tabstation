@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../i18n';
@@ -41,6 +41,21 @@ function renderSection(over: Partial<React.ComponentProps<typeof SessionSection>
 }
 
 describe('SessionSection', () => {
+  it('输入法组合中的 Enter/Escape 不提交或取消，确认候选后 Enter 才重命名', async () => {
+    const { props } = renderSection();
+    await userEvent.click(screen.getByTitle('重命名'));
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'gong' } });
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true, keyCode: 229 });
+    fireEvent.keyDown(input, { key: 'Escape', isComposing: true, keyCode: 229 });
+    expect(props.onRename).not.toHaveBeenCalled();
+    expect(input).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: '工作' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(props.onRename).toHaveBeenCalledWith(sessions[0], '工作');
+  });
+
   it('会话渲染为 win-block 卡片：名称、条目数、恢复 / 删除回调，标题不含保存时间', async () => {
     const { props, view } = renderSection();
     expect(

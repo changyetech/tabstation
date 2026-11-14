@@ -1,5 +1,5 @@
 import { type ReadLaterItem, type SavedSession } from './storage';
-import { hostnameOf } from './grouping';
+import { hostnameOf } from './url';
 
 export type OmniItem =
   | { kind: 'tab'; tabId: number; windowId: number; title: string; url: string }

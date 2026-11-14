@@ -6,6 +6,11 @@ import { MANAGER_PATH } from './urls';
 const MANAGER = 'chrome-extension://test-id/src/manager/index.html';
 
 describe('findManagerTab', () => {
+  it('管理页导航尚未提交时，pendingUrl 也参与单例查找', () => {
+    const pending = makeTab({ id: 99, url: '', pendingUrl: MANAGER, windowId: 1 });
+    expect(findManagerTab([pending], MANAGER, 'global', 1)).toBe(pending);
+  });
+
   const managerInWin1 = makeTab({ id: 10, url: MANAGER, windowId: 1 });
   const managerInWin2 = makeTab({ id: 20, url: MANAGER, windowId: 2 });
   const normal = makeTab({ id: 30, url: 'https://a.com/', windowId: 1 });

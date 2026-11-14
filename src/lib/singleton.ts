@@ -6,7 +6,9 @@ export function findManagerTab(
   scope: 'global' | 'per-window',
   currentWindowId: number,
 ): chrome.tabs.Tab | undefined {
-  const managers = tabs.filter((t) => t.url?.startsWith(managerUrl));
+  const managers = tabs.filter(
+    (t) => t.url?.startsWith(managerUrl) || t.pendingUrl?.startsWith(managerUrl),
+  );
   const inCurrent = managers.find((t) => t.windowId === currentWindowId);
   if (scope === 'per-window') return inCurrent;
   return inCurrent ?? managers[0];

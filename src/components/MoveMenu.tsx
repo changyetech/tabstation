@@ -11,9 +11,10 @@ export interface MoveTarget {
 }
 
 type AnchorRect = Pick<DOMRect, 'top' | 'bottom' | 'right'>;
-type PopoverPosition = { top: number; right: number };
+type PopoverPosition = { top: number; right: number; maxHeight: number; overflowY: 'auto' };
 
 const POPOVER_OFFSET_PX = 6;
+const VIEWPORT_MARGIN_PX = 8;
 
 export default function MoveMenu({
   targets,
@@ -59,14 +60,24 @@ export default function MoveMenu({
       if (!popover) return;
 
       const rect = triggerRef.current?.getBoundingClientRect() ?? anchorRect;
+      const maxHeight = Math.max(0, window.innerHeight - 2 * VIEWPORT_MARGIN_PX);
+      // 视口增高时先解除旧限高，再测量；否则定位仍用旧高度而菜单随后长高越界。
+      popover.style.maxHeight = `${maxHeight}px`;
+      const height = Math.min(popover.offsetHeight, maxHeight);
       const belowTop = rect.bottom + POPOVER_OFFSET_PX;
-      const aboveTop = rect.top - POPOVER_OFFSET_PX - popover.offsetHeight;
-      const canShowBelow = belowTop + popover.offsetHeight <= window.innerHeight;
-      const top = canShowBelow || aboveTop < 0 ? belowTop : aboveTop;
+      const aboveTop = rect.top - POPOVER_OFFSET_PX - height;
+      const canShowBelow = belowTop + height <= window.innerHeight - VIEWPORT_MARGIN_PX;
+      const preferredTop = canShowBelow || aboveTop < VIEWPORT_MARGIN_PX ? belowTop : aboveTop;
+      const top = Math.max(
+        VIEWPORT_MARGIN_PX,
+        Math.min(preferredTop, window.innerHeight - height - VIEWPORT_MARGIN_PX),
+      );
       const right = window.innerWidth - rect.right;
 
       setPopoverPosition((previous) =>
-        previous?.top === top && previous.right === right ? previous : { top, right },
+        previous?.top === top && previous.right === right && previous.maxHeight === maxHeight
+          ? previous
+          : { top, right, maxHeight, overflowY: 'auto' },
       );
     };
 

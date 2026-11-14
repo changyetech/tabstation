@@ -80,15 +80,18 @@ export default function DomainGroupList(props: DomainGroupListProps) {
 
   // 去重预览：只保留重复组成员，空组隐藏（spec §5.4）
   // 分组是 O(tab 数) 的全量重算，父级每次 tab 事件刷新都会重渲染本组件，故记忆化
+  const domainGroups = useMemo(() => groupByDomain(tabs), [tabs]);
   const groups = useMemo(
     () =>
-      groupByDomain(tabs)
-        .map((g) => ({
-          ...g,
-          tabs: dedupePreview ? g.tabs.filter((x) => previewByTabId.has(x.id)) : g.tabs,
-        }))
-        .filter((g) => g.tabs.length > 0),
-    [tabs, dedupePreview, previewByTabId],
+      dedupePreview
+        ? domainGroups
+            .map((g) => ({
+              ...g,
+              tabs: g.tabs.filter((x) => previewByTabId.has(x.id)),
+            }))
+            .filter((g) => g.tabs.length > 0)
+        : domainGroups,
+    [domainGroups, dedupePreview, previewByTabId],
   );
 
   const rows = (groupTabs: TabWithId[]) =>

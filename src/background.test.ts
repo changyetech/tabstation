@@ -6,6 +6,22 @@ import { openManager, safeOpenManager } from './background';
 const MANAGER = 'chrome-extension://test-id/src/manager/index.html';
 
 describe('openManager', () => {
+  it('同时触发两个入口只创建一个管理页', async () => {
+    const { chromeMock } = getChromeMock();
+    const tabs: chrome.tabs.Tab[] = [];
+    chromeMock.tabs.query.mockImplementation(async () => [...tabs]);
+    chromeMock.tabs.create.mockImplementation(async (props) => {
+      const tab = makeTab({ id: 9, windowId: 1, ...props });
+      tabs.push(tab);
+      return tab;
+    });
+
+    await Promise.all([openManager(), openManager()]);
+
+    expect(chromeMock.tabs.create).toHaveBeenCalledTimes(1);
+    expect(tabs).toHaveLength(1);
+  });
+
   beforeEach(() => {
     const { chromeMock } = getChromeMock();
     chromeMock.windows.getLastFocused.mockResolvedValue(makeWindow({ id: 1 }));
@@ -70,6 +86,59 @@ describe('safeOpenManager', () => {
 });
 
 describe('omnibox', () => {
+  it('并发打开两条稍后阅读不会使另一条复活', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.readLater = [
+      { id: 'a', url: 'https://a.com/', title: 'A', savedAt: 1 },
+      { id: 'b', url: 'https://b.com/', title: 'B', savedAt: 1 },
+    ];
+    chromeMock.omnibox.onInputEntered.emit('read:a', 'newForegroundTab');
+    chromeMock.omnibox.onInputEntered.emit('read:b', 'newForegroundTab');
+
+    await vi.waitFor(() => expect(chromeMock.storage.local.set).toHaveBeenCalledTimes(2));
+
+    expect(storageData.readLater).toEqual([]);
+    expect(chromeMock.tabs.create).toHaveBeenCalledTimes(2);
+  });
+
+  it('空查询仅读设置用于本地化，不查询标签页和完整清单', async () => {
+    const { chromeMock } = getChromeMock();
+    const suggest = vi.fn();
+    chromeMock.omnibox.onInputChanged.emit('  ', suggest);
+    await vi.waitFor(() => expect(suggest).toHaveBeenCalledWith([]));
+    expect(chromeMock.tabs.query).not.toHaveBeenCalled();
+    expect(chromeMock.storage.local.get).toHaveBeenCalledWith('settings');
+  });
+
+  it('后台打开稍后阅读不抢占当前标签页', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.readLater = [{ id: 'r1', url: 'https://a.com/', title: 'A', savedAt: 1 }];
+    chromeMock.omnibox.onInputEntered.emit('read:r1', 'newBackgroundTab');
+    await vi.waitFor(() => expect(storageData.readLater).toEqual([]));
+    expect(chromeMock.tabs.create).toHaveBeenCalledWith({ url: 'https://a.com/', active: false });
+  });
+
+  it('打开稍后阅读期间的新增和删除不会被旧清单覆盖', async () => {
+    const { chromeMock, storageData } = getChromeMock();
+    const a = { id: 'a', url: 'https://a.com/', title: 'A', savedAt: 1 };
+    const b = { ...a, id: 'b' };
+    const c = { ...a, id: 'c' };
+    storageData.readLater = [a, b];
+    let complete!: () => void;
+    chromeMock.tabs.update.mockReturnValueOnce(
+      new Promise<undefined>((resolve) => {
+        complete = () => resolve(undefined);
+      }),
+    );
+    chromeMock.omnibox.onInputEntered.emit('read:a', 'currentTab');
+    await vi.waitFor(() => expect(chromeMock.tabs.update).toHaveBeenCalled());
+    await chromeMock.storage.local.set({ readLater: [a, c] });
+
+    complete();
+
+    await vi.waitFor(() => expect(storageData.readLater).toEqual([c]));
+  });
+
   it('建议中排除自有页面（管理页与设置页）', async () => {
     const { chromeMock } = getChromeMock();
     chromeMock.tabs.query.mockResolvedValue([
@@ -215,7 +284,7 @@ describe('omnibox', () => {
     storageData.readLater = [{ id: 'r1', url: 'https://a.com/', title: 'A', savedAt: 1 }];
     chromeMock.omnibox.onInputEntered.emit('read:r1', 'newForegroundTab');
     await vi.waitFor(() =>
-      expect(chromeMock.tabs.create).toHaveBeenCalledWith({ url: 'https://a.com/' }),
+      expect(chromeMock.tabs.create).toHaveBeenCalledWith({ url: 'https://a.com/', active: true }),
     );
     expect(storageData.readLater).toEqual([]);
   });

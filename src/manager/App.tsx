@@ -36,12 +36,14 @@ import { restoreSession } from '../lib/restore-session';
 import {
   DEFAULT_SETTINGS,
   mergeSettings,
+  isSessionSnapshotCurrent,
   moveSessionTab,
   removeReadLater,
   removeSessionTab,
   renameSession,
   snapshotWindow,
   upsertReadLater,
+  upsertReadLaterBatch,
   type ReadLaterItem,
   type SavedSession,
   type SessionTab,
@@ -191,11 +193,21 @@ function AppInner({ settings }: { settings: Settings }) {
   // 轻量 toast：2.5s 后自动清空；重复调用先清掉上一个定时器
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      window.clearTimeout(toastTimer.current);
+    };
+  }, []);
   const showToast = (msg: string) => {
+    if (!mounted.current) return;
     window.clearTimeout(toastTimer.current);
     setToast(msg);
     toastTimer.current = window.setTimeout(() => setToast(null), 2500);
   };
+  const reportFailure = () => showToast(t('toast.operationFailed'));
 
   const runDedupe = () => {
     setDedupePreview(false);
@@ -227,6 +239,7 @@ function AppInner({ settings }: { settings: Settings }) {
     void closeTabsWithEffect([{ tabId: tab.id, el: rowEls.current.get(tab.id) ?? null }]);
 
   const [readLater, setReadLater] = useStorageState<ReadLaterItem[]>('readLater', []);
+  const openingReadIds = useRef(new Set<string>());
 
   // 保存即关 tab（spec 沿用 §5.5）；同 URL 归一化合并在 upsertReadLater 内。
   // 清单类写入一律走函数式更新：以最新已提交清单为基准，
@@ -241,41 +254,59 @@ function AppInner({ settings }: { settings: Settings }) {
         Date.now(),
         crypto.randomUUID(),
       ),
-    );
-    void closeTabsWithEffect([{ tabId: tab.id, el: rowEls.current.get(tab.id) ?? null }]).then(() =>
-      showToast(t('toast.readLaterSaved')),
-    );
+    )
+      .then(() => closeTabsWithEffect([{ tabId: tab.id, el: rowEls.current.get(tab.id) ?? null }]))
+      .then(() => showToast(t('toast.readLaterSaved')))
+      .catch(reportFailure);
   };
 
   // 打开即移除（沿用旧 spec）
   const openReadLater = (item: ReadLaterItem) => {
-    void chrome.tabs.create({ url: item.url });
-    void setReadLater((list) => removeReadLater(list, item.id));
+    if (openingReadIds.current.has(item.id)) return;
+    openingReadIds.current.add(item.id);
+    void chrome.tabs
+      .create({ url: item.url })
+      .then(() => setReadLater((list) => removeReadLater(list, item.id)))
+      .catch(reportFailure)
+      .finally(() => openingReadIds.current.delete(item.id));
   };
 
   // 新窗口打开：语义同「打开」，即从清单移除；尺寸遵循设置（spec §5.3）
   const openReadLaterNewWindow = (item: ReadLaterItem) => {
-    void createWindowBySetting(settings.newWindowMode, { url: item.url, focused: true });
-    void setReadLater((list) => removeReadLater(list, item.id));
+    if (openingReadIds.current.has(item.id)) return;
+    openingReadIds.current.add(item.id);
+    void createWindowBySetting(settings.newWindowMode, { url: item.url, focused: true })
+      .then(() => setReadLater((list) => removeReadLater(list, item.id)))
+      .catch(reportFailure)
+      .finally(() => openingReadIds.current.delete(item.id));
   };
 
   // 全部打开：一个新窗口开全部并清空清单（spec §5.5）
   const openAllReadLater = () => {
-    const n = readLater.length;
+    const targets = readLater.filter((item) => !openingReadIds.current.has(item.id));
+    const n = targets.length;
     if (n === 0) return;
+    const openedIds = new Set(targets.map((item) => item.id));
+    openedIds.forEach((id) => openingReadIds.current.add(id));
     void createWindowBySetting(settings.newWindowMode, {
-      url: readLater.map((x) => x.url),
+      url: targets.map((x) => x.url),
       focused: true,
-    });
-    void setReadLater([]);
-    showToast(t('toast.rlOpenAll', { n }));
+    })
+      .then(() => setReadLater((list) => list.filter((item) => !openedIds.has(item.id))))
+      .then(() => showToast(t('toast.rlOpenAll', { n })))
+      .catch(reportFailure)
+      .finally(() => openedIds.forEach((id) => openingReadIds.current.delete(id)));
   };
 
   // 直接删除：仅退场动画，无音效/纸屑/确认。
   // 提交延后到动画结束（300ms），期间可能发生别的写入——必须以最新清单为基准，
   // 否则「300ms 内连删两条」会让先删的那条复活
   const deleteReadLater = (item: ReadLaterItem, el: HTMLElement | null) => {
-    const commit = () => void setReadLater((list) => removeReadLater(list, item.id));
+    const commit = () =>
+      void setReadLater((list) => removeReadLater(list, item.id)).catch(() => {
+        if (el) undoAnimateElementOut(el);
+        reportFailure();
+      });
     if (el) animateElementOut(el, commit);
     else commit();
   };
@@ -384,36 +415,54 @@ function AppInner({ settings }: { settings: Settings }) {
         createdAt: savedAt,
         tabs: snapshot,
       },
-    ]);
-    const n = numberByWindowId.get(win.id) ?? 0;
-    if (settings.closeWindowAfterSave) {
-      closeWindow(win, null);
-      showToast(t('toast.sessionSavedClosed', { n }));
-    } else {
-      showToast(t('toast.sessionSaved', { n }));
-    }
+    ])
+      .then(() => {
+        const n = numberByWindowId.get(win.id) ?? 0;
+        if (settings.closeWindowAfterSave) {
+          closeWindow(win, null);
+          showToast(t('toast.sessionSavedClosed', { n }));
+        } else {
+          showToast(t('toast.sessionSaved', { n }));
+        }
+      })
+      .catch(reportFailure);
   };
 
   const deleteSession = (s: SavedSession) =>
-    void setSessions((list) => list.filter((x) => x.id !== s.id));
+    void setSessions((list) => list.filter((x) => x.id !== s.id)).catch(reportFailure);
   const handleRename = (s: SavedSession, name: string) =>
-    void setSessions((list) => renameSession(list, s.id, name));
+    void setSessions((list) => renameSession(list, s.id, name)).catch(reportFailure);
   const handleMoveTab = (
     fromSessionId: string,
     fromIndex: number,
     toSessionId: string,
     toIndex: number,
-  ) =>
-    void setSessions((list) =>
-      moveSessionTab(list, fromSessionId, fromIndex, toSessionId, toIndex),
-    );
+  ) => {
+    const fromSnapshot = sessions.find((session) => session.id === fromSessionId);
+    const toSnapshot = sessions.find((session) => session.id === toSessionId);
+    void setSessions((list) => {
+      if (
+        !isSessionSnapshotCurrent(list, fromSnapshot) ||
+        !isSessionSnapshotCurrent(list, toSnapshot)
+      ) {
+        throw new Error('Session changed before moving tab');
+      }
+      return moveSessionTab(list, fromSessionId, fromIndex, toSessionId, toIndex);
+    }).catch(reportFailure);
+  };
   const handleDeleteTab = (s: SavedSession, index: number) =>
-    void setSessions((list) => removeSessionTab(list, s.id, index)); // 删空自动删会话（storage.ts 保证）
-  const openSessionTab = (tab: SessionTab) => void chrome.tabs.create({ url: tab.url });
+    void setSessions((list) => {
+      if (!isSessionSnapshotCurrent(list, s))
+        throw new Error('Session changed before deleting tab');
+      return removeSessionTab(list, s.id, index);
+    }).catch(reportFailure); // 删空自动删会话（storage.ts 保证）
+  const openSessionTab = (tab: SessionTab) =>
+    void chrome.tabs.create({ url: tab.url }).catch(reportFailure);
   // 会话条目「新窗口打开」：条目保留（模板式）；尺寸遵循设置
   const openSessionTabNewWindow = (tab: SessionTab) => {
-    void createWindowBySetting(settings.newWindowMode, { url: tab.url, focused: true });
-    showToast(t('toast.openedNewWindow'));
+    void createWindowBySetting(settings.newWindowMode, { url: tab.url, focused: true })
+      .then(() => showToast(t('toast.openedNewWindow')))
+      .catch(reportFailure);
   };
 
   // 拖影内容（spec 2026-08-16-session-card-dnd §3.4）：
@@ -500,22 +549,26 @@ function AppInner({ settings }: { settings: Settings }) {
       return;
     }
     const savedAt = Date.now();
-    void setReadLater((list) =>
-      targets.reduce(
-        (acc, tab) =>
-          upsertReadLater(
-            acc,
-            { url: tab.url ?? '', title: tab.title ?? tab.url ?? '', favIconUrl: tab.favIconUrl },
-            savedAt,
-            crypto.randomUUID(),
-          ),
-        list,
-      ),
-    );
     const host = domainHostLabel(targets);
-    void closeTabsWithEffect(
-      targets.map((x) => ({ tabId: x.id, el: rowEls.current.get(x.id) ?? null })),
-    ).then(() => showToast(t('toast.domReadLater', { host, n: targets.length })));
+    void setReadLater((list) =>
+      upsertReadLaterBatch(
+        list,
+        targets.map((tab) => ({
+          url: tab.url ?? '',
+          title: tab.title ?? tab.url ?? '',
+          favIconUrl: tab.favIconUrl,
+        })),
+        savedAt,
+        () => crypto.randomUUID(),
+      ),
+    )
+      .then(() =>
+        closeTabsWithEffect(
+          targets.map((x) => ({ tabId: x.id, el: rowEls.current.get(x.id) ?? null })),
+        ),
+      )
+      .then(() => showToast(t('toast.domReadLater', { host, n: targets.length })))
+      .catch(reportFailure);
   };
 
   const domainCloseAll = (batch: TabWithId[]) => {
@@ -551,10 +604,14 @@ function AppInner({ settings }: { settings: Settings }) {
   };
 
   // ===== 渲染 =====
+  const domainCount = useMemo(
+    () => new Set(visible.map((x) => domainGroupKey(x.url ?? ''))).size,
+    [visible],
+  );
   const stats = {
     windows: windowsWithTabs.length,
     tabs: visible.length,
-    domains: new Set(visible.map((x) => domainGroupKey(x.url ?? ''))).size,
+    domains: domainCount,
     dupGroups: dupGroups.length,
     readLater: readLater.length,
   };
@@ -573,13 +630,13 @@ function AppInner({ settings }: { settings: Settings }) {
     registerRow,
     onCloseTab: closeTab,
     getMoveTargets,
-    onMove: (tab: TabWithId, target: MoveTarget) => void moveTab(tab, target),
+    onMove: (tab: TabWithId, target: MoveTarget) => void moveTab(tab, target).catch(reportFailure),
     onReadLater: saveReadLater,
-    onSplit: (tab: TabWithId) => void splitTab(tab),
+    onSplit: (tab: TabWithId) => void splitTab(tab).catch(reportFailure),
     onHoverDup: setHoverDupTabId,
     onDedupe: runGroupDedupe,
     onDomainReadLater: domainReadLater,
-    onDomainSplit: (batch: TabWithId[]) => void domainSplit(batch),
+    onDomainSplit: (batch: TabWithId[]) => void domainSplit(batch).catch(reportFailure),
     onDomainCloseAll: domainCloseAll,
   };
 
@@ -616,7 +673,9 @@ function AppInner({ settings }: { settings: Settings }) {
                 visibleLimit={settings.visibleTabs}
                 expandedKeys={expandedKeys}
                 onToggleExpand={toggleExpand}
-                onRestore={(s) => void restoreSession(s, settings.newWindowMode)}
+                onRestore={(s) =>
+                  void restoreSession(s, settings.newWindowMode).catch(reportFailure)
+                }
                 onDelete={deleteSession}
                 onRename={handleRename}
                 onMoveTab={handleMoveTab}

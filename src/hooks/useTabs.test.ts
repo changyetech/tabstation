@@ -5,6 +5,47 @@ import { makeTab, makeWindow } from '../test/factories';
 import { useTabs } from './useTabs';
 
 describe('useTabs', () => {
+  it('内容相同的刷新复用快照，嵌套 mutedInfo 也按值比较', async () => {
+    const { chromeMock } = getChromeMock();
+    const tab = makeTab({ id: 1, mutedInfo: { muted: false } });
+    const win = makeWindow({ id: 1 });
+    chromeMock.tabs.query.mockImplementation(async () => [{ ...tab, mutedInfo: { muted: false } }]);
+    chromeMock.windows.getAll.mockImplementation(async () => [{ ...win }]);
+    const { result } = renderHook(() => useTabs());
+    await waitFor(() => expect(result.current.tabs).toHaveLength(1));
+    const previous = result.current;
+
+    await act(async () => chromeMock.tabs.onUpdated.emit(1 as never, {} as never, {} as never));
+
+    expect(result.current.tabs).toBe(previous.tabs);
+    expect(result.current.windows).toBe(previous.windows);
+  });
+
+  it.each([
+    { title: 'Changed' },
+    { url: 'https://new.example/' },
+    { index: 3 },
+    { windowId: 2 },
+    { pinned: true },
+    { lastAccessed: 500 },
+    { mutedInfo: { muted: true } },
+    { status: 'complete' as const },
+  ])('快照字段变化仍传播：%j', async (patch) => {
+    const { chromeMock } = getChromeMock();
+    const tab = makeTab({ id: 1, mutedInfo: { muted: false } });
+    chromeMock.tabs.query.mockResolvedValue([tab]);
+    chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 }), makeWindow({ id: 2 })]);
+    const { result } = renderHook(() => useTabs());
+    await waitFor(() => expect(result.current.tabs).toHaveLength(1));
+    const previous = result.current.tabs;
+    chromeMock.tabs.query.mockResolvedValue([{ ...tab, ...patch }]);
+
+    await act(async () => chromeMock.tabs.onUpdated.emit(1 as never, {} as never, {} as never));
+
+    expect(result.current.tabs).not.toBe(previous);
+    expect(result.current.tabs[0]).toMatchObject(patch);
+  });
+
   it('挂载时全量拉取 tabs/windows/currentWindowId', async () => {
     const { chromeMock } = getChromeMock();
     chromeMock.tabs.query.mockResolvedValue([makeTab({ id: 1 })]);

@@ -39,6 +39,7 @@ make package      # build + 打包 dist/ 为 tab-station-<version>.zip
 **分层约定**：
 
 - `src/lib/` — 纯函数领域逻辑（storage 数据模型与操作、URL 归一化、去重、分组、折叠、DnD 计算、关闭动效），不碰 React；数据模型（`ReadLaterItem` / `SavedSession` / `Settings`）定义在 `src/lib/storage.ts`。
+  持久化读改写经 `updateKey` 的同源 Web Locks 按 key 串行，页面和 SW 共用，锁内重读 storage 最新值；不要基于渲染快照整体写回。`useStorageState` 在写入成功或 onChanged 后更新界面。后台用 `lib/tabs.ts` / `lib/url.ts` 的轻量函数，避免导入带完整域名后缀库的 `lib/grouping.ts`。
 - `src/hooks/` — 把 `chrome.storage` / `chrome.tabs` 事件桥接为 React state（`useStorageState`、`useTabs`、`useTheme`）。
 - `src/components/` — 管理页 UI 组件，逐组件配套 `.test.tsx`；少数通用组件（如 `CopyrightFooter`）由设置页共用。
 - `src/i18n/` — 自研轻量 i18n（zh_CN / en JSON + resolve），manifest 层文案在 `public/_locales/`。

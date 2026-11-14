@@ -188,6 +188,7 @@ function SessionBlock({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commitRename}
             onKeyDown={(e) => {
+              if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
               if (e.key === 'Enter') commitRename();
               if (e.key === 'Escape') {
                 setDraft(session.name);
