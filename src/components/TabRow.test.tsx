@@ -47,6 +47,35 @@ describe('TabRow', () => {
     expect(screen.getByText('×2')).toBeInTheDocument();
   });
 
+  it('重复徽标支持点击和键盘去重、聚焦预览，且不触发行跳转', async () => {
+    const { chromeMock } = getChromeMock();
+    const tab = makeTab({ id: 1 });
+    const onDedupe = vi.fn();
+    const onHoverDup = vi.fn();
+    renderRow(
+      <TabRow
+        tab={tab}
+        dupCount={2}
+        draggable
+        now={Date.now()}
+        registerRow={noop}
+        onClose={noop}
+        onDedupe={onDedupe}
+        onHoverDup={onHoverDup}
+      />,
+    );
+    const badge = screen.getByRole('button', { name: '去除此组重复标签' });
+    await userEvent.click(badge);
+    expect(onDedupe).toHaveBeenCalledWith(tab);
+    expect(onHoverDup).toHaveBeenCalledWith(1);
+    await userEvent.keyboard(' ');
+    expect(onDedupe).toHaveBeenCalledTimes(2);
+    await userEvent.tab();
+    expect(onHoverDup).toHaveBeenLastCalledWith(null);
+    expect(chromeMock.tabs.update).not.toHaveBeenCalled();
+    expect(chromeMock.windows.update).not.toHaveBeenCalled();
+  });
+
   it('favicon 统一经 Chrome 本地缓存按 URL 取图；无 URL 回退字母徽标', () => {
     const t1 = makeTab({ id: 1, url: 'https://www.a.com/p' });
     const t2 = makeTab({ id: 2, url: undefined, title: 'NoUrl' });

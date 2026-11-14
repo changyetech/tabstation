@@ -27,6 +27,7 @@ export interface TabRowProps {
   onSplit?: (tab: TabWithId) => void;
   /** 悬停重复行 → 上报以高亮同组（spec §5.4）；离开上报 null */
   onHoverDup?: (tabId: number | null) => void;
+  onDedupe?: (tab: TabWithId) => void;
 }
 
 export default function TabRow({
@@ -44,6 +45,7 @@ export default function TabRow({
   onReadLater,
   onSplit,
   onHoverDup,
+  onDedupe,
 }: TabRowProps) {
   const t = useT();
   const lang = useLanguage();
@@ -135,9 +137,28 @@ export default function TabRow({
             <span className="row-spacer" />
           </>
         )}
-        {dupCount !== undefined && (
-          <span className="dup-badge num">{t('dup.badge', { n: dupCount })}</span>
-        )}
+        {dupCount !== undefined &&
+          (onDedupe ? (
+            <button
+              type="button"
+              className="dup-badge dup-action num"
+              title={t('dup.dedupeGroup')}
+              aria-label={t('dup.dedupeGroup')}
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              onFocus={() => onHoverDup?.(tab.id)}
+              onBlur={() => onHoverDup?.(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDedupe(tab);
+              }}
+            >
+              <span className="dup-action-label">{t('dup.dedupe')} </span>
+              <span>{t('dup.badge', { n: dupCount })}</span>
+            </button>
+          ) : (
+            <span className="dup-badge num">{t('dup.badge', { n: dupCount })}</span>
+          ))}
         <span className="row-tail">
           <span className="tab-time num">{timeText}</span>
           <span className="row-acts">

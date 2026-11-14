@@ -31,6 +31,7 @@ export interface DomainGroupListProps extends DomainActionHandlers {
   onReadLater?: (tab: TabWithId) => void;
   onSplit?: (tab: TabWithId) => void;
   onHoverDup?: (tabId: number | null) => void;
+  onDedupe?: (tab: TabWithId) => void;
 }
 
 // 域名行批量操作组（spec §5.1）：稍后阅读 / 拆窗 / 关闭，悬停浮现
@@ -108,6 +109,7 @@ export default function DomainGroupList(props: DomainGroupListProps) {
         onReadLater={props.onReadLater}
         onSplit={props.onSplit}
         onHoverDup={props.onHoverDup}
+        onDedupe={props.onDedupe}
       />
     ));
 

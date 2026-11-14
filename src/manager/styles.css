@@ -579,6 +579,27 @@ img.favicon {
   padding: 0 6px;
   line-height: 16px;
 }
+.dup-action {
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+.dup-action-label {
+  display: none;
+}
+.tab-row:hover .dup-action-label,
+.dup-action:focus-visible .dup-action-label {
+  display: inline;
+}
+.tab-row:hover .dup-action,
+.dup-action:focus-visible {
+  background: color-mix(in oklch, var(--warn) 12%, transparent);
+  border-color: var(--warn);
+}
+.dup-action:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+}
 .tab-time {
   color: var(--muted);
   font-size: 12px;

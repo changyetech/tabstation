@@ -32,6 +32,7 @@ export interface WindowSectionProps {
   onSaveWindow?: (win: chrome.windows.Window) => void;
   onSplit?: (tab: TabWithId) => void;
   onHoverDup?: (tabId: number | null) => void;
+  onDedupe?: (tab: TabWithId) => void;
 }
 
 // 窗口区块（设计稿 win-block）：区块头 + 列表；当前窗口强调描边
@@ -133,6 +134,7 @@ export default function WindowSection(props: WindowSectionProps) {
               onReadLater={props.onReadLater}
               onSplit={props.onSplit}
               onHoverDup={props.onHoverDup}
+              onDedupe={props.onDedupe}
             />
           ))}
           {fold.hiddenCount > 0 && (

@@ -206,6 +206,18 @@ function AppInner({ settings }: { settings: Settings }) {
     ).then(() => showToast(t('toast.dedupeDone', { n })));
   };
 
+  // 行内徽标仅处理当前重复组；搜索隐藏的成员仍参与去重。
+  const runGroupDedupe = (tab: TabWithId) => {
+    const group = dupGroups.find((g) => g.tabs.some((member) => member.id === tab.id));
+    if (!group) return;
+    const { closeIds } = planDedupe([group]);
+    if (closeIds.length === 0) return;
+    setHoverDupTabId(null);
+    void closeTabsWithEffect(
+      closeIds.map((id) => ({ tabId: id, el: rowEls.current.get(id) ?? null })),
+    ).then(() => showToast(t('toast.dedupeDone', { n: closeIds.length })));
+  };
+
   const registerRow = (tabId: number, el: HTMLElement | null) => {
     if (el) rowEls.current.set(tabId, el);
     else rowEls.current.delete(tabId);
@@ -565,6 +577,7 @@ function AppInner({ settings }: { settings: Settings }) {
     onReadLater: saveReadLater,
     onSplit: (tab: TabWithId) => void splitTab(tab),
     onHoverDup: setHoverDupTabId,
+    onDedupe: runGroupDedupe,
     onDomainReadLater: domainReadLater,
     onDomainSplit: (batch: TabWithId[]) => void domainSplit(batch),
     onDomainCloseAll: domainCloseAll,

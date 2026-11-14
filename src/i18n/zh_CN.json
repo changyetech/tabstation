@@ -115,6 +115,8 @@
   "domain.localFiles": "本地文件",
   "domain.other": "其他",
   "time.justNow": "刚刚",
+  "dup.dedupe": "去重",
+  "dup.dedupeGroup": "去除此组重复标签",
   "dup.badge": "×{n}",
   "omnibox.typeTab": "标签页",
   "omnibox.typeRead": "稍后阅读",

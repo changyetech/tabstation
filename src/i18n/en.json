@@ -115,6 +115,8 @@
   "domain.localFiles": "Local files",
   "domain.other": "Other",
   "time.justNow": "just now",
+  "dup.dedupe": "Dedupe",
+  "dup.dedupeGroup": "Dedupe this group",
   "dup.badge": "×{n}",
   "omnibox.typeTab": "Tab",
   "omnibox.typeRead": "Read later",

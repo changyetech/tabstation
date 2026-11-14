@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { getChromeMock } from '../test/chrome-mock';
@@ -369,6 +369,32 @@ describe('一键去重', () => {
     await userEvent.unhover(screen.getByText('D1'));
     expect(screen.getByText('D2').closest('li')).not.toHaveClass('dup-keep');
   });
+
+  it.each(['all', 'window'] as const)(
+    '%s 模式：徽标只去重本组，跨窗口和搜索过滤保留固定标签',
+    async (mode) => {
+      const { chromeMock, storageData } = getChromeMock();
+      storageData.settings = { defaultView: mode };
+      chromeMock.tabs.query.mockResolvedValue([
+        makeTab({ id: 1, title: '目标', url: 'https://d.com/#one', lastAccessed: 300 }),
+        makeTab({ id: 2, windowId: 2, title: '隐藏固定', url: 'https://d.com/#two', pinned: true }),
+        makeTab({ id: 3, title: '其他旧', url: 'https://other.com/', lastAccessed: 100 }),
+        makeTab({ id: 4, title: '其他新', url: 'https://other.com/', lastAccessed: 200 }),
+      ]);
+      chromeMock.windows.getAll.mockResolvedValue([makeWindow({ id: 1 }), makeWindow({ id: 2 })]);
+      chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
+      render(<App />);
+      await screen.findByText('目标');
+      await userEvent.type(screen.getByRole('searchbox', { name: '搜索标签页' }), '目标');
+      const badge = screen.getByRole('button', { name: '去除此组重复标签' });
+      act(() => badge.focus());
+      expect(screen.getByText('目标').closest('li')).toHaveClass('dup-doomed');
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
+      expect(chromeMock.tabs.remove).toHaveBeenCalledTimes(1);
+      expect(chromeMock.tabs.update).not.toHaveBeenCalled();
+    },
+  );
 
   it('孤儿 tab（windowId 不在 windows.getAll() 里）不渲染、不计入 ×N、去重按钮不出现', async () => {
     const { chromeMock } = getChromeMock();
