@@ -100,7 +100,7 @@
   "settings.visibleTabs16": "16 tabs",
   "settings.visibleTabsAll": "Show all",
   "settings.language": "Interface language",
-  "settings.languageDesc": "\"Auto\" follows the browser language.",
+  "settings.languageDesc": "“Auto” follows the browser language; unsupported languages default to English.",
   "settings.langAuto": "Auto (follow browser)",
   "settings.langEn": "English",
   "settings.langZh": "简体中文",

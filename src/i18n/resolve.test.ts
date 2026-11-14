@@ -13,6 +13,26 @@ describe('resolveLanguage', () => {
   });
   it('auto：其余取 en', () => {
     expect(resolveLanguage('auto', 'en-US')).toBe('en');
-    expect(resolveLanguage('auto', 'ja')).toBe('en');
+    expect(resolveLanguage('auto', 'de-DE')).toBe('en');
+  });
+
+  it.each([
+    ['ru', 'ru'],
+    ['ru-RU', 'ru'],
+    ['ko-KR', 'ko'],
+    ['ja', 'ja'],
+    ['ja-JP', 'ja'],
+    ['fr-CA', 'fr'],
+    ['FR-fr', 'fr'],
+  ])('auto：%s 解析为 %s', (browser, expected) => {
+    expect(resolveLanguage('auto', browser)).toBe(expected);
+  });
+
+  it.each(['de-DE', 'es', '', 'unknown', 'zhinvalid'])('auto：未匹配的 %s 默认英文', (browser) => {
+    expect(resolveLanguage('auto', browser)).toBe('en');
+  });
+
+  it.each(['ru', 'ko', 'ja', 'fr'] as const)('显式设置 %s 优先于浏览器语言', (language) => {
+    expect(resolveLanguage(language, 'zh-CN')).toBe(language);
   });
 });

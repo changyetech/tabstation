@@ -86,6 +86,22 @@ describe('safeOpenManager', () => {
 });
 
 describe('omnibox', () => {
+  it.each([
+    ['ru', 'Поиск по вкладкам, списку чтения и сохранённым окнам'],
+    ['ko', '탭, 나중에 읽기, 저장된 창 검색'],
+    ['ja', 'タブ、「後で読む」、保存したウィンドウを検索'],
+    ['fr', 'Rechercher dans les onglets, la liste de lecture et les fenêtres enregistrées'],
+  ])('地址栏空查询使用 %s 设置', async (language, description) => {
+    const { chromeMock, storageData } = getChromeMock();
+    storageData.settings = { language };
+
+    chromeMock.omnibox.onInputChanged.emit('', vi.fn());
+
+    await vi.waitFor(() =>
+      expect(chromeMock.omnibox.setDefaultSuggestion).toHaveBeenCalledWith({ description }),
+    );
+  });
+
   it('并发打开两条稍后阅读不会使另一条复活', async () => {
     const { chromeMock, storageData } = getChromeMock();
     storageData.readLater = [

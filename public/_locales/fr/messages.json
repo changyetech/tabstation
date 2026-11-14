@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "Tab Station"
+  },
+  "extDescription": {
+    "message": "Gérez vos onglets : tri, déplacement, doublons, lecture différée et fenêtres enregistrées. Tout reste en local."
+  },
+  "cmdOpenManager": {
+    "message": "Ouvrir la page de gestion"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "Tab Station"
+  },
+  "extDescription": {
+    "message": "모든 탭을 한곳에서 관리하세요. 정렬, 이동, 중복 제거, 나중에 읽기, 창 저장을 지원하며 모든 데이터는 로컬에 저장됩니다."
+  },
+  "cmdOpenManager": {
+    "message": "관리 페이지 열기"
+  }
+}

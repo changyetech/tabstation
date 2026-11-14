@@ -100,7 +100,7 @@
   "settings.visibleTabs16": "16 条",
   "settings.visibleTabsAll": "全部显示",
   "settings.language": "界面语言",
-  "settings.languageDesc": "「自动」跟随浏览器语言。",
+  "settings.languageDesc": "“自动”跟随浏览器语言；未匹配到支持的语言时默认英文。",
   "settings.langAuto": "自动（跟随浏览器）",
   "settings.langEn": "English",
   "settings.langZh": "简体中文",

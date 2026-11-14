@@ -1,4 +1,5 @@
 import { normalizeUrl } from './url';
+import type { Language } from '../i18n/resolve';
 
 // ===== 数据模型（spec §6）=====
 
@@ -27,7 +28,7 @@ export interface SavedSession {
 export interface Settings {
   managerPageScope: 'global' | 'per-window';
   closeWindowAfterSave: boolean;
-  language: 'auto' | 'en' | 'zh-CN';
+  language: 'auto' | Language;
   theme: 'light' | 'dark' | 'auto';
   newWindowMode: 'max' | 'same';
   visibleTabs: 8 | 12 | 16 | 'all';

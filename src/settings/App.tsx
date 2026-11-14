@@ -315,6 +315,10 @@ function SettingsPage({
                     <option value="auto">{t('settings.langAuto')}</option>
                     <option value="zh-CN">{t('settings.langZh')}</option>
                     <option value="en">{t('settings.langEn')}</option>
+                    <option value="ru">Русский</option>
+                    <option value="ko">한국어</option>
+                    <option value="ja">日本語</option>
+                    <option value="fr">Français</option>
                   </select>
                 </span>
               </div>

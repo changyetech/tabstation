@@ -18,9 +18,8 @@ import {
   type SavedSession,
   type Settings,
 } from './lib/storage';
-import { resolveLanguage, translate, type Language } from './i18n/resolve';
-import en from './i18n/en.json';
-import zhCN from './i18n/zh_CN.json';
+import { resolveLanguage, translate } from './i18n/resolve';
+import { dictionaries } from './i18n/dictionaries';
 
 // background：扩展的命令入口——图标点击/快捷键 → 管理页单例，地址栏关键字 → 搜索自有数据（spec §4.2、omnibox spec §8）
 // service worker 随时休眠，不持有状态——每次都从 storage 读设置
@@ -81,14 +80,13 @@ interface StoredOmniData {
   settings?: Partial<Settings>;
 }
 
-const dictionaries: Record<Language, Record<string, string>> = { en, 'zh-CN': zhCN };
-
 // SW 无 React 上下文，useT 不可用——直接复用页面层同一份字典与插值逻辑（translate），
 // 保证界面文案只有一处来源
 function translatorFor(settings: Partial<Settings> | undefined) {
   const lang = resolveLanguage(mergeSettings(settings).language, navigator.language);
   const dict = dictionaries[lang];
-  return (key: string, params?: Record<string, string | number>) => translate(dict, key, params);
+  return (key: string, params?: Record<string, string | number>) =>
+    translate(dict, key, params, lang);
 }
 
 // 输入序号：用户连续敲字时多个 handler 并发，先发起的可能后 resolve，

@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "Tab Station"
+  },
+  "extDescription": {
+    "message": "タブをまとめて管理。並べ替え、移動、重複の削除、後で読む、ウィンドウの保存に対応。データはすべてローカルに保存。"
+  },
+  "cmdOpenManager": {
+    "message": "管理ページを開く"
+  }
+}

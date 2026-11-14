@@ -8,6 +8,37 @@ function Probe({ id, params }: { id: string; params?: Record<string, string | nu
 }
 
 describe('useT', () => {
+  it.each([
+    [0, '0 вкладок'],
+    [1, '1 вкладка'],
+    [2, '2 вкладки'],
+    [5, '5 вкладок'],
+    [11, '11 вкладок'],
+    [21, '21 вкладка'],
+    [22, '22 вкладки'],
+    [25, '25 вкладок'],
+  ])('русский：%i 的数量词形', (n, expected) => {
+    render(
+      <I18nProvider language="ru">
+        <Probe id="window.tabCount" params={{ n }} />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId('out')).toHaveTextContent(expected);
+  });
+
+  it.each([
+    [0, '0 onglet'],
+    [1, '1 onglet'],
+    [2, '2 onglets'],
+  ])('français：%i 的数量词形', (n, expected) => {
+    render(
+      <I18nProvider language="fr">
+        <Probe id="window.tabCount" params={{ n }} />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId('out')).toHaveTextContent(expected);
+  });
+
   it('按语言取文案', () => {
     render(
       <I18nProvider language="zh-CN">

@@ -177,6 +177,23 @@ describe('设置页', () => {
     expect(await screen.findByText('Settings')).toBeInTheDocument();
   });
 
+  it.each([
+    ['ru', 'Настройки'],
+    ['ko', '설정'],
+    ['ja', '設定'],
+    ['fr', 'Paramètres'],
+  ])('语言切换为 %s：落盘且界面立即翻译', async (language, title) => {
+    const { storageData } = getChromeMock();
+    render(<App />);
+
+    await userEvent.selectOptions(screen.getByLabelText('界面语言'), language);
+
+    await waitFor(() =>
+      expect((storageData.settings as { language: string }).language).toBe(language),
+    );
+    expect(await screen.findByRole('heading', { name: title, level: 1 })).toBeInTheDocument();
+  });
+
   it('「在 Chrome 中修改」打开扩展快捷键页', async () => {
     const { chromeMock } = getChromeMock();
     render(<App />);

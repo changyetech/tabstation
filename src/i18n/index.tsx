@@ -1,15 +1,9 @@
 import { createContext, useCallback, useContext, type ReactNode } from 'react';
-import en from './en.json';
-import zhCN from './zh_CN.json';
+import { dictionaries } from './dictionaries';
 import { translate, type Language } from './resolve';
 
 export type { Language } from './resolve';
 export { resolveLanguage } from './resolve';
-
-const dictionaries: Record<Language, Record<string, string>> = {
-  en,
-  'zh-CN': zhCN,
-};
 
 const I18nContext = createContext<Language>('en');
 
@@ -25,7 +19,7 @@ export function useT() {
   const lang = useContext(I18nContext);
   return useCallback(
     (key: string, params?: Record<string, string | number>): string =>
-      translate(dictionaries[lang], key, params),
+      translate(dictionaries[lang], key, params, lang),
     [lang],
   );
 }
