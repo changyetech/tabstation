@@ -30,15 +30,15 @@ function renderPanel(over: Partial<React.ComponentProps<typeof ReadLaterSidebar>
 describe('ReadLaterSidebar', () => {
   it('点击条目标题 → onOpen', async () => {
     const props = renderPanel();
-    await userEvent.click(screen.getByText('Article A'));
+    await userEvent.click(screen.getByRole('button', { name: 'Article A' }));
     expect(props.onOpen).toHaveBeenCalledWith(items[0]);
   });
 
   it('新窗口打开 / 删除 各自回调，不触发 onOpen', async () => {
     const props = renderPanel();
-    await userEvent.click(screen.getByTitle('新窗口打开（并从清单移除）'));
+    await userEvent.click(screen.getByRole('button', { name: '新窗口打开（并从清单移除）' }));
     expect(props.onOpenNewWindow).toHaveBeenCalledWith(items[0]);
-    await userEvent.click(screen.getByTitle('从清单删除'));
+    await userEvent.click(screen.getByRole('button', { name: '从清单删除' }));
     expect(props.onDelete).toHaveBeenCalled();
     expect(props.onOpen).not.toHaveBeenCalled();
   });

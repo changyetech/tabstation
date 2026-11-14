@@ -188,7 +188,7 @@ describe('App', () => {
     const a1 = await screen.findByText('A1');
     const row = a1.closest('li');
     if (!row) throw new Error('A1 所在行未找到');
-    await userEvent.click(within(row).getByTitle('移动到其他窗口'));
+    await userEvent.click(within(row).getByRole('button', { name: '移动到其他窗口' }));
     // A1 在窗口 1，目标菜单经 portal 挂到 body，应只含窗口 2
     expect(screen.queryByText(/^窗口 1 ·/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByText('窗口 2 · B1'));
@@ -203,7 +203,7 @@ describe('App', () => {
     const b1 = await screen.findByText('B1');
     const row = b1.closest('li');
     if (!row) throw new Error('B1 所在行未找到');
-    await userEvent.click(within(row).getByTitle('拆到新窗口'));
+    await userEvent.click(within(row).getByRole('button', { name: '拆到新窗口' }));
     await waitFor(() =>
       expect(chromeMock.windows.create).toHaveBeenCalledWith({
         tabId: 3,
@@ -242,7 +242,7 @@ describe('App', () => {
     seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 1')).toBeInTheDocument());
-    await userEvent.click(within(winBlockOf('窗口 1')).getByTitle('关闭窗口'));
+    await userEvent.click(within(winBlockOf('窗口 1')).getByRole('button', { name: '关闭窗口' }));
     await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
     expect(chromeMock.windows.remove).not.toHaveBeenCalled();
   });
@@ -253,7 +253,7 @@ describe('App', () => {
     seedWindowView();
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
-    await userEvent.click(within(winBlockOf('窗口 2')).getByTitle('关闭窗口'));
+    await userEvent.click(within(winBlockOf('窗口 2')).getByRole('button', { name: '关闭窗口' }));
     await waitFor(() => expect(chromeMock.windows.remove).toHaveBeenCalledWith(2));
     expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
   });
@@ -276,7 +276,7 @@ describe('App', () => {
     ]);
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
-    await userEvent.click(within(winBlockOf('窗口 2')).getByTitle('关闭窗口'));
+    await userEvent.click(within(winBlockOf('窗口 2')).getByRole('button', { name: '关闭窗口' }));
     await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([3]));
     expect(chromeMock.windows.remove).not.toHaveBeenCalled();
   });
@@ -289,7 +289,7 @@ describe('App', () => {
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 2')).toBeInTheDocument());
     const section = winBlockOf('窗口 2');
-    await userEvent.click(within(section).getByTitle('关闭窗口'));
+    await userEvent.click(within(section).getByRole('button', { name: '关闭窗口' }));
     await waitFor(() => expect(chromeMock.windows.remove).toHaveBeenCalledWith(2));
     await waitFor(() => expect(section).not.toHaveClass('closing'), { timeout: 2000 });
   });
@@ -302,7 +302,7 @@ describe('App', () => {
     render(<App />);
     await waitFor(() => expect(screen.getByText('窗口 1')).toBeInTheDocument());
     const section = winBlockOf('窗口 1');
-    await userEvent.click(within(section).getByTitle('关闭窗口'));
+    await userEvent.click(within(section).getByRole('button', { name: '关闭窗口' }));
     await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]));
     await waitFor(() => expect(section).not.toHaveClass('closing'), { timeout: 2000 });
   });
@@ -441,7 +441,7 @@ describe('稍后阅读', () => {
     expect(document.querySelector('aside')).toBeNull();
     expect(document.querySelector('.layout')).toHaveClass('no-aside');
 
-    await userEvent.click(screen.getAllByTitle('收进稍后阅读（保存并关闭）')[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: '收进稍后阅读（保存并关闭）' })[0]);
     await waitFor(() => expect(document.querySelector('aside')).not.toBeNull());
     expect(document.querySelector('.layout')).not.toHaveClass('no-aside');
   });
@@ -459,7 +459,7 @@ describe('稍后阅读', () => {
     // 空清单：整卡隐藏
     expect(screen.queryByText('稍后阅读')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getAllByTitle('收进稍后阅读（保存并关闭）')[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: '收进稍后阅读（保存并关闭）' })[0]);
     await waitFor(() => {
       expect((storageData.readLater as unknown[]).length).toBe(1);
     });
@@ -507,8 +507,10 @@ describe('保存窗口', () => {
     chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
     seedWindowView();
     render(<App />);
-    await waitFor(() => expect(screen.getByTitle('保存会话')).toBeInTheDocument());
-    await userEvent.click(screen.getByTitle('保存会话'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: '保存会话' })).toBeInTheDocument(),
+    );
+    await userEvent.click(screen.getByRole('button', { name: '保存会话' }));
     expect(await screen.findByText('没有可保存的标签页')).toBeInTheDocument();
     expect(storageData.sessions).toBeUndefined();
   });
@@ -523,8 +525,10 @@ describe('保存窗口', () => {
     chromeMock.windows.getCurrent.mockResolvedValue(makeWindow({ id: 1 }));
     seedWindowView();
     render(<App />);
-    await waitFor(() => expect(screen.getByTitle('保存会话')).toBeInTheDocument());
-    await userEvent.click(screen.getByTitle('保存会话'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: '保存会话' })).toBeInTheDocument(),
+    );
+    await userEvent.click(screen.getByRole('button', { name: '保存会话' }));
     await waitFor(() => expect(storageData.sessions).toBeDefined());
     const sessions = storageData.sessions as { tabs: { url: string }[] }[];
     expect(sessions).toHaveLength(1);
@@ -562,7 +566,7 @@ describe('保存窗口', () => {
     expect(screen.queryByText(/2026\/8\/15 09:00/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByText('已保存会话'));
     await waitFor(() => expect(screen.getByText(/2026\/8\/15 09:00/)).toBeInTheDocument());
-    await userEvent.click(screen.getByTitle('恢复到新窗口（会话保留）'));
+    await userEvent.click(screen.getByRole('button', { name: '恢复到新窗口（会话保留）' }));
     await waitFor(() =>
       expect(chromeMock.windows.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -630,7 +634,9 @@ describe('域名批量操作', () => {
     render(<App />);
     await waitFor(() => expect(screen.getByText('C1')).toBeInTheDocument());
     await userEvent.click(screen.getByText('全部模式'));
-    const closeButtons = screen.getAllByTitle('关闭该域名全部标签页（固定标签除外）');
+    const closeButtons = screen.getAllByRole('button', {
+      name: '关闭该域名全部标签页（固定标签除外）',
+    });
     await userEvent.click(closeButtons[0]); // c.com 组（2 个）排最前
     await waitFor(() => expect(chromeMock.tabs.remove).toHaveBeenCalledWith([1]), {
       timeout: 2000,

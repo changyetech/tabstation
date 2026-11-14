@@ -126,7 +126,7 @@ describe('TabRow', () => {
     renderRow(
       <TabRow tab={tab} draggable={false} now={Date.now()} registerRow={noop} onClose={onClose} />,
     );
-    await userEvent.click(screen.getByTitle('关闭标签页'));
+    await userEvent.click(screen.getByRole('button', { name: '关闭标签页' }));
     expect(onClose).toHaveBeenCalledWith(tab);
     expect(chromeMock.tabs.update).not.toHaveBeenCalled();
   });
@@ -155,8 +155,8 @@ describe('TabRow', () => {
         />
       </>,
     );
-    expect(screen.getAllByTitle('拆到新窗口')).toHaveLength(1);
-    await userEvent.click(screen.getByTitle('拆到新窗口'));
+    expect(screen.getAllByRole('button', { name: '拆到新窗口' })).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: '拆到新窗口' }));
     expect(onSplit).toHaveBeenCalledWith(t1);
   });
 
@@ -185,7 +185,7 @@ describe('TabRow', () => {
         />
       </>,
     );
-    expect(screen.getAllByTitle('移动到其他窗口')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: '移动到其他窗口' })).toHaveLength(1);
   });
 
   it('悬停重复行上报 onHoverDup', async () => {

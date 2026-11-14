@@ -1,3 +1,4 @@
+import TooltipButton from './TooltipButton';
 import { useMemo } from 'react';
 import type { TabWithId } from '../lib/dedupe';
 import { useT } from '../i18n';
@@ -44,23 +45,27 @@ function DomainActs({
   const t = useT();
   return (
     <span className="dom-acts">
-      <button
+      <TooltipButton
         className="icon-btn"
         title={t('dom.readLater')}
         onClick={() => onDomainReadLater(tabs)}
       >
         <Icon name="bookAdd" size={13} />
-      </button>
-      <button className="icon-btn" title={t('dom.split')} onClick={() => onDomainSplit(tabs)}>
+      </TooltipButton>
+      <TooltipButton
+        className="icon-btn"
+        title={t('dom.split')}
+        onClick={() => onDomainSplit(tabs)}
+      >
         <Icon name="winNew" size={13} />
-      </button>
-      <button
+      </TooltipButton>
+      <TooltipButton
         className="icon-btn danger"
         title={t('dom.closeAll')}
         onClick={() => onDomainCloseAll(tabs)}
       >
         <Icon name="close" size={13} />
-      </button>
+      </TooltipButton>
     </span>
   );
 }

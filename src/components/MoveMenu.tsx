@@ -1,3 +1,4 @@
+import TooltipButton from './TooltipButton';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '../i18n';
@@ -98,7 +99,7 @@ export default function MoveMenu({
 
   return (
     <span className="move-menu" ref={rootRef}>
-      <button
+      <TooltipButton
         className="icon-btn"
         title={t('tab.moveTo')}
         ref={triggerRef}
@@ -109,7 +110,7 @@ export default function MoveMenu({
         }}
       >
         <Icon name="move" size={13} />
-      </button>
+      </TooltipButton>
       {open &&
         createPortal(
           <ul

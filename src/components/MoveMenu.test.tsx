@@ -26,7 +26,7 @@ describe('MoveMenu', () => {
           <MoveMenu targets={[{ windowId: 2, label: '窗口 2', tabCount: 1 }]} onPick={noop} />
         </I18nProvider>,
       );
-      await userEvent.click(screen.getByTitle('移动到其他窗口'));
+      await userEvent.click(screen.getByRole('button', { name: '移动到其他窗口' }));
       viewport = 740;
       fireEvent.resize(window);
       expect(screen.getByText('移动到窗口').closest('ul')).toHaveStyle({
@@ -59,7 +59,7 @@ describe('MoveMenu', () => {
           />
         </I18nProvider>,
       );
-      await userEvent.click(screen.getByTitle('移动到其他窗口'));
+      await userEvent.click(screen.getByRole('button', { name: '移动到其他窗口' }));
       expect(screen.getByText('移动到窗口').closest('ul')).toHaveStyle({
         top: '8px',
         maxHeight: '724px',
@@ -83,7 +83,7 @@ describe('MoveMenu', () => {
         <MoveMenu targets={targets} onPick={onPick} />
       </I18nProvider>,
     );
-    await userEvent.click(screen.getByTitle('移动到其他窗口'));
+    await userEvent.click(screen.getByRole('button', { name: '移动到其他窗口' }));
     expect(screen.getByText('移动到窗口')).toBeInTheDocument();
     expect(screen.queryByText(/新窗口/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByText('窗口 2 · Doc'));
@@ -101,7 +101,7 @@ describe('MoveMenu', () => {
       </I18nProvider>,
     );
 
-    await userEvent.click(screen.getByTitle('移动到其他窗口'));
+    await userEvent.click(screen.getByRole('button', { name: '移动到其他窗口' }));
 
     const popover = screen.getByText('移动到窗口').closest('ul');
     expect(popover?.parentElement).toBe(document.body);
@@ -124,7 +124,7 @@ describe('MoveMenu', () => {
           <MoveMenu targets={[{ windowId: 2, label: '窗口 2 · Doc', tabCount: 3 }]} onPick={noop} />
         </I18nProvider>,
       );
-      await userEvent.click(screen.getByTitle('移动到其他窗口'));
+      await userEvent.click(screen.getByRole('button', { name: '移动到其他窗口' }));
 
       expect(screen.getByText('移动到窗口').closest('ul')).toHaveStyle({ top: '554px' });
     } finally {

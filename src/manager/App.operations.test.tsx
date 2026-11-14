@@ -36,7 +36,7 @@ describe('保存与关闭的异步顺序', () => {
     );
     vi.useFakeTimers();
 
-    fireEvent.click(screen.getByTitle(title));
+    fireEvent.click(screen.getByRole('button', { name: title }));
     await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
     expect(chromeMock.windows.remove).not.toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe('保存与关闭的异步顺序', () => {
     await screen.findByText('Source');
     chromeMock.storage.local.set.mockRejectedValueOnce(new Error('Storage failed'));
 
-    await userEvent.click(screen.getByTitle(title));
+    await userEvent.click(screen.getByRole('button', { name: title }));
 
     expect(await screen.findByText('操作失败，请重试')).toBeInTheDocument();
     expect(chromeMock.tabs.remove).not.toHaveBeenCalled();
@@ -96,7 +96,7 @@ describe('稍后阅读打开成功后才移除', () => {
     const row = (await screen.findByText('Saved')).closest('li');
     chromeMock.storage.local.set.mockRejectedValueOnce(new Error('Storage failed'));
 
-    await userEvent.click(screen.getByTitle('从清单删除'));
+    await userEvent.click(screen.getByRole('button', { name: '从清单删除' }));
 
     expect(await screen.findByText('操作失败，请重试')).toBeInTheDocument();
     expect(row).not.toHaveClass('closing');
@@ -115,7 +115,11 @@ describe('稍后阅读打开成功后才移除', () => {
       else chromeMock.windows.create.mockRejectedValueOnce(new Error('No window'));
 
       await userEvent.click(
-        title === '全部打开' ? screen.getByText(title) : screen.getByTitle(title),
+        title === '全部打开'
+          ? screen.getByText(title)
+          : screen.getByRole('button', {
+              name: title === '打开并从清单移除' ? readItem.title : title,
+            }),
       );
 
       expect(await screen.findByText('操作失败，请重试')).toBeInTheDocument();
@@ -124,7 +128,11 @@ describe('稍后阅读打开成功后才移除', () => {
 
       // 失败后解除防重入标记，用户可以立即重试。
       await userEvent.click(
-        title === '全部打开' ? screen.getByText(title) : screen.getByTitle(title),
+        title === '全部打开'
+          ? screen.getByText(title)
+          : screen.getByRole('button', {
+              name: title === '打开并从清单移除' ? readItem.title : title,
+            }),
       );
       await waitFor(() => expect(storageData.readLater).toEqual([]));
     },
@@ -181,7 +189,7 @@ describe('会话条目并发修改', () => {
           };
         }),
     );
-    const buttons = screen.getAllByTitle('移除此条');
+    const buttons = screen.getAllByRole('button', { name: '移除此条' });
     await userEvent.click(buttons[0]);
     await userEvent.click(buttons[1]);
 

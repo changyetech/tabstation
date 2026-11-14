@@ -137,12 +137,12 @@ describe('WindowSection 关闭窗口', () => {
   it('点击直接回调，无确认（设计稿语义）', async () => {
     const onCloseWindow = vi.fn();
     renderSection({ onCloseWindow });
-    await userEvent.click(screen.getByTitle('关闭窗口'));
+    await userEvent.click(screen.getByRole('button', { name: '关闭窗口' }));
     expect(onCloseWindow).toHaveBeenCalled();
   });
 
   it('未传 onCloseWindow 时不渲染按钮', () => {
     renderSection();
-    expect(screen.queryByTitle('关闭窗口')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '关闭窗口' })).not.toBeInTheDocument();
   });
 });

@@ -1,3 +1,4 @@
+import TooltipButton from './TooltipButton';
 import { useState } from 'react';
 import {
   DndContext,
@@ -113,7 +114,7 @@ function SessionTabRow({
           )}
         </span>
         <span className="row-acts">
-          <button
+          <TooltipButton
             className="icon-btn"
             title={t('sessions.tabNewWindow')}
             onClick={(e) => {
@@ -122,8 +123,8 @@ function SessionTabRow({
             }}
           >
             <Icon name="winNew" size={13} />
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             className="icon-btn danger"
             title={t('sessions.removeTab')}
             onClick={(e) => {
@@ -132,7 +133,7 @@ function SessionTabRow({
             }}
           >
             <Icon name="close" size={13} />
-          </button>
+          </TooltipButton>
         </span>
       </div>
     </li>
@@ -206,15 +207,15 @@ function SessionBlock({
         </span>
         <span className="win-meta num">{t('window.tabCount', { n: session.tabs.length })}</span>
         <span className="win-acts">
-          <button
+          <TooltipButton
             className="ghost-btn"
             title={t('sessions.restore')}
             onClick={() => onRestore(session)}
           >
             <Icon name="restore" size={13} />
             {t('sessions.restoreShort')}
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             className="ghost-btn"
             title={t('sessions.rename')}
             onClick={() => {
@@ -224,15 +225,15 @@ function SessionBlock({
           >
             <Icon name="edit" size={13} />
             {t('sessions.rename')}
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             className="ghost-btn danger"
             title={t('sessions.delete')}
             onClick={() => onDelete(session)}
           >
             <Icon name="trash" size={13} />
             {t('sessions.delete')}
-          </button>
+          </TooltipButton>
         </span>
       </div>
       <SortableContext

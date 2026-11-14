@@ -1,3 +1,4 @@
+import TooltipButton from './TooltipButton';
 import { useLanguage, useT } from '../i18n';
 import type { ReadLaterItem } from '../lib/storage';
 import { formatRelative, lastAccessedDisplay } from '../lib/time';
@@ -40,18 +41,23 @@ export default function ReadLaterSidebar({
         </span>
         <span className="panel-title">{t('readLater.title')}</span>
         <span className="panel-count num">{t('readLater.count', { n: items.length })}</span>
-        <button className="panel-act" title={t('readLater.openAllTitle')} onClick={onOpenAll}>
+        <TooltipButton
+          className="panel-act"
+          title={t('readLater.openAllTitle')}
+          onClick={onOpenAll}
+        >
           <Icon name="restore" size={13} />
           {t('readLater.openAll')}
-        </button>
+        </TooltipButton>
       </div>
       <ul className="rl-list">
         {items.map((item) => (
           <li key={item.id} className="rl-row" onClick={() => onOpen(item)}>
             <Favicon url={item.url} favIconUrl={item.favIconUrl} />
             <span className="rl-text">
-              <button
+              <TooltipButton
                 className="rl-title"
+                aria-label={item.title}
                 title={t('readLater.openTitle')}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -59,13 +65,13 @@ export default function ReadLaterSidebar({
                 }}
               >
                 {item.title}
-              </button>
+              </TooltipButton>
               <span className="rl-url">{item.url.replace(/^https?:\/\//, '')}</span>
             </span>
             <span className="row-tail">
               <span className="rl-time num">{timeText(item.savedAt)}</span>
               <span className="rl-acts">
-                <button
+                <TooltipButton
                   className="icon-btn"
                   title={t('readLater.newWindow')}
                   onClick={(e) => {
@@ -74,8 +80,8 @@ export default function ReadLaterSidebar({
                   }}
                 >
                   <Icon name="winNew" size={13} />
-                </button>
-                <button
+                </TooltipButton>
+                <TooltipButton
                   className="icon-btn danger"
                   title={t('readLater.delete')}
                   onClick={(e) => {
@@ -84,7 +90,7 @@ export default function ReadLaterSidebar({
                   }}
                 >
                   <Icon name="close" size={13} />
-                </button>
+                </TooltipButton>
               </span>
             </span>
           </li>

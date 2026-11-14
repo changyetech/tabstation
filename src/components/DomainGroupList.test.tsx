@@ -55,7 +55,9 @@ describe('DomainGroupList', () => {
 
   it('域名批量操作：关闭全部回调带该域名的 tab 集', async () => {
     const props = renderList();
-    await userEvent.click(screen.getAllByTitle('关闭该域名全部标签页（固定标签除外）')[0]);
+    await userEvent.click(
+      screen.getAllByRole('button', { name: '关闭该域名全部标签页（固定标签除外）' })[0],
+    );
     expect(props.onDomainCloseAll).toHaveBeenCalledWith([tabs[1], tabs[2]]);
   });
 

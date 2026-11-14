@@ -1,3 +1,4 @@
+import TooltipButton from './TooltipButton';
 import { useRef } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TabWithId } from '../lib/dedupe';
@@ -95,24 +96,24 @@ export default function WindowSection(props: WindowSectionProps) {
         </span>
         <span className="win-acts">
           {props.onSaveWindow && (
-            <button
+            <TooltipButton
               className="ghost-btn"
               title={t('window.save')}
               onClick={() => props.onSaveWindow?.(win)}
             >
               <Icon name="save" size={13} />
               {t('window.save')}
-            </button>
+            </TooltipButton>
           )}
           {props.onCloseWindow && (
-            <button
+            <TooltipButton
               className="ghost-btn danger"
               title={t('window.close')}
               onClick={() => props.onCloseWindow?.(win, sectionRef.current)}
             >
               <Icon name="close" size={13} />
               {t('window.close')}
-            </button>
+            </TooltipButton>
           )}
         </span>
       </div>

@@ -1,3 +1,4 @@
+import TooltipButton from './TooltipButton';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TabWithId } from '../lib/dedupe';
@@ -139,7 +140,7 @@ export default function TabRow({
         )}
         {dupCount !== undefined &&
           (onDedupe ? (
-            <button
+            <TooltipButton
               type="button"
               className="dup-badge dup-action num"
               title={t('dup.dedupeGroup')}
@@ -155,7 +156,7 @@ export default function TabRow({
             >
               <span className="dup-action-label">{t('dup.dedupe')} </span>
               <span>{t('dup.badge', { n: dupCount })}</span>
-            </button>
+            </TooltipButton>
           ) : (
             <span className="dup-badge num">{t('dup.badge', { n: dupCount })}</span>
           ))}
@@ -164,7 +165,7 @@ export default function TabRow({
           <span className="row-acts">
             {/* 稍后阅读仅 http(s)、非 pinned（沿用旧 spec §5.4） */}
             {onReadLater && !tab.pinned && /^https?:\/\//.test(tab.url ?? '') && (
-              <button
+              <TooltipButton
                 className="icon-btn"
                 title={t('tab.readLater')}
                 onClick={(e) => {
@@ -173,10 +174,10 @@ export default function TabRow({
                 }}
               >
                 <Icon name="bookAdd" size={13} />
-              </button>
+              </TooltipButton>
             )}
             {onSplit && !tab.pinned && (
-              <button
+              <TooltipButton
                 className="icon-btn"
                 title={t('tab.split')}
                 onClick={(e) => {
@@ -185,12 +186,12 @@ export default function TabRow({
                 }}
               >
                 <Icon name="winNew" size={13} />
-              </button>
+              </TooltipButton>
             )}
             {moveTargets.length > 0 && onMove && (
               <MoveMenu targets={moveTargets} onPick={(target) => onMove(tab, target)} />
             )}
-            <button
+            <TooltipButton
               className="icon-btn danger"
               title={t('tab.close')}
               onClick={(e) => {
@@ -199,7 +200,7 @@ export default function TabRow({
               }}
             >
               <Icon name="close" size={13} />
-            </button>
+            </TooltipButton>
           </span>
         </span>
       </div>

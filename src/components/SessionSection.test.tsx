@@ -43,7 +43,7 @@ function renderSection(over: Partial<React.ComponentProps<typeof SessionSection>
 describe('SessionSection', () => {
   it('输入法组合中的 Enter/Escape 不提交或取消，确认候选后 Enter 才重命名', async () => {
     const { props } = renderSection();
-    await userEvent.click(screen.getByTitle('重命名'));
+    await userEvent.click(screen.getByRole('button', { name: '重命名' }));
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'gong' } });
     fireEvent.keyDown(input, { key: 'Enter', isComposing: true, keyCode: 229 });
@@ -63,9 +63,9 @@ describe('SessionSection', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/2026\/8\/15 10:00/)).toBeInTheDocument();
     expect(view.container.querySelector('.win-head .win-meta')).toHaveTextContent(/^2 个标签页$/);
-    await userEvent.click(screen.getByTitle('恢复到新窗口（会话保留）'));
+    await userEvent.click(screen.getByRole('button', { name: '恢复到新窗口（会话保留）' }));
     expect(props.onRestore).toHaveBeenCalledWith(sessions[0]);
-    await userEvent.click(screen.getByTitle('删除会话'));
+    await userEvent.click(screen.getByRole('button', { name: '删除会话' }));
     expect(props.onDelete).toHaveBeenCalledWith(sessions[0]);
   });
 
@@ -106,15 +106,15 @@ describe('SessionSection 条目操作', () => {
     const { props } = renderSection();
     await userEvent.click(screen.getAllByTitle(/单独打开/)[0]);
     expect(props.onOpenTab).toHaveBeenCalledWith(sessions[0].tabs[0]);
-    await userEvent.click(screen.getAllByTitle('新窗口打开')[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: '新窗口打开' })[0]);
     expect(props.onOpenTabNewWindow).toHaveBeenCalledWith(sessions[0].tabs[0]);
-    await userEvent.click(screen.getAllByTitle('移除此条')[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: '移除此条' })[0]);
     expect(props.onDeleteTab).toHaveBeenCalledWith(sessions[0], 0);
   });
 
   it('重命名：切输入框，Enter 提交', async () => {
     const { props } = renderSection();
-    await userEvent.click(screen.getByTitle('重命名'));
+    await userEvent.click(screen.getByRole('button', { name: '重命名' }));
     const input = screen.getByRole('textbox');
     await userEvent.clear(input);
     await userEvent.type(input, '工作会话{Enter}');
@@ -190,7 +190,7 @@ describe('SessionSection 条目行对齐窗口模式（spec 2026-11-13-visual-po
     const { props } = renderSection();
     await userEvent.click(screen.getAllByTitle(/单独打开/)[0]);
     expect(props.onOpenTab).toHaveBeenCalledWith(sessions[0].tabs[0]);
-    await userEvent.click(screen.getAllByTitle('新窗口打开')[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: '新窗口打开' })[0]);
     expect(props.onOpenTabNewWindow).toHaveBeenCalledWith(sessions[0].tabs[0]);
     expect(props.onOpenTab).toHaveBeenCalledTimes(1);
   });
